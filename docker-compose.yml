@@ -5,7 +5,7 @@ services:
       context: ./nginx
       dockerfile: Dockerfile
     container_name: nginx
-    image: transcendance_nginx
+    # image: transcendance_nginx
     ports:
       - "80:80"
       - "443:443"
@@ -21,9 +21,17 @@ services:
       context: ./api
       dockerfile: Dockerfile
     container_name: api
-    image: transcendance_api
-    
-
+    # image: transcendance_api
+  
+  sqlite_db:
+    build:
+      context: ./sqlite_db
+      dockerfile: Dockerfile
+    container_name: sqlite_db
+    # image: transcendance_sqlite_db
+    volumes:
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
     
 
 
