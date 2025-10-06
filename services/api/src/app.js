@@ -1,18 +1,20 @@
 
+//TODO: Implement environment variables for service URLs
+// Example: const usersServiceUrl = process.env.USER_API_URL || 'http://localhost:3001/users';
 
 const fastify = require('fastify')({ logger: true })
 fastify.register(require('@fastify/reply-from'))
 
 fastify.get('/users', async (request, reply) => {
   // Adresse du microservice dédié aux users
-  const usersServiceUrl = 'http://localhost:3001/users'
+  const usersServiceUrl = 'http://user_api:3001/users'
   // Proxy la requête au microservice et renvoie la réponse
   return reply.from(usersServiceUrl)
 })
 
 // Each microservice would have its own route
-// fastify.get('/products', async (request, reply) => {
-//   return reply.from('http://localhost:3002/products')
+// fastify.get('/example', async (request, reply) => {
+//   return reply.from('http://localhost:3002/example')
 // })
 
 const start = async () => {

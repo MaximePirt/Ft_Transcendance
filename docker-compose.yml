@@ -1,37 +1,59 @@
 services:
 
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: nginx
-    # image: transcendance_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/data/logs:/var/log/nginx
-      - ./nginx/data/certs:/etc/nginx/certs
-      - vault-secrets:/secrets:ro
-      - ./shared:/scripts:ro
-      - modsec-data:/var/cache/modsecurity
+  # nginx:
+  #   build:
+  #     context: ./nginx
+  #     dockerfile: Dockerfile
+  #   container_name: nginx
+  #   # image: transcendance_nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/data/logs:/var/log/nginx
+  #     - ./nginx/data/certs:/etc/nginx/certs
+  #     - vault-secrets:/secrets:ro
+  #     - ./shared:/scripts:ro
+  #     - modsec-data:/var/cache/modsecurity
 
   api:
     build:
-      context: ./api
+      context: ./services/api
       dockerfile: Dockerfile
     container_name: api
-    # image: transcendance_api
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:3000
+    volumes:
+      - ./infrastructure/sqlite_db/db.sqlite:/app/db.sqlite
+    depends_on:
+      - sqlite_db
   
+  user_api:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    container_name: user_api
+    ports:
+      - "3001:3001"
+    environment:
+      - API_URL=http://api:3001
+    volumes:
+      - ./infrastructure/sqlite_db/db.sqlite:/app/db.sqlite
+    depends_on:
+      - sqlite_db
+  
+
   sqlite_db:
     build:
-      context: ./sqlite_db
+      context: ./infrastructure/sqlite_db
       dockerfile: Dockerfile
     container_name: sqlite_db
     # image: transcendance_sqlite_db
-    volumes:
-      - vault-secrets:/secrets:ro
-      - ./shared:/scripts:ro
+    # volumes:
+      # - vault-secrets:/secrets:ro
+      # - ./shared:/scripts:ro
     
 
 
