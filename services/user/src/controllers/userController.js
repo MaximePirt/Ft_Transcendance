@@ -14,4 +14,16 @@ async function getUserById(id) {
   }
   return user;
 }
-module.exports = { getUsers, getUserById };
+
+async function updateUser(userId, updateData)
+{
+  const update = await userModel.updateUserById(userId, updateData);
+  if (!update) {
+    throw new Error('User not found or update failed');
+  }
+  return update;
+}
+module.exports = { getUsers,
+                   getUserById,
+                   updateUser };
+
