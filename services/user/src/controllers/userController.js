@@ -1,4 +1,8 @@
 const userModel = require('../models/userModel');
+const fs = require("fs");
+const { pipeline } = require("stream/promises");
+const path = require("path");
+
 async function getUsers() {
   const users = await userModel.findAllUsers();
   if (!users) {
@@ -23,7 +27,29 @@ async function updateUser(userId, updateData)
   }
   return update;
 }
+
+async function updateAvatar(userId, data)
+{
+    if (!["image/png", "image/jpeg"].includes(data.mimetype)) {
+      return reply
+        .code(400)
+        .send({ error: "Invalid file type, only PNG and JPEG are allowed" });
+    }
+    const ext = data.mimetype === "image/png" ? "png" : "jpg";
+    const filePath = `/uploads/avatars/${userId}-${Date.now()}.${ext}`;
+
+    const uploadDir = path.join(__dirname, "../../uploads/avatars");
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+
+    await pipeline(data.file, fs.createWriteStream(`.${filePath}`));
+
+    await updateUser(userId, { avatarUrl: filePath });
+    return { message: "Avatar uploaded", avatarUrl: filePath };
+}
+
 module.exports = { getUsers,
                    getUserById,
-                   updateUser };
-
+                   updateUser,
+                   updateAvatar };

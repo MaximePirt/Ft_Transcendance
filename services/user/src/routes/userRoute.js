@@ -1,8 +1,6 @@
 // Route : 127.0.0.1:3000/users/
 userController = require("../controllers/userController");
-const fs = require("fs");
-const { pipeline } = require("stream/promises");
-const path = require("path");
+
 
 async function userRoutes(fastify, options) {
   // Get informations
@@ -33,25 +31,12 @@ async function userRoutes(fastify, options) {
   fastify.patch("/users/:id/avatar", async (request, reply) => {
     const userId = request.params.id;
     const data = await request.file();
-
-    if (!["image/png", "image/jpeg"].includes(data.mimetype)) {
-      return reply
-        .code(400)
-        .send({ error: "Invalid file type, only PNG and JPEG are allowed" });
-    }
-    const ext = data.mimetype === "image/png" ? "png" : "jpg";
-    const filePath = `/uploads/avatars/${userId}-${Date.now()}.${ext}`;
-
-    const uploadDir = path.join(__dirname, "../../uploads/avatars");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-
-    await pipeline(data.file, fs.createWriteStream(`.${filePath}`));
-
-    await userController.updateUser(userId, { avatarUrl: filePath });
-    return { message: "Avatar uploaded", avatarUrl: filePath };
+    if (!data)
+      return reply.code(400).send({ error: "No file uploaded" });
+    return await userController.updateAvatar(userId, data);
   });
+
+  
 }
 
 module.exports = userRoutes;
