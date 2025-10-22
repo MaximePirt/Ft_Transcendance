@@ -36,6 +36,15 @@ async function userRoutes(fastify, options) {
     return await userController.updateAvatar(userId, data);
   });
 
+  // settings
+  fastify.get("/users/:id/settings", async (request, reply) => {
+    const userId = request.params.id;
+    const data = await request.file();
+    if (!data)
+        return reply.code(400).send({error : "No file uploaded"});
+    return await userController.addAvatar(userId, data);
+  });
+
   
 }
 
