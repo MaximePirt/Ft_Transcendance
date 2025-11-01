@@ -5,14 +5,13 @@
   font-size: xx-large;
 }
 
-.pong {
-  position: absolute;
+.field {
+  position: relative;
   border: 1rem solid;
-  height: 75%;
-  width: 75%;
-  top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+  height: 800px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .line {
@@ -43,6 +42,8 @@
   background: black;
   position: absolute;
   left: 0px;
+  top: 60%;
+  bottom: 0px;
 }
 
 .player2 {
@@ -51,4 +52,6 @@
   background: black;
   right: 0px;
   position: absolute;
+  top: 20%;
+  bottom: 0px;
 }
