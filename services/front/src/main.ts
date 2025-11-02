@@ -14,6 +14,9 @@ document.querySelector<HTMLDivElement>('#pong')!.innerHTML = `
 //const field = document.querySelector('.field') as HTMLDivElement;
 const paddle1 = document.querySelector('.player1') as HTMLDivElement;
 const paddle2 = document.querySelector('.player2') as HTMLDivElement;
+const ball = document.querySelector('.ball') as HTMLDivElement;
+let ballX = 870;
+//let ballY = ball.getBoundingClientRect().y;
 let paddle1Y = paddle1.getBoundingClientRect().y;
 let paddle2Y = paddle2.getBoundingClientRect().y;
 
@@ -41,4 +44,23 @@ export function movePaddle() {
   requestAnimationFrame(movePaddle);
 }
 
+let touch = false;
+export function moveBall() {
+  if (ballX <= 1800 && !touch) {
+    ballX += 10;
+    if (ballX === 1750) {
+      touch = true;
+    }
+  } else if (ballX > 0 && touch) {
+    ballX -= 10
+    if (ballX <= 0) {
+      touch = false;
+    }
+  }
+  ball.style.left = `${ballX}px`;
+  requestAnimationFrame(moveBall);
+  console.log(ballX);
+}
+
+moveBall();
 movePaddle();
