@@ -61,7 +61,7 @@ Create a website where users can play Pong against each other, featuring:
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **Framework**: Modern JavaScript framework (TailwindCSS)
+- **Framework**: Modern Typescript framework (TailwindCSS)
 - **Styling**: CSS3, SCSS, or CSS-in-JS solutions
 - **Real-time**: WebSocket for live gameplay and chat
 - **Build Tools**: Webpack, Vite, or similar bundlers
@@ -130,12 +130,18 @@ make	# .. Downloading docker's images and launching website
 ```
 Ft_Transcendance/
 ├── README.md
-├── frontend/          # Frontend application
-├── backend/           # Backend API and services
-├── database/          # Database schemas and migrations
-├── docker/            # Docker configuration files
+├── infrastructure
+|	├── nginx /
+|	├── sqlite_db /	# Database
+├── services/		# Micro-services
+|	├── api / 
+|	├── auth / 
+|	├── frontend / 
+|	├── user /
+├── shared/			# Shared script between dockers
+├── docker-compose.yml
 ├── docs/              # Project documentation
-└── tests/             # Test suites
+└── tests/             # Tests - not in prod
 ```
 
 > **Note**: The project structure will be updated as development progresses.

@@ -1,0 +1,127 @@
+services:
+
+  # nginx:
+  #   build:
+  #     context: ./nginx
+  #     dockerfile: Dockerfile
+  #   container_name: nginx
+  #   # image: transcendance_nginx
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx/data/logs:/var/log/nginx
+  #     - ./nginx/data/certs:/etc/nginx/certs
+  #     - vault-secrets:/secrets:ro
+  #     - ./shared:/scripts:ro
+  #     - modsec-data:/var/cache/modsecurity
+
+  api:
+    build:
+      context: ./services/api
+      dockerfile: Dockerfile
+    container_name: api
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=http://api:3000
+    volumes:
+      - ./infrastructure/sqlite_db/db.sqlite:/app/db.sqlite
+    depends_on:
+      - sqlite_db
+  
+  user_api:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    container_name: user_api
+    ports:
+      - "3001:3001"
+    environment:
+      - API_URL=http://api:3001
+    volumes:
+      - ./infrastructure/sqlite_db/db.sqlite:/app/db.sqlite
+    depends_on:
+      - sqlite_db
+  
+
+  sqlite_db:
+    build:
+      context: ./infrastructure/sqlite_db
+      dockerfile: Dockerfile
+    container_name: sqlite_db
+    # image: transcendance_sqlite_db
+    # volumes:
+      # - vault-secrets:/secrets:ro
+      # - ./shared:/scripts:ro
+    
+
+
+  # vault:
+  #   build:
+  #     context: ./vault
+  #     dockerfile: Dockerfile
+  #   container_name: vault
+  #   ports:
+  #     - "8200:8200"
+  #   cap_add:
+  #     - IPC_LOCK
+  #   tmpfs:
+  #     - /run:rw,noexec,nosuid,nodev
+  #     - /tmp:rw,noexec,nosuid,nodev
+  #   environment:
+  #     VAULT_ADDR: https://vault:8200
+  #     VAULT_CACERT: /vault/certs/vault.cert
+  #   volumes:
+  #     - vault_data:/vault/data
+  #     - ./data/file:/vault/file
+  #     - ./vault/certs:/vault/certs
+  #     - ./vault/config:/vault/config
+  #     - ./secrets:/run/secrets:ro
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -skf https://vault:8200/v1/sys/health | jq -e '.sealed==false' >/dev/null"]
+  #     interval: 3s
+  #     timeout: 2s
+  #     retries: 40
+
+  # vault_agent:
+  #   image: hashicorp/vault:1.20
+  #   container_name: vault-agent
+  #   command: ["/vault/vault-agent-entrypoint.sh"]
+  #   cap_add:
+  #     - IPC_LOCK
+  #   depends_on:
+  #     vault:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./data/file:/vault/file:ro
+  #     - vault-secrets:/secrets
+  #     - ./vault:/vault
+  #   environment:
+  #     - VAULT_ADDR=https://vault:8200
+  #     - VAULT_CACERT=/vault/certs/vault.cert
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "[ -s /secrets/sqlite_api/app.env ]  && [ -s /secrets/ws_server/app.env ] && [ -s /secrets/web/app.env ]"]
+  #     interval: 2s
+  #     timeout: 2s
+  #     retries: 20
+
+
+networks:
+    frontend:
+        driver: bridge
+    backend:
+        driver: bridge
+
+volumes:
+  vault_data:
+  vault-secrets:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  modsec-data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
