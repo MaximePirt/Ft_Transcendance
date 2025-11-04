@@ -28,6 +28,7 @@ let scoreP1 = document.getElementById('score1') as HTMLElement;
 let scoreP2 = document.getElementById('score2') as HTMLElement;
 let dx = 10;
 let dy = 10;
+const border = 10;
 
 const keyPressed: { [str: string]: boolean} = {};
 
@@ -59,8 +60,8 @@ export function movePaddle() {
   }
   if (keyPressed['s']) {
     paddle1XY.y += 15;
-    if (paddle1XY.y + paddle1XY.height >= fieldXY.height - 40)
-      paddle1XY.y = fieldXY.height - paddle1XY.height - 40;
+    if (paddle1XY.y + paddle1XY.height >= fieldXY.height - border)
+      paddle1XY.y = fieldXY.height - paddle1XY.height - border;
   }
   if (keyPressed['ArrowUp']) {
     paddle2XY.y -= 15;
@@ -69,8 +70,8 @@ export function movePaddle() {
   }
   if (keyPressed['ArrowDown']) {
     paddle2XY.y += 15;
-    if (paddle2XY.y + paddle2XY.height >= fieldXY.height - 40)
-      paddle2XY.y = fieldXY.height - paddle2XY.height - 40;
+    if (paddle2XY.y + paddle2XY.height >= fieldXY.height - border)
+      paddle2XY.y = fieldXY.height - paddle2XY.height - border;
   }
   paddle1.style.top = `${paddle1XY.y}px`;
   paddle2.style.top = `${paddle2XY.y}px`;
@@ -93,9 +94,9 @@ export function moveBall() {
   } else if (ballXY.y <= 0) {
     dy *= -1;
     ballXY.y = 0;
-  } else if (ballXY.y >= fieldXY.height - ballXY.height - 40) {
+  } else if (ballXY.y >= fieldXY.height - ballXY.height - border) {
     dy *= -1;
-    ballXY.y = fieldXY.height - ballXY.height - 40;
+    ballXY.y = fieldXY.height - ballXY.height - border;
   } else if (ballXY.x === 0) {
     score2++;
     scoreP2.textContent = score2.toString();
@@ -110,10 +111,8 @@ export function moveBall() {
     ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
   }
   if (markPoint) {
-    ballXY.x = 870;
-    ballXY.y = 370;
-    ball.style.left = `${ballXY.x}px`;
-    ball.style.top = `${ballXY.y}px`;
+    ballXY.x = 900;
+    ballXY.y = 400;
     return ;
   }
   requestAnimationFrame(moveBall);
@@ -122,6 +121,9 @@ export function moveBall() {
 window.addEventListener("keydown", function(e: KeyboardEvent) {
     if (e.code === 'Space') {
       markPoint = false;
+      ballXY.x = 900;
+      ballXY.y = 400;
+      ball.style.backgroundColor = 'black';
       moveBall();
     }
 });
