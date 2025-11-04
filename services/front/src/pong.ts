@@ -26,8 +26,8 @@ let paddle2XY = paddle2.getBoundingClientRect();
 const fieldXY = field.getBoundingClientRect();
 let scoreP1 = document.getElementById('score1') as HTMLElement;
 let scoreP2 = document.getElementById('score2') as HTMLElement;
-let dx = 5;
-let dy = 5;
+let dx = 10;
+let dy = 10;
 
 const keyPressed: { [str: string]: boolean} = {};
 
@@ -41,34 +41,34 @@ window.addEventListener('keydown', (e: KeyboardEvent) => {
 
 function collidePaddle1(ball: DOMRect, paddle1: DOMRect) {
   return ball.y < paddle1.y + paddle1.height &&
-         ball.y + paddle1.height > paddle1.y &&
-         ball.x === paddle1XY.width;
+         ball.y > paddle1.y &&
+         ball.x == paddle1XY.width;
 }
 
 function collidePaddle2(ball: DOMRect, paddle2: DOMRect) {
   return ball.y < paddle2.y + paddle2.height &&
-         ball.y + paddle2.height > paddle2.y &&
-         ball.x + ball.width === fieldXY.width - 40 - paddle2XY.width;
+         ball.y > paddle2.y &&
+         ball.x + ball.width == fieldXY.width - 40 - paddle2XY.width;
 }
 
 export function movePaddle() {
   if (keyPressed['w']) {
-    paddle1XY.y -= 10;
+    paddle1XY.y -= 15;
     if (paddle1XY.y <= 0)
       paddle1XY.y = 0;
   }
   if (keyPressed['s']) {
-    paddle1XY.y += 10;
+    paddle1XY.y += 15;
     if (paddle1XY.y + paddle1XY.height >= fieldXY.height - 40)
       paddle1XY.y = fieldXY.height - paddle1XY.height - 40;
   }
   if (keyPressed['ArrowUp']) {
-    paddle2XY.y -= 10;
+    paddle2XY.y -= 15;
     if (paddle2XY.y <= 0)
       paddle2XY.y = 0;
   }
   if (keyPressed['ArrowDown']) {
-    paddle2XY.y += 10;
+    paddle2XY.y += 15;
     if (paddle2XY.y + paddle2XY.height >= fieldXY.height - 40)
       paddle2XY.y = fieldXY.height - paddle2XY.height - 40;
   }
