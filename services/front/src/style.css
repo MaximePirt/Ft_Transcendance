@@ -8,6 +8,8 @@
 .field {
   position: relative;
   border: 20px solid greenyellow;
+  border-right: white;
+  border-left: white;
   height: 800px;
   width: 1800px;
   margin-left: auto;
@@ -51,7 +53,7 @@
 }
 
 .player1 {
-  height: 150px;
+  height: 100px;
   width: 20px;
   background: black;
   position: absolute;
@@ -61,7 +63,7 @@
 }
 
 .player2 {
-  height: 150px;
+  height: 100px;
   width: 20px;
   background: black;
   right: 0px;
