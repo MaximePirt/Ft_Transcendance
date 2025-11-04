@@ -2,10 +2,17 @@ import "./style.css"
 
 let score1 = 0;
 let score2 = 0;
+let name1 = "toto";
+let name2 = "tutu";
 
 document.querySelector<HTMLDivElement>('#pong')!.innerHTML = `
   <div class="header">
-    <h1 class="title">PONG GAME</h1>
+    <h1 class="title">PONG</h1>
+  </div>
+  <div class="players">
+    <p id="name1">${name1}</p>
+    <p id="VS">VS</p>
+    <p id="name2">${name2}</p>
   </div>
   <div class="field">
     <div class="player1"></div>
