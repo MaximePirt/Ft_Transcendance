@@ -1,6 +1,6 @@
 const Database = require("better-sqlite3");
 
-// Chemin vers le fichier de ta base SQLite
+// DB paths
 const db = new Database("./db.sqlite");
 
 const createUsersTable = `
@@ -15,9 +15,13 @@ CREATE TABLE IF NOT EXISTS users (
 
 const createFriendsTable = `
 CREATE TABLE IF NOT EXISTS friends (
-  id_user INTEGER,
-  id_friend INTEGER,
-  status TEXT CHECK( status IN ('pending','accepted','blocked') ) NOT NULL
+  user_id INTEGER NOT NULL,
+  friend_id INTEGER NOT NULL,
+  status TEXT CHECK( status IN ('pending','accepted','blocked') ) NOT NULL DEFAULT 'pending',
+  PRIMARY KEY (user_id, friend_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+  CHECK (user_id < friend_id)
 );`;
 
 try {
