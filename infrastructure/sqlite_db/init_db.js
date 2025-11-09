@@ -18,10 +18,13 @@ CREATE TABLE IF NOT EXISTS friends (
   user_id INTEGER NOT NULL,
   friend_id INTEGER NOT NULL,
   status TEXT CHECK( status IN ('pending','accepted','blocked') ) NOT NULL DEFAULT 'pending',
+  initiator_id INTEGER NOT NULL,
   PRIMARY KEY (user_id, friend_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (initiator_id) REFERENCES users(id) ON DELETE CASCADE,
   CHECK (user_id < friend_id)
+  CHECK (initiator_id IN (user_id, friend_id))
 );`;
 
 try {

@@ -10,7 +10,7 @@
 const fastify = require("fastify")({ logger: true });
 fastify.register(require('@fastify/multipart'));
 fastify.register(require("./routes/userRoute"));
-
+fastify.register(require("./routes/friendRoute"));
 
 
 const start = async () => {

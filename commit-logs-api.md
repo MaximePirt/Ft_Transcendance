@@ -15,3 +15,23 @@ Major modification :
 				It make searching a lil bit more complex but save storage in bigger project (if a lot of users subscribed)
 	- Creation of friend files : Controller, Model, Route
 
+
+Name of previous commit - commit afcc25a974cac277bb672968384abda1c7862b42
+
+Commit Number 13 :
+
+Minor modification :
+	- clean some comments in code
+	- Remove code in auth.js because it was from AI only to understand how it was supposed to work, not supposed to be push at all
+	- Databases :
+		- activate Foreign_key inside user/%/db.js
+
+
+Major modification :
+	- database : add initiator in Friends db, which is user who send first invitation
+	- friendModel : 
+		- Add addFriend functions with 3 sql commands
+
+
+
+NEED TO ACTIVATE PARGMA FOREIGN KEY = on 
