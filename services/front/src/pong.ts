@@ -1,4 +1,4 @@
-import "./style.css"
+import './style/pong.css'
 
 let score1 = 0;
 let score2 = 0;
@@ -17,6 +17,7 @@ document.querySelector<HTMLDivElement>('#pong')!.innerHTML = `
   <div class="field">
     <div class="player1"></div>
     <div class="player2"></div>
+    <p id="press">PRESS SPACE</p>
     <div class="ball"></div>
     <div class="line"></div>
     <p id="score1">0</p>
@@ -33,6 +34,7 @@ let paddle2XY = paddle2.getBoundingClientRect();
 const fieldXY = field.getBoundingClientRect();
 let scoreP1 = document.getElementById('score1') as HTMLElement;
 let scoreP2 = document.getElementById('score2') as HTMLElement;
+const press = document.getElementById('press') as HTMLElement;
 let dx = 10;
 let dy = 10;
 const border = 10;
@@ -118,6 +120,7 @@ export function moveBall() {
     ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
   }
   if (markPoint) {
+    field.appendChild(press);
     ballXY.x = 900;
     ballXY.y = 400;
     return ;
@@ -127,6 +130,7 @@ export function moveBall() {
 
 window.addEventListener("keydown", function(e: KeyboardEvent) {
     if (e.code === 'Space') {
+      press.remove();
       markPoint = false;
       ballXY.x = 900;
       ballXY.y = 400;

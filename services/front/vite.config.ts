@@ -7,7 +7,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: './lib/main.ts',
+      entry: './src/pong.ts',
       name: 'Counter',
       fileName: 'counter',
     },
