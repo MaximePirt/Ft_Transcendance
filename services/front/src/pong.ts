@@ -5,7 +5,7 @@ let score2 = 0;
 let name1 = "toto";
 let name2 = "tutu";
 
-document.querySelector<HTMLDivElement>('#pong')!.innerHTML = `
+document.querySelector<HTMLDivElement>('#MULTIpong')!.innerHTML = `
   <div class="header">
     <h1 class="title">PONG</h1>
   </div>
@@ -26,11 +26,11 @@ document.querySelector<HTMLDivElement>('#pong')!.innerHTML = `
 `
 const field = document.querySelector('.field') as HTMLDivElement;
 const paddle1 = document.querySelector('.player1') as HTMLDivElement;
-const paddle2 = document.querySelector('.player2') as HTMLDivElement;
+export const paddle2 = document.querySelector('.player2') as HTMLDivElement;
 const ball = document.querySelector('.ball') as HTMLDivElement;
-let ballXY = ball.getBoundingClientRect();
+export let ballXY = ball.getBoundingClientRect();
 let paddle1XY = paddle1.getBoundingClientRect();
-let paddle2XY = paddle2.getBoundingClientRect();
+export let paddle2XY = paddle2.getBoundingClientRect();
 const fieldXY = field.getBoundingClientRect();
 let scoreP1 = document.getElementById('score1') as HTMLElement;
 let scoreP2 = document.getElementById('score2') as HTMLElement;
@@ -55,7 +55,7 @@ function collidePaddle1(ball: DOMRect, paddle1: DOMRect) {
          ball.x === paddle1XY.width;
 }
 
-function collidePaddle2(ball: DOMRect, paddle2: DOMRect) {
+export function collidePaddle2(ball: DOMRect, paddle2: DOMRect) {
   return ball.y < paddle2.y + paddle2.height &&
          ball.y + ball.width > paddle2.y &&
          ball.x === fieldXY.width - paddle1XY.width - ball.height;
