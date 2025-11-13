@@ -1,7 +1,16 @@
 const Database = require("better-sqlite3");
+const fs = require("fs");
 
-// DB paths
-const db = new Database("./db.sqlite");
+const dbPath = "/db/db.sqlite";
+
+console.log("=== DEBUG: Initializing database ===");
+
+if (fs.existsSync(dbPath)) {
+  console.log("Database already exists. Skipping initialization.");
+  process.exit(0);
+}
+
+const db = new Database(dbPath);
 
 const createUsersTable = `
 CREATE TABLE IF NOT EXISTS users (
@@ -23,17 +32,39 @@ CREATE TABLE IF NOT EXISTS friends (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (friend_id) REFERENCES users(id) ON DELETE CASCADE,
   FOREIGN KEY (initiator_id) REFERENCES users(id) ON DELETE CASCADE,
-  CHECK (user_id < friend_id)
+  CHECK (user_id < friend_id),
   CHECK (initiator_id IN (user_id, friend_id))
 );`;
 
 try {
+  console.log("Creating tables...");
   db.exec(createUsersTable);
   console.log("Table 'users' created (or already exists).");
   db.exec(createFriendsTable);
   console.log("Table 'friends' created (or already exists).");
 } catch (err) {
   console.error("Error creating users or friends table:", err);
+  process.exit(1);
 }
 
+
+// DEBUG
+const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+console.log("Tables created:", tables);
+
+console.log("Create fake data...");
+const insertUser = db.prepare("INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)");
+const users = [
+  ["alice", "alice@example.com", "password123", "https://example.com/avatars/alice.png"],
+  ["bob", "bob@example.com", "password456", "https://example.com/avatars/bob.png"],
+  ["charlie", "charlie@example.com", "password789", "https://example.com/avatars/charlie.png"]
+];
+
+for (const user of users) {
+  insertUser.run(...user);
+}
+////////
+
+
 db.close();
+console.log("Database initialized successfully!");

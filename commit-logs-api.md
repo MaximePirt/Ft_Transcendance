@@ -35,3 +35,16 @@ Major modification :
 
 
 NEED TO ACTIVATE PARGMA FOREIGN KEY = on 
+
+
+Name of previous commit - commit 4aa339ab7fe3e185ce98b76dc67137aac07a0590
+Commit Number 14 :
+
+Minor modification :
+	- rename initiator sql command by statusFriend
+
+Major modification :
+	- Add removeFriend function
+	- Test docker-compose : Change databases into a persistant volumes. Each docker now need to RUN mkdir -p /db before expose to access volumes
+	- Databases totally working on a volume now, add fakes datas during db creation
+	- Can add friends (tested with curl command)
