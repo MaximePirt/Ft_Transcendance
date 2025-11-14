@@ -115,13 +115,12 @@ body {
 .ball {
   width: 30px;
   height: 30px;
-  background-color: #fff7e7;
+  background-color: #000000;
   border-radius: 50%;
-  position: absolute;
+  position: relative;
   z-index: 10;
   left: 100px;
   top: 0px;
-  margin-inline: auto;
 }
 
 .player1 {
