@@ -10,19 +10,28 @@ async function addFriendHandler(userId, friendId) {
 	return res;
 }
 
-async function removeFriendHandler(request, reply) {
-	const userId = Number(request.user.id);
-	const friendId = Number(request.params.friendId);
+async function removeFriendHandler(userId, friendId) {
+    console.log(`Removing friend ${friendId} from user ${userId}`);
 
 	if (!userId || !friendId)
-		return reply.code(400).send({ ok: false, message: "Invalid input ID." });
-
+		return ({ statusCode:400, ok: false, message: "Invalid input ID." });
 	const res = await friendModel.removeFriend(userId, friendId);
 	if (res.ok)
-		return reply.code(200).send({ ok:true, info: res.info || "Friend removed successfully." });
-	return reply.code(400).send({ ok:false, message: res.message });
+		return ({ statusCode:200, ok:true, info: res.info || "Friend removed successfully." });
+	return ({ statusCode:400, ok:false, message: res.message });
 }
 
+async function listFriendsHandler(userId)
+{
+	try {
+		if (!userId)
+			return { statusCode:400, ok:false, message: "Invalid userId." };
+		const friends = await friendModel.listFriends(userId);
+		return { statusCode: 200, ok: true, friends };
+	}
+	catch (error) {
+		return { statusCode:500, ok:false, message: "Internal Server Error." };
+	}
+}
 
-
-module.exports = { addFriendHandler, removeFriendHandler };
+module.exports = { addFriendHandler, removeFriendHandler, listFriendsHandler };

@@ -48,3 +48,16 @@ Major modification :
 	- Test docker-compose : Change databases into a persistant volumes. Each docker now need to RUN mkdir -p /db before expose to access volumes
 	- Databases totally working on a volume now, add fakes datas during db creation
 	- Can add friends (tested with curl command)
+
+Name of previous commit - commit cd96ef1e555494b933ae6a0897844f2ba015ee42
+
+Commit Number 15:
+
+Minor modification :
+	- modification inside removeFriend routes - userId is now in header
+	- add sqlite3 inside user_api dockerfile, it needs to be removed later because it's only for debug purpose
+	- 
+
+Major modification:
+	- Remove friends tested and working (with curl)
+	- listFriends tested and working (with curl)

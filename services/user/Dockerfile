@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 make g++ \
  && rm -rf /var/lib/apt/lists/*
 
+#TODO: REMOVE ITS A DEBUG LINE
+RUN apt-get update && apt-get install -y sqlite3
+
 # Force la compilation locale (pas de prébuilds)
 ENV npm_config_build_from_source=true
 

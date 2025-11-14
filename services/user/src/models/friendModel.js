@@ -20,6 +20,14 @@ const deleteFriend = db.prepare(`
 	DELETE FROM friends
 	WHERE user_id = ? AND friend_id = ?`);
 
+const listFriend = db.prepare(`
+  SELECT u.id, u.username
+  FROM friends f
+  JOIN users u ON (f.friend_id = u.id OR f.user_id = u.id)
+  WHERE (f.user_id = ? OR f.friend_id = ?)
+  AND u.id != ?
+`);
+
 //	Functions
 
 function addFriend(userId, friendId) {
@@ -80,7 +88,7 @@ function removeFriend(userId, friendId) {
   var min = userId < friendId ? userId : friendId;
   var max = min === userId ? friendId : userId;
 
-  const status = initiator.get(min, max);
+  const status = statusFriend.get(min, max);
   if (!status || (status.status !== "accepted" && status.status !== "pending"))
     return { ok: false, message: "No existing friendship or invitation." };
 
@@ -91,13 +99,8 @@ function removeFriend(userId, friendId) {
 }
 
 function listFriends(userId) {
-  const list = db.prepare(`
-		SELECT u.id, u.username
-		FROM users u
-		JOIN friends f ON (u.id = f.friend_id AND f.user_id = ?)
-		OR (u.id = f.user_id AND f.friend_id = ?)
-	`);
-  return list.all(userId, userId); //TODO: Check return format
+
+  return listFriend.all(userId, userId, userId);
 }
 
 module.exports = { addFriend, removeFriend, listFriends };
