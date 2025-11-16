@@ -1,4 +1,4 @@
-import './style/pong.css'
+import '../style/pong.css'
 
 let score1 = 0;
 let score2 = 0;
@@ -26,11 +26,11 @@ document.querySelector<HTMLDivElement>('#MULTIpong')!.innerHTML = `
 `
 const field = document.querySelector('.field') as HTMLDivElement;
 const paddle1 = document.querySelector('.player1') as HTMLDivElement;
-export const paddle2 = document.querySelector('.player2') as HTMLDivElement;
+const paddle2 = document.querySelector('.player2') as HTMLDivElement;
 const ball = document.querySelector('.ball') as HTMLDivElement;
-export let ballXY = ball.getBoundingClientRect();
+let ballXY = ball.getBoundingClientRect();
 let paddle1XY = paddle1.getBoundingClientRect();
-export let paddle2XY = paddle2.getBoundingClientRect();
+let paddle2XY = paddle2.getBoundingClientRect();
 const fieldXY = field.getBoundingClientRect();
 let scoreP1 = document.getElementById('score1') as HTMLElement;
 let scoreP2 = document.getElementById('score2') as HTMLElement;
@@ -51,14 +51,14 @@ window.addEventListener('keydown', (e: KeyboardEvent) => {
 
 function collidePaddle1(ball: DOMRect, paddle1: DOMRect) {
   return ball.y < paddle1.y + paddle1.height &&
-         ball.y + ball.height > paddle1.y &&
-         ball.x === paddle1XY.width;
+         ball.y + ball.width > paddle1.y &&
+         ball.x <= border + paddle1XY.width;
 }
 
 export function collidePaddle2(ball: DOMRect, paddle2: DOMRect) {
   return ball.y < paddle2.y + paddle2.height &&
          ball.y + ball.width > paddle2.y &&
-         ball.x === fieldXY.width - paddle1XY.width - ball.height;
+         ball.x >= fieldXY.width - paddle1XY.width - ball.height;
 }
 
 export function movePaddle() {
@@ -88,41 +88,74 @@ export function movePaddle() {
 }
 
 let markPoint = false;
-export function moveBall() {
+let markPlayer1 = false;
+let markPlayer2 = false;
+let touch1 = false;
+let touch2 = false;
+let wall = false;
+function moveBall() {
   ballXY.x += dx;
   ballXY.y -= dy;
   ball.style.left = `${ballXY.x}px`;
   ball.style.top = `${ballXY.y}px`;
 
-  if (ballXY.x + ballXY.height === fieldXY.width) {
-    score1++;
-    scoreP1.textContent = score1.toString();
+  if (ballXY.x + ballXY.height >= fieldXY.width) {
     setTimeout(() => {
       markPoint = true;
+      markPlayer1 = true;
     }, 1000);
   } else if (ballXY.y <= 0) {
-    dy *= -1;
-    ballXY.y = 0;
+    if (wall) {
+      dy *= -0.5;
+      wall = false;
+    } else
+      dy *= -1;
+    wall = true;
   } else if (ballXY.y >= fieldXY.height - ballXY.height - border) {
-    dy *= -1;
+     if (wall) {
+      dy *= -0.5;
+      wall = false;
+    } else
+      dy *= -1;
+    wall = true;
     ballXY.y = fieldXY.height - ballXY.height - border;
-  } else if (ballXY.x === 0) {
-    score2++;
-    scoreP2.textContent = score2.toString();
+  } else if (ballXY.x <= 0) {
     setTimeout(() => {
       markPoint = true;
+      markPlayer2 = true;
     }, 1000);
   } else if (collidePaddle1(ballXY, paddle1XY)) {
-    dx *= -1;
+    if (touch1 === true) {
+      dx *= -1;
+      touch1 = false;
+    } else {
+      dx *= -1.5;
+    }
+    touch1 = true; 
     ballXY.x = paddle1XY.width;
   } else if (collidePaddle2(ballXY, paddle2XY)) {
-    dx *= -1;
+    if (touch2 === true) {
+      dx *= -1;
+      touch2 = false;
+    } else {
+      dx *= -1.5;
+      dy *= -1;
+    }
+    touch2 = true;
     ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
   }
   if (markPoint) {
+    if (markPlayer1) {
+      score1++;
+      scoreP1.textContent = score1.toString();
+      markPlayer1 = false;
+    } else if (markPlayer2) {
+      score2++;
+      scoreP2.textContent = score2.toString();
+      markPlayer2 = false;
+    }
     field.appendChild(press);
-    ballXY.x = 900;
-    ballXY.y = 400;
+    markPoint = false;
     return ;
   }
   requestAnimationFrame(moveBall);
@@ -132,9 +165,10 @@ window.addEventListener("keydown", function(e: KeyboardEvent) {
     if (e.code === 'Space') {
       press.remove();
       markPoint = false;
-      ballXY.x = 900;
-      ballXY.y = 400;
-      ball.style.backgroundColor = 'black';
+      ballXY.x = fieldXY.width / 2;
+      ballXY.y = fieldXY.height / 2;
+      dx = 10;
+      dy = 10;
       moveBall();
     }
 });
