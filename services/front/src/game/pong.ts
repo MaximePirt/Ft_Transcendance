@@ -5,7 +5,7 @@ let score2 = 0;
 let name1 = "toto";
 let name2 = "tutu";
 
-document.querySelector<HTMLDivElement>('#MULTIpong')!.innerHTML = `
+document.querySelector<HTMLDivElement>('#index')!.innerHTML = `
   <div class="header">
     <h1 class="title">PONG</h1>
   </div>
@@ -24,6 +24,7 @@ document.querySelector<HTMLDivElement>('#MULTIpong')!.innerHTML = `
     <p id="score2">0</p>
   </div>
 `
+
 const field = document.querySelector('.field') as HTMLDivElement;
 const paddle1 = document.querySelector('.player1') as HTMLDivElement;
 const paddle2 = document.querySelector('.player2') as HTMLDivElement;
@@ -52,13 +53,13 @@ window.addEventListener('keydown', (e: KeyboardEvent) => {
 function collidePaddle1(ball: DOMRect, paddle1: DOMRect) {
   return ball.y < paddle1.y + paddle1.height &&
          ball.y + ball.width > paddle1.y &&
-         ball.x <= border + paddle1XY.width;
+         ball.x <= paddle1XY.width + border;
 }
 
 export function collidePaddle2(ball: DOMRect, paddle2: DOMRect) {
   return ball.y < paddle2.y + paddle2.height &&
          ball.y + ball.width > paddle2.y &&
-         ball.x >= fieldXY.width - paddle1XY.width - ball.height;
+         ball.x <= fieldXY.width - paddle1XY.width - ball.height;
 }
 
 export function movePaddle() {
@@ -87,17 +88,28 @@ export function movePaddle() {
   requestAnimationFrame(movePaddle);
 }
 
+function relativeAngle(paddle: DOMRect) {
+  let interY;
+  let ballY = ballXY.y + (ballXY.width / 2) + (ballXY.height / 2);
+  let paddleY = paddle.y + (paddle.height / 2);
+  let paddleH = paddle.height;
+  let norm;
+
+  interY = ballY - (paddleY + (paddleH / 2));
+  norm = interY / (paddleH / 2);
+  norm = Math.max(-1, Math.min(1, norm));
+  console.log(norm);
+  return norm * (Math.PI / 4);
+}
+
 let markPoint = false;
 let markPlayer1 = false;
 let markPlayer2 = false;
-let touch1 = false;
-let touch2 = false;
-let wall = false;
 function moveBall() {
-  ballXY.x += dx;
-  ballXY.y -= dy;
   ball.style.left = `${ballXY.x}px`;
   ball.style.top = `${ballXY.y}px`;
+  ballXY.x += dx;
+  ballXY.y -= dy;
 
   if (ballXY.x + ballXY.height >= fieldXY.width) {
     setTimeout(() => {
@@ -105,19 +117,10 @@ function moveBall() {
       markPlayer1 = true;
     }, 1000);
   } else if (ballXY.y <= 0) {
-    if (wall) {
-      dy *= -0.5;
-      wall = false;
-    } else
-      dy *= -1;
-    wall = true;
+    dy *= -1;
+    ballXY.y = 0;
   } else if (ballXY.y >= fieldXY.height - ballXY.height - border) {
-     if (wall) {
-      dy *= -0.5;
-      wall = false;
-    } else
-      dy *= -1;
-    wall = true;
+    dy *= -1;
     ballXY.y = fieldXY.height - ballXY.height - border;
   } else if (ballXY.x <= 0) {
     setTimeout(() => {
@@ -125,23 +128,14 @@ function moveBall() {
       markPlayer2 = true;
     }, 1000);
   } else if (collidePaddle1(ballXY, paddle1XY)) {
-    if (touch1 === true) {
-      dx *= -1;
-      touch1 = false;
-    } else {
-      dx *= -1.5;
-    }
-    touch1 = true; 
+    dx *= -1;
+    //dx *= Math.cos(relativeAngle(paddle1XY));
+    //dy *= Math.sin(relativeAngle(paddle1XY));
     ballXY.x = paddle1XY.width;
   } else if (collidePaddle2(ballXY, paddle2XY)) {
-    if (touch2 === true) {
-      dx *= -1;
-      touch2 = false;
-    } else {
-      dx *= -1.5;
-      dy *= -1;
-    }
-    touch2 = true;
+    dx *= -1;
+    //dx *= Math.cos(relativeAngle(paddle2XY)) * -1;
+    //dy *= Math.sin(relativeAngle(paddle2XY));
     ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
   }
   if (markPoint) {
@@ -161,16 +155,18 @@ function moveBall() {
   requestAnimationFrame(moveBall);
 }
 
-window.addEventListener("keydown", function(e: KeyboardEvent) {
-    if (e.code === 'Space') {
-      press.remove();
-      markPoint = false;
-      ballXY.x = fieldXY.width / 2;
-      ballXY.y = fieldXY.height / 2;
-      dx = 10;
-      dy = 10;
-      moveBall();
-    }
-});
+// window.addEventListener("keydown", function(e: KeyboardEvent) {
+//   if (e.code === 'Space') {
+//     press.remove();
+//     markPoint = false;
+//     markPlayer1 = false;
+//     markPlayer2 = false;
+//     ballXY.x = fieldXY.width / 2;
+//     ballXY.y = fieldXY.height / 2;
+//     console.log(ballXY.x);
+//     console.log(ballXY.y);
+//     moveBall();
+//   }
+// });
 
 movePaddle();

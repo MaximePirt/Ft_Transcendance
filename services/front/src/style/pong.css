@@ -116,8 +116,8 @@ body {
   border: solid 2px black;
   position: relative;
   z-index: 10;
-  left: 100px;
-  top: 0px;
+  left: 750;
+  top: 300;
 }
 
 .player1 {

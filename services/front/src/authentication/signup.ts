@@ -1,6 +1,6 @@
 import '../style/signin.css'
 
-document.querySelector<HTMLDivElement>('#authentication')!.innerHTML = `
+document.querySelector<HTMLDivElement>('#index')!.innerHTML = `
     <p class="title">SIGN UP</p>
     <div class='square'>
         <form method='post'>
