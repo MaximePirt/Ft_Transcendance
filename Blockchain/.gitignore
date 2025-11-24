@@ -1,0 +1,22 @@
+# Node modules
+/src/node_modules
+
+# Compilation output
+/dist
+
+# pnpm deploy output
+/bundle
+
+# Hardhat Build Artifacts
+/src/artifacts
+
+# Hardhat compilation (v2) support directory
+/src/cache
+
+# Typechain output
+/types
+
+# Hardhat coverage reports
+/coverage
+
+.env

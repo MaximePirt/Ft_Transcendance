@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-dc68f9515e270a9c646864232c32227e4ae1fcb5",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/TournamentScore.sol": "project/contracts/TournamentScore.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/TournamentScore.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\ncontract StorageScore {\n    event TournamentAdded(uint256 indexed id, string player1, string player2, string winner);\n\n    struct Score{\n        uint256 id;\n        string player1;\n        string player2;\n        uint256 player_score1;\n        uint256 player_score2;\n        string winner;\n        bool exists;\n    }\n\n    mapping(uint256 => Score) public tournamentScore;\n    \n\n    function get(uint256 id) public view returns (Score memory){\n        require(tournamentScore[id].exists, \"Tournament does not exist!\");\n        return tournamentScore[id];\n    }\n\n    function set(\n        uint256 id,\n        string memory player1,\n        string memory player2,\n        uint256 score_player1,\n        uint256 score_player2,\n        string memory winner\n        ) public {\n            tournamentScore[id] = Score({\n                id : id,\n                player1: player1,\n                player2: player2,\n                player_score1: score_player1,\n                player_score2: score_player2,\n                winner: winner,\n                exists: true\n            });\n            emit TournamentAdded(id, player1, player2, winner);\n        }\n}"
+      }
+    }
+  }
+}
