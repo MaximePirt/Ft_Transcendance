@@ -1,8 +1,46 @@
+# Dependencies (seront réinstallées dans Docker)
 node_modules/
+**/node_modules/
+
+# Build artifacts (seront recompilés dans Docker)
 dist/
 cache/
 artifacts/
+**/cache/
+**/artifacts/
+
+# Hardhat Ignition deployments
+ignition/deployments/
+
+# Environment files (passés via --env-file ou -e)
 .env
+.env.*
+
+# Logs
 *.log
-.git
+npm-debug.log*
+yarn-debug.log*
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
 README.md
+*.md
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# CI/CD
+.github/
