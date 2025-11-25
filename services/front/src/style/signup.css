@@ -8,8 +8,9 @@ body {
     position: relative;
     text-align: center;
     font-family: 'Montserrat', sans-serif;
-    font-size: 200px;
+    font-size: 100px;
     color: #FEEE91;
+	font-weight: 700;
     -webkit-text-stroke: 2px black;
 }
 
@@ -30,6 +31,10 @@ input {
     position: relative;
     border: solid black 1px;
     border-radius: 5px;
+	font-family: 'Montserrat', sans-serif;
+	font-weight: 200;
+	height: 50px;
+	width: 400px;
 }
 
 label {
@@ -49,6 +54,15 @@ input, label {
     background-color: #FEEE91;
     width: 150px;
     position: relative;
-    top: 300px;
-    font-weight: 200;
+	height: 50px;
+}
+
+form > * {
+	position: relative;
+	margin-bottom: 30px;
+}
+
+form {
+	position: relative;
+	top: 50px;
 }
