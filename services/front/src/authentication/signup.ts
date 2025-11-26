@@ -12,7 +12,7 @@ document.querySelector<HTMLDivElement>('#index')!.innerHTML = `
             <br />
             <input id="confpass" name='confpassword' type='password' placeholder='confirm password'/>
             <br />
-            <input id='button' name='signin' placeholder='submit'/>
+            <input id='button' type='submit' name='signin' placeholder='submit'/>
         </form>
     </div>
 `;

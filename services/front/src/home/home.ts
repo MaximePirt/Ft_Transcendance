@@ -4,6 +4,7 @@ document.querySelector<HTMLDivElement>("#index")!.innerHTML = `
 	<div class="header">
 		<h1 class="title">PONG</h1>
 	</div>
+	<p>You have to sign in if you want to play !</p>
 	<div class="menu">
 		<button class="play" type="button">PLAY</button>
 		<br>

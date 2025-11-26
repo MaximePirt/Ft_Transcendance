@@ -55,6 +55,8 @@ input, label {
     width: 150px;
     position: relative;
 	height: 50px;
+    text-align: center;
+    font-weight: 200;
 }
 
 form > * {

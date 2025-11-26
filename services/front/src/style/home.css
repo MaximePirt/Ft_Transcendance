@@ -4,6 +4,7 @@
 	position: relative;
 	text-align: center;
 	font-family: 'Montserrat', sans-serif;
+	font-weight: 800;
     top: 25px;
 	font-size: 100px;
     color: #FEEE91;
@@ -25,6 +26,7 @@
 	margin-left: auto;
 	font-size: 50px;
 	font-family: 'Montserrat', sans-serif;
+	font-weight: 800;
 	border: solid 2px black;
 	width: 400px;
 	color: white;
@@ -37,6 +39,7 @@
 p {
 	font-family: 'Montserrat', sans-serif;
 	text-align: center;
+	font-weight: 800;
 }
 
 .easy, .normal, .hard, .god {
