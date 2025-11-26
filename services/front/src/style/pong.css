@@ -115,14 +115,14 @@ body {
 }
 
 .ball {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   background-color: #FEEE91;
   border: solid 2px black;
   position: relative;
   z-index: 10;
-  left: 750;
-  top: 300;
+  left: 500px;
+  top: 250px;
 }
 
 .player1 {

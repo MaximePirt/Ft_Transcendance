@@ -18,7 +18,7 @@ services:
 
   api:
     build:
-      context: ./services/api
+      context: ./services/back/api
       dockerfile: Dockerfile
     container_name: api
     ports:
@@ -26,13 +26,14 @@ services:
     environment:
       - API_URL=http://api:3000
     volumes:
-      - ./infrastructure/sqlite_db/db.sqlite:/app/db.sqlite
+      - db:/db
     depends_on:
-      - sqlite_db
+       sqlite_db:
+          condition: service_completed_successfully 
   
   user_api:
     build:
-      context: ./services/user
+      context: ./services/back/user
       dockerfile: Dockerfile
     container_name: user_api
     ports:
@@ -40,9 +41,10 @@ services:
     environment:
       - API_URL=http://api:3001
     volumes:
-      - ./infrastructure/sqlite_db/db.sqlite:/app/db.sqlite
+      - db:/db
     depends_on:
-      - sqlite_db
+       sqlite_db:
+          condition: service_completed_successfully 
   
 
   sqlite_db:
@@ -51,7 +53,8 @@ services:
       dockerfile: Dockerfile
     container_name: sqlite_db
     # image: transcendance_sqlite_db
-    # volumes:
+    volumes:
+      - db:/db
       # - vault-secrets:/secrets:ro
       # - ./shared:/scripts:ro
     
@@ -125,3 +128,5 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
+  db:
+    driver: local

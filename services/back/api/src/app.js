@@ -6,9 +6,8 @@ const fastify = require('fastify')({ logger: true })
 fastify.register(require('@fastify/reply-from'))
 
 fastify.get('/users', async (request, reply) => {
-  // Adresse du microservice dédié aux users
+  // user microservice URL
   const usersServiceUrl = 'http://user_api:3001/users'
-  // Proxy la requête au microservice et renvoie la réponse
   return reply.from(usersServiceUrl)
 })
 

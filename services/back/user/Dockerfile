@@ -16,6 +16,8 @@ RUN npm install
 
 COPY . .
 
+RUN mkdir -p /db
+
 EXPOSE 3001
 
 CMD ["node", "src/app.js"]

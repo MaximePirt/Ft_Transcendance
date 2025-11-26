@@ -34,8 +34,8 @@ let paddle2XY = paddle2.getBoundingClientRect();
 const fieldXY = field.getBoundingClientRect();
 let scoreP1 = document.getElementById('score1') as HTMLElement;
 let scoreP2 = document.getElementById('score2') as HTMLElement;
-let dx = 15;
-let dy = 15;
+let dx = 5;
+let dy = 5;
 const border = 10;
 
 // 400 possibilities because of the field height
@@ -49,7 +49,7 @@ const border = 10;
 // missing the ball: 0
 
 // For Bellman equation :
-let max_s = fieldXY.y - paddle2XY.y - border;
+let max_s = fieldXY.height - paddle2XY.height;
 
 // apprenticeship coef.
 let alpha: number = 0.7;
@@ -72,41 +72,47 @@ qTable = Array.from({ length: max_s }, () =>
 	Array(3).fill(0)
 );
 
-function collidePaddle1(ball: DOMRect, paddle1: DOMRect) {
-	return ball.y < paddle1.y + paddle1.height &&
-		ball.y + ball.height > paddle1.y &&
-		ball.x === paddle1XY.width;
+function count() {
+	for (let i = 0; i < qTable.length; i++) {
+		for (let j = 0; j < qTable[i].length; j++) {
+			console.log(`${qTable[i][j]}, `);
+		}
+		console.log("\n");
+	}
 }
 
 function collidePaddle2(ball: DOMRect, paddle2: DOMRect) {
 	return ball.y < paddle2.y + paddle2.height &&
 		ball.y + ball.width > paddle2.y &&
-		ball.x === fieldXY.width - paddle1XY.width - ball.height;
+		ball.x >= fieldXY.width - paddle1XY.width - ball.height;
 }
 
 function heuristicPlayer() {
-	if (ballXY.y != paddle2XY.y)
-		paddle2XY.y = ballXY.y;
-	if (paddle2XY.x <= 0)
-		paddle2XY.x = 0;
-	if (paddle2XY.y + paddle2XY.height >= fieldXY.height - border)
-		paddle2XY.y = fieldXY.height - paddle2XY.height - border;
-	paddle2.style.top = `${paddle2XY.y}px`;
+	if (ballXY.y != paddle1XY.y)
+		paddle1XY.y = ballXY.y;
+	if (paddle1XY.x <= 0)
+		paddle1XY.x = 0;
+	if (paddle1XY.y + paddle1XY.height >= fieldXY.height - border)
+		paddle1XY.y = fieldXY.height - paddle1XY.height - border;
+	paddle1.style.top = `${paddle1XY.y}px`;
+	requestAnimationFrame(heuristicPlayer);
 }
 
 // exploration or exploitation ?
 function epsilonGreedyPolicy(epsilon: number, state: number) {
 	let random_nb = Math.random();
+	let floor_s = Math.floor(state);
 	let result = 0;
 
 	if (random_nb > epsilon) {
-		result = Math.max(...qTable[state]);
+		result = Math.max(...qTable[floor_s]);
 	} else {
-		let random = Math.floor(Math.random() * qTable.length);
-		let toto = Math.random();
-		result = qTable[random][0];
-		console.log(toto);
+		let randomI = Math.floor(Math.random() * 3);
+		let randomJ = Math.floor(Math.random() * max_s);
+
+		result = qTable[randomJ][randomI];
 	}
+
 	return result;
 }
 
@@ -114,13 +120,16 @@ function totoAI() {
 	let action;
 
 	for (let i: number = 0; i < n_episodes; i++) {
-		let epsilon = min_epsilon + (max_epsilon - min_epsilon) ** (-decay_rate * i);
-		let state = paddle1XY.y;
-		while (moveBall) {
-			let new_state = paddle1XY.y;
+		let epsilon = min_epsilon + (max_epsilon - min_epsilon) * Math.exp(-decay_rate * i);
+		let state = Math.floor(paddle2XY.y);
+		let game = moveBall();
+		while (game != 0 && game != 1) {
+			let new_state = Math.floor(paddle2XY.y);
+
 			action = epsilonGreedyPolicy(epsilon, state);
 			movePaddle(action);
 			//Bellman equation
+
 			qTable[state][action] = qTable[state][action] + alpha * (reward + gamma * Math.max(...qTable[new_state]) - qTable[state][action]);
 			state = new_state;
 		}
@@ -130,62 +139,79 @@ function totoAI() {
 function movePaddle(action: number) {
 	if (action === 0) {
 		paddle1XY.y -= 15;
-		if (paddle1XY.y <= 0)
-			paddle1XY.y = 0;
+		if (paddle2XY.y <= 0)
+			paddle2XY.y = 0;
 	}
 	if (action === 1) {
-		paddle1XY.y += 15;
-		if (paddle1XY.y + paddle1XY.height >= fieldXY.height - border)
-			paddle1XY.y = fieldXY.height - paddle1XY.height - border;
+		paddle2XY.y += 15;
+		if (paddle2XY.y + paddle2XY.height >= fieldXY.height - border)
+			paddle2XY.y = fieldXY.height - paddle2XY.height - border;
 	}
 	if (action === 2)
-		paddle1XY.y += 0;
-	paddle1.style.top = `${paddle1XY.y}px`;
-	heuristicPlayer();
+		paddle2XY.y += 0;
+	paddle2.style.top = `${paddle2XY.y}px`;
 	requestAnimationFrame(movePaddle);
 }
 
-let mark = 0;
+function relativeAngle(paddle: DOMRect) {
+	let interY;
+	let ballY = ballXY.y + (ballXY.width / 2) + (ballXY.height / 2);
+	let paddleY = paddle.y + (paddle.height / 2);
+	let paddleH = paddle.height;
+	let norm;
+
+	interY = (paddleY + (paddleH / 2)) - ballY;
+	norm = interY / (paddleH / 2);
+	console.log(norm);
+	return norm * (Math.PI / 4);
+}
+
+let markPlayer1 = false;
+let markPlayer2 = false;
 function moveBall() {
 	ballXY.x += dx;
 	ballXY.y -= dy;
-	ball.style.left = `${ballXY.x}px`;
-	ball.style.top = `${ballXY.y}px`;
-
-	if (ballXY.x + ballXY.height === fieldXY.width) {
-		score1++;
-		reward = 1;
-		mark = 1;
-		scoreP1.textContent = score1.toString();
+	paddle1.remove();
+	
+	if (ballXY.x + ballXY.height >= fieldXY.width) {
+		markPlayer1 = true;
+		dx *= -1;
 	} else if (ballXY.y <= 0) {
 		dy *= -1;
 		ballXY.y = 0;
 	} else if (ballXY.y >= fieldXY.height - ballXY.height - border) {
 		dy *= -1;
 		ballXY.y = fieldXY.height - ballXY.height - border;
-	} else if (ballXY.x === 0) {
-		score2++;
-		reward = 0;
-		mark = 1;
-		scoreP2.textContent = score2.toString();
-	} else if (collidePaddle1(ballXY, paddle1XY)) {
+	} else if (ballXY.x <= 0) {
+		markPlayer2 = true;
 		dx *= -1;
-		reward = 1;
-		ballXY.x = paddle1XY.width;
 	} else if (collidePaddle2(ballXY, paddle2XY)) {
 		dx *= -1;
+		dx *= Math.cos(relativeAngle(paddle2XY)) + 0.1;
+		dy *= Math.sin(relativeAngle(paddle2XY)) + 0.1;
 		ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
 	}
-	if (score1 === 5 || score2 === 5) {
-		return 0;
+	if (markPlayer2) {
+		score2++;
+		scoreP2.textContent = score2.toString();
+		ballXY.x = 500;
+		ballXY.y = 250;
+		markPlayer2 = false;
+		return 1;
 	}
-	if (mark) {
-		ball.style.left = `${fieldXY.width / 2}px`;
-		ball.style.top = `${fieldXY.height / 2}px`;
+	if (markPlayer1) {
+		score1++;
+		scoreP1.textContent = score1.toString();
+		ballXY.x = 500;
+		ballXY.y = 250;
+		markPlayer1 = false;
 		return 0;
 	}
 	requestAnimationFrame(moveBall);
-	return 1;
+	ball.style.left = `${ballXY.x}px`;
+	ball.style.top = `${ballXY.y}px`;
 }
 
+moveBall();
+//heuristicPlayer();
 totoAI();

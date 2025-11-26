@@ -97,7 +97,6 @@ function relativeAngle(paddle: DOMRect) {
 
 	interY = (paddleY + (paddleH / 2)) - ballY;
 	norm = interY / (paddleH / 2);
-	console.log(norm);
 	return norm * (Math.PI / 4);
 }
 
