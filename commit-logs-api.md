@@ -61,3 +61,21 @@ Minor modification :
 Major modification:
 	- Remove friends tested and working (with curl)
 	- listFriends tested and working (with curl)
+
+Name of previous commit - commit ccb7424bb2c6bbc437842d5aa45cb6317d587044
+
+Commit Number 16
+
+Minor modification:
+	- add debug entry into game and game_players databases
+
+Major modification:
+	- Create tables : game and game_players which linked to user
+	- 
+Notes :
+	This Commit will probably not be very helpfull because i just remembered the Blockchain module.
+
+Name of previous commit - 
+
+Commit Number 17 -
+	

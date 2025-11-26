@@ -1,3 +1,5 @@
+//TODO: ADD a table check to only create tables which haven't been created
+
 const Database = require("better-sqlite3");
 const fs = require("fs");
 
@@ -36,6 +38,31 @@ CREATE TABLE IF NOT EXISTS friends (
   CHECK (initiator_id IN (user_id, friend_id))
 );`;
 
+// TODO: Check if theses tables are still useful due to blockchain module
+
+const createGameTable = `
+CREATE TABLE IF NOT EXISTS games (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date_played DATETIME DEFAULT CURRENT_TIMESTAMP,
+  winner_id INTEGER NULL,
+  mode TEXT CHECK( mode IN ('easy', 'medium', 'hard')) NOT NULL DEFAULT 'medium',
+  tournament INTEGER NOT NULL DEFAULT 0,
+  FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE CASCADE
+);
+`;
+
+const createGamePlayersTable = `
+CREATE TABLE IF NOT EXISTS game_players (
+  game_id INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  score INTEGER NOT NULL DEFAULT '0',
+  winner BOOLEAN NOT NULL DEFAULT '0',
+  PRIMARY KEY (game_id, user_id),
+  FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+`;
+
 try {
   console.log("Creating tables...");
   db.exec(createUsersTable);
@@ -48,7 +75,7 @@ try {
 }
 
 
-// DEBUG
+// DEBUG TODO:  ADD entry into game and game_players databases
 const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
 console.log("Tables created:", tables);
 
