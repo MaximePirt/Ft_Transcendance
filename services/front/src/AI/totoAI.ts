@@ -22,6 +22,7 @@ document.querySelector<HTMLDivElement>('#index')!.innerHTML = `
     <p id="score1">0</p>
     <p id="score2">0</p>
   </div>
+  <br>
 `;
 
 const field = document.querySelector('.field') as HTMLDivElement;
@@ -106,32 +107,11 @@ function epsilonGreedyPolicy(epsilon: number, state: number) {
 
 	console.log(`epsilon: ${epsilon}, state: ${state}`);
 	if (random_nb > epsilon) {
-		console.log("random > epsilon");
-		result = Math.max(...qTable[floor_s]);
+		result = Math.floor(Math.max(...qTable[floor_s]));
 	} else {
-		console.log("random result");
-		let randomI = Math.floor(Math.random() * 3);
-		let randomJ = Math.floor(Math.random() * max_s);
-
-		result = qTable[randomJ][randomI];
+		result = Math.floor(Math.random() * 2);
 	}
 	return result;
-}
-
-let action: number;
-let state: number;
-let new_state: number;
-let i: number;
-function totoAI() {
-	for (i = 0; i < n_episodes; i++) {
-		let epsilon = min_epsilon + (max_epsilon - min_epsilon) * Math.exp(-decay_rate * i);
-		state = Math.floor(paddle2XY.y);
-		action = epsilonGreedyPolicy(epsilon, state);
-		moveBall();
-		movePaddle(action);
-		new_state = Math.floor(paddle2XY.y);
-		state = new_state;
-	}
 }
 
 function movePaddle(action: number) {
@@ -166,51 +146,75 @@ function relativeAngle(paddle: DOMRect) {
 
 let markPlayer1 = false;
 let markPlayer2 = false;
-function moveBall() {
-	ballXY.x += dx;
-	ballXY.y -= dy;
-	paddle1.remove();
+// function trainAI() {
+// 	for (let i = 100; i > 0;) {
+// 		moveBall(i--);
+// 	}
+// }
 
-	if (ballXY.x + ballXY.height >= fieldXY.width) {
-		markPlayer1 = true;
-		dx *= -1;
-	} else if (ballXY.y <= 0) {
-		dy *= -1;
-		ballXY.y = 0;
-	} else if (ballXY.y >= fieldXY.height - ballXY.height - border) {
-		dy *= -1;
-		ballXY.y = fieldXY.height - ballXY.height - border;
-	} else if (ballXY.x <= 0) {
-		markPlayer2 = true;
-		dx *= -1;
-	} else if (collidePaddle2(ballXY, paddle2XY)) {
-		reward = 1;
-		dx *= -1;
-		dx *= Math.cos(relativeAngle(paddle2XY)) + 0.1;
-		dy *= Math.sin(relativeAngle(paddle2XY)) + 0.1;
-		ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
+function trainAI() {
+	for (let i = 0; i < 1000;) {
+		moveBall(i);
+		i++;
 	}
-	if (markPlayer2) {
-		score2++;
-		reward = 1;
-		//put Bellman in a function
-		qTable[state][action] = qTable[state][action] + alpha * (reward + gamma * Math.max(...qTable[new_state]) - qTable[state][action]);
-		console.log(`Bellman: ${qTable[state][action]}, state: ${state}, action: ${action}`);
-		markPlayer2 = false;
-		console.log(`i: ${i}`);
-	} else if (markPlayer1) {
-		score1++;
-		//scoreP1.textContent = score1.toString();
-		ballXY.x = 500;
-		ballXY.y = 250;
-		reward = 0;
-		qTable[state][action] = qTable[state][action] + alpha * (reward + gamma * Math.max(...qTable[new_state]) - qTable[state][action]);
-		markPlayer1 = false;
-	}
-	// requestAnimationFrame(moveBall);
-	ball.style.left = `${ballXY.x}px`;
-	ball.style.top = `${ballXY.y}px`;
+	count();
 }
 
+function moveBall(j: number) {	
+	let epsilon = min_epsilon + (max_epsilon - min_epsilon) * Math.exp(-decay_rate * j);
+	let i = 100;
+	while (i > 0) {
+		let state = Math.floor(paddle2XY.y);
+		let action = epsilonGreedyPolicy(epsilon, state);
+		ballXY.x += dx;
+		ballXY.y -= dy;
+		paddle1.remove();
+		if (ballXY.x + ballXY.height >= fieldXY.width) {
+			markPlayer1 = true;
+			dx *= -1;
+		} else if (ballXY.y <= 0) {
+			dy *= -1;
+			ballXY.y = 0;
+		} else if (ballXY.y >= fieldXY.height - ballXY.height - border) {
+			dy *= -1;
+			ballXY.y = fieldXY.height - ballXY.height - border;
+		} else if (ballXY.x <= 0) {
+			markPlayer2 = true;
+			dx *= -1;
+		} else if (collidePaddle2(ballXY, paddle2XY)) {
+			reward = 1;
+			dx *= -1;
+			dx *= Math.cos(relativeAngle(paddle2XY)) + 0.1;
+			dy *= Math.sin(relativeAngle(paddle2XY)) + 0.1;
+			ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
+		}
+		let	new_state = Math.floor(paddle2XY.y);
+		if (markPlayer2) {
+			score2++;
+			scoreP2.textContent = score2.toString();
+			reward = 1;
+			//put Bellman in a function
+			qTable[state][action] = qTable[state][action] + alpha * (reward + gamma * Math.max(...qTable[new_state]) - qTable[state][action]);
+			markPlayer2 = false;
+		} else if (markPlayer1) {
+			score1++;
+			scoreP1.textContent = score1.toString();
+			ballXY.x = 500;
+			ballXY.y = 250;
+			reward = 0;
+			qTable[state][action] = qTable[state][action] + alpha * (reward + gamma * Math.max(...qTable[new_state]) - qTable[state][action]);
+			markPlayer1 = false;
+		}
+		movePaddle(Math.floor(action));
+		console.log(`Bellman: ${qTable[state][Math.floor(action)]}, state: ${state}, action: ${Math.floor(action)}`);
+		state = new_state;
+		// requestAnimationFrame(moveBall);
+		ball.style.left = `${ballXY.x}px`;
+		ball.style.top = `${ballXY.y}px`;
+		i--;
+	}
+}
+
+trainAI();
+
 //heuristicPlayer();
-totoAI();

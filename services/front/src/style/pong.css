@@ -148,3 +148,40 @@ body {
   border-radius: 3px;
   border: solid black 2px;
 }
+
+#toto-data {
+  height: 700px;
+  width: 1500px;
+  position: relative;
+  background-color: black;
+  border-radius: 10px;
+  border: solid 2px white;
+  margin-left: auto;
+  margin-right: auto;
+  top: 100px;
+}
+
+.data-title {
+  font-size: 30px;
+  font-weight: 800;
+  position: relative;
+  top: 50px;
+  font-family: 'Montserrat', sans-serif;
+  color: rgb(28, 170, 0);
+  text-align: center;
+}
+
+#tab1 {
+  display: flex;
+}
+
+.column {
+  width: 33%;
+  font-size: 30px;
+  font-weight: 800;
+  position: relative;
+  top: 50px;
+  font-family: 'Montserrat', sans-serif;
+  color: rgb(28, 170, 0);
+  text-align: center;
+}
