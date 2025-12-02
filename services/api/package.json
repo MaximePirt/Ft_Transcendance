@@ -1,0 +1,21 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@fastify/multipart": "^9.2.1",
+    "@fastify/reply-from": "^12.3.1",
+    "better-sqlite3": "^12.4.1",
+    "express": "^5.1.0",
+    "fastify": "^5.6.1",
+    "fastify-jwt": "^4.1.3"
+  }
+}

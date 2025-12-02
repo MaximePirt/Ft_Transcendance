@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   password TEXT NOT NULL,
   avatarUrl TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  lastConnexion DATETIME DEFAULT CURRENT_TIMESTAMP
 );`;
 
 const createFriendsTable = `

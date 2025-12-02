@@ -20,11 +20,25 @@ function updateUserById(id, data) {
   values.push(id);
 
   const stmt = db.prepare(`UPDATE users SET ${setClause} WHERE id = ?`);
-  const info = stmt.run(...values);
+  
+  let info;
+  try {
+    info = stmt.run(...values);
+  }
+  catch (err)
+  {
+    const errorMsg = String(err);
 
+    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE' &&  errorMsg.includes('users.email'))
+      throw new Error('Email already taken by another account');
+    if (err.code === 'SQLITE_CONSTRAINT_UNIQUE' &&  errorMsg.includes('users.username'))
+      throw new Error('Username already taken by another account');
+
+    throw err;
+  }
   if (info.changes === 0)
     return null;
-
+  
   return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
 }
 

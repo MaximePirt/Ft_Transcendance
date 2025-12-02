@@ -75,7 +75,14 @@ Major modification:
 Notes :
 	This Commit will probably not be very helpfull because i just remembered the Blockchain module.
 
-Name of previous commit - 
+Name of previous commit - 2ed0e0933918f22438dd21e3f4c046cb7a0d60f4
 
 Commit Number 17 -
+
+Minor Modification:
+	- Databases : add lastConnexion into user database
+
+Major Modification:
+	- UserModel.js -> UpdateUserbyId is now using a try-catch to check about already taken datas (username/mail)
+	- user -> add job folder which will contain code to anonymize and/or delete inactive users
 	
