@@ -63,7 +63,7 @@ export function collidePaddle2(ball: DOMRect, paddle2: DOMRect) {
 }
 
 export function movePaddle() {
-	if (keyPressed['z']) {
+	if (keyPressed['w']) {
 		paddle1XY.y -= 15;
 		if (paddle1XY.y <= 0)
 			paddle1XY.y = 0;
@@ -89,15 +89,16 @@ export function movePaddle() {
 }
 
 function relativeAngle(paddle: DOMRect) {
-	let interY;
-	let ballY = ballXY.y + (ballXY.width / 2) + (ballXY.height / 2);
+	let impact;
+	let ballY = ballXY.y + (ballXY.width / 2);
 	let paddleY = paddle.y + (paddle.height / 2);
 	let paddleH = paddle.height;
-	let norm;
 
-	interY = (paddleY + (paddleH / 2)) - ballY;
-	norm = interY / (paddleH / 2);
-	return norm * (Math.PI / 4);
+	impact = (ballY - paddleY) / (paddle.height / 2);
+	console.log(`interY: ${impact}, paddle height: ${paddleH}, dx: ${dx} & paddleY: ${dy}`);
+	dx += 0.5;
+	dy += 0.5;
+	return impact * (Math.PI / 4);
 }
 
 let markPlayer1 = false;
@@ -119,14 +120,14 @@ function moveBall() {
 	} else if (ballXY.x <= 0) {
 		markPlayer2 = true;
 	} else if (collidePaddle1(ballXY, paddle1XY)) {
+		dx *= Math.cos(relativeAngle(paddle1XY));
+		dy *= Math.sin(relativeAngle(paddle1XY));
 		dx *= -1;
-		dx *= Math.cos(relativeAngle(paddle1XY)) + 0.1;
-		dy *= Math.sin(relativeAngle(paddle1XY)) + 0.1;
 		ballXY.x = paddle1XY.width;
 	} else if (collidePaddle2(ballXY, paddle2XY)) {
+		dx *= Math.cos(relativeAngle(paddle2XY));
+		dy *= Math.sin(relativeAngle(paddle2XY));
 		dx *= -1;
-		dx *= Math.cos(relativeAngle(paddle2XY)) + 0.1;
-		dy *= Math.sin(relativeAngle(paddle2XY)) + 0.1;
 		ballXY.x = fieldXY.width - ballXY.width - paddle1XY.width;
 	}
 	if (markPlayer1 === true) {

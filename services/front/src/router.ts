@@ -11,7 +11,7 @@ function routes() {
 	} else if (window.location.href === "http://localhost:5173/signup") {
 		page.src = "./src/authentication/signup.ts";
 	} else if (window.location.href === "http://localhost:5173/toto") {
-		page.src = "./src/AI/totoAI.ts";
+		page.src = "./src/AI/trainAI.ts";
 	} else if (window.location.href === "http://localhost:5173/home") {
 		page.src = "./src/home/home.ts";
 	} else {
