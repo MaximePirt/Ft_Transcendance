@@ -18,7 +18,7 @@ services:
 
   api:
     build:
-      context: ./services/api
+      context: ./services/back/api
       dockerfile: Dockerfile
     container_name: api
     ports:
@@ -33,7 +33,7 @@ services:
   
   user_api:
     build:
-      context: ./services/user
+      context: ./services/back/user
       dockerfile: Dockerfile
     container_name: user_api
     ports:

@@ -1,0 +1,187 @@
+@import "tailwindcss";
+
+@keyframes grow {
+  0% {
+    font-size: 50px;
+  }
+
+  50% {
+    font-size: 60px;
+  }
+
+  100% {
+    font-size: 50px;
+  }
+}
+
+body {
+  background-color: #8CE4FF;
+}
+
+.players {
+  position: relative;
+  display: flex;
+  top: 75px;
+  gap: 500px;
+  justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+}
+
+#press {
+  font-size: 50px;
+  position: relative;
+  text-align: center;
+  top: 30%;
+  font-family: 'Montserrat', sans-serif;
+  font-style: italic;
+  z-index: 1;
+  font-weight: 800;
+  color:rgb(255, 21, 21);
+  -webkit-text-stroke: 2px rgb(0, 0, 0);
+  animation: grow 8s infinite;
+}
+
+#name1, #name2 {
+  font-size: 50px;
+}
+
+#VS {
+  font-size: 50px;
+  font-style: italic;
+  color: #FEEE91;
+  font-weight: 800;
+  -webkit-text-stroke: 2px black;
+}
+
+
+.title {
+  text-align: center;
+  font-size: 75px;
+  font-weight: 900;
+  font-family: 'Montserrat', sans-serif;
+  border-radius: 10px;
+  width: 500px;
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+  top: 25px;
+  color: #FEEE91;
+  -webkit-text-stroke: 2px black;
+}
+
+.field {
+  position: relative;
+  border: 5px solid #FF5656;
+  border-right: white;
+  border-left: white;
+  height: 500px;
+  width: 1000px;
+  top: 100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#score1 {
+  font-size: 200px;
+  font-weight: 800;
+  font-family: 'Montserrat', sans-serif;
+  position: absolute;
+  top: 50%;
+  left: 25%;
+  color: #FF5656;
+  -webkit-text-stroke: 2px black;
+}
+
+#score2 {
+  font-size: 200px;
+  font-weight: 800;
+  font-family: 'Montserrat', sans-serif;
+  position: absolute;
+  top: 50%;
+  right: 25%;
+  color: #FFA239;
+  -webkit-text-stroke: 2px black;
+}
+
+.line {
+  position: absolute;
+  height: 100%;
+  width: 0px;
+  border: 2px solid #FF5656;
+  top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.ball {
+  width: 20px;
+  height: 20px;
+  background-color: #FEEE91;
+  border: solid 2px black;
+  position: relative;
+  z-index: 10;
+  left: 500px;
+  top: 250px;
+}
+
+.player1 {
+  height: 100px;
+  width: 20px;
+  background: #FF5656;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  bottom: 0px;
+  border-radius: 3px;
+  border: solid 2px black;
+}
+
+.player2 {
+  height: 100px;
+  width: 20px;
+  background: #FFA239;
+  right: 0px;
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  border-radius: 3px;
+  border: solid black 2px;
+}
+
+#toto-data {
+  height: 700px;
+  width: 1500px;
+  position: relative;
+  background-color: black;
+  border-radius: 10px;
+  border: solid 2px white;
+  margin-left: auto;
+  margin-right: auto;
+  top: 100px;
+}
+
+.data-title {
+  font-size: 30px;
+  font-weight: 800;
+  position: relative;
+  top: 50px;
+  font-family: 'Montserrat', sans-serif;
+  color: rgb(28, 170, 0);
+  text-align: center;
+}
+
+#tab1 {
+  display: flex;
+}
+
+.column {
+  width: 33%;
+  font-size: 30px;
+  font-weight: 800;
+  position: relative;
+  top: 50px;
+  font-family: 'Montserrat', sans-serif;
+  color: rgb(28, 170, 0);
+  text-align: center;
+}
