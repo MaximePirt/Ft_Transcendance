@@ -12,7 +12,7 @@ document.querySelector<HTMLDivElement>('#index')!.innerHTML = `
             <br />
             <input id="confpass" name='confpassword' type='password' placeholder='confirm password'/>
             <br />
-            <input id='button' type='submit' name='signin' placeholder='submit'/>
+            <input id='button' name='signin' placeholder='submit'/>
         </form>
     </div>
 `;
@@ -43,14 +43,14 @@ async function registerUser() {
 
 	let myUser: User = { username: username.value, email: email.value, password: password.value };
 	try {
-		const response = await fetch("http://localhost:3000/register", {
+		const response = await fetch("http://localhost:3003/signup", {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(myUser)
 		});
-		console.log("Data sent !");
+		console.log(`${response}`);
 	} catch (e) {
 		console.error("Error", e);
 	}
