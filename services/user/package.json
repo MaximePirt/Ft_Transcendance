@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@fastify/schedule": "^6.0.0"
+  }
+}

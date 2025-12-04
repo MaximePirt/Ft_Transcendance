@@ -86,3 +86,18 @@ Major Modification:
 	- UserModel.js -> UpdateUserbyId is now using a try-catch to check about already taken datas (username/mail)
 	- user -> add job folder which will contain code to anonymize and/or delete inactive users
 	
+
+
+
+MERGE with front branch : 2b65b3bee0405e83aa4a52d4b57d1da8160fa1ee
+
+
+Commit number 1 :
+
+Minor modification:
+	- fix init_db.js by adding ','
+	-
+Major modification:
+	- add packages @fastify/schedule and toad-scheduler
+	- add a purge script in user/src/jobs
+	- add a cron logic in user/app.js to use purge function
