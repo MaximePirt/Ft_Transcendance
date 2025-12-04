@@ -1,4 +1,5 @@
 import '../style/signup.css'
+import { setCookie } from 'typescript-cookie';
 
 document.querySelector<HTMLDivElement>('#index')!.innerHTML = `
     <p class="title">SIGN UP</p>
@@ -45,14 +46,17 @@ async function registerUser() {
 	try {
 		const response = await fetch("http://localhost:3003/signup", {
 			method: 'POST',
+			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify(myUser)
 		});
-		console.log(`${response}`);
+		const data = await response.json();
+		setCookie('access_token', data.token, { httpOnly: true });
+		console.log(data.token);
 	} catch (e) {
-		console.error("Error", e);
+		console.error(e);
 	}
 }
 
