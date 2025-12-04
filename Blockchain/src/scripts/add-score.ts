@@ -32,8 +32,10 @@ const addScore = async (
     id: bigint,
     player1: string,
     player2: string,
-    score1: bigint,
-    score2: bigint,
+    player3: string,
+    player4: string,
+    team1: bigint,
+    team2: bigint,
     winner: string
 ) => {
 
@@ -41,11 +43,11 @@ const addScore = async (
         throw new Error("Player are required !");
     }
     
-    if (score1 < 0n || score2 < 0n){
+    if (team1 < 0n || team2 < 0n){
         throw new Error("Scores must be positive !");
     }
 
-    if (winner !== player1 && winner !== player2) {
+    if (winner !== "team1" && winner !== "team2") {
         throw new Error("The winner must be one of the two players !");
     }
 
@@ -62,8 +64,10 @@ const addScore = async (
             id,
             player1,
             player2,
-            score1,
-            score2,
+            player3,
+            player4,
+            team1,
+            team2,
             winner
         ]);
 
