@@ -1,12 +1,11 @@
 'use strict'
 
-const fastify = require('fastify');
+import fastify from "fastify";
+import userRoutes from "../../user/src/routes/userRoute.js";
 
 function build(opts={}) {
     const app = fastify(opts);
-    app.get('/', async function (request, reply) {
-        return { hello: 'world' }
-    })
+    userRoutes();
     return app;
 }
 

@@ -6,6 +6,10 @@ function findAllUsers() {
   return res;
 }
 
+function addUser() {
+  
+}
+
 function findUserById(id) {
   return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
 }

@@ -8,12 +8,15 @@
 // Route : 127.0.0.1:3000/users/
 userController = require("../controllers/userController");
 
-
 async function userRoutes(fastify, options) {
   // Get informations
   fastify.get("/users", async (request, reply) => {
     return await userController.getUsers();
   });
+
+  fastify.post("/users", async (request, reply) => {
+    console.log(`data: ${request.body}`);
+  })
 
   fastify.get("/users/:id", async (request, reply) => {
     return await userController.getUserById(request.params.id);

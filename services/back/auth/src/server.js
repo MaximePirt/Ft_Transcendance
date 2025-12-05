@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import bcrypt from 'bcryptjs'
 import jwt from '@fastify/jwt'
+import cookie from '@fastify/cookie'
 
 const fastify = Fastify();
 await fastify.register(cors, {
@@ -13,6 +14,11 @@ await fastify.register(cors, {
 await fastify.register(jwt, {
 	//put secret in .env
 	secret: 'a-string-secret-at-least-256-bits-long'
+})
+await fastify.register(cookie, {
+	secret: 'a-string-secret-at-least-256-bits-long',
+	parseOptions: {},
+	maxAge: 60_000
 })
 
 const saltWorkFactor = 12;
@@ -52,7 +58,15 @@ fastify.post('/signup', async function (request, reply) {
 	user.id = id++;
 	user.token = JWTgenerator(user);
 	console.log(`username: ${user.username}, email: ${user.email}, password: ${user.password}`);
-	await reply.code(200).send({ token: user.token })
+	try {
+		reply.setCookie('token', user.token, {
+			signed: true,
+			httpOnly: true
+		})
+		console.log('token stock in cookies !')
+	} catch (error) {
+		console.error(error);
+	}
 })
 
 const start = async () => {

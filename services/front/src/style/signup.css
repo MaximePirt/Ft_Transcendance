@@ -59,6 +59,42 @@ input, label {
     font-weight: 200;
 }
 
+#formerrpass {
+    color: red;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    top: 50px;
+    position: relative;
+}
+
+#formerrlen {
+    color: red;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    top: 50px;
+    position: relative;
+}
+
+#formerrmail {
+    color: red;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    top: 50px;
+    position: relative;
+}
+
+#formerrpass {
+    color: red;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    top: 50px;
+    position: relative;
+}
+
 form > * {
 	position: relative;
 	margin-bottom: 30px;
