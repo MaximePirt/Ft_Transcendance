@@ -24,7 +24,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - API_URL=http://api:3000
+      - API_URL=http://localhost:3000
     volumes:
       - db:/db
     depends_on:
@@ -39,7 +39,7 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - API_URL=http://api:3001
+      - API_URL=http://localhost:3001
     volumes:
       - db:/db
     depends_on:

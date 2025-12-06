@@ -41,7 +41,7 @@ async function registerUser() {
 		p.innerText = `password and confirm password are not the same.`;
 		if (!document.getElementById("formerrpass"))
 			index?.appendChild(p);
-		return ;
+		return;
 	}
 	else
 		document.getElementById("formerrpass")?.remove();
@@ -51,7 +51,7 @@ async function registerUser() {
 		p.innerText = `please fully fill the form.`;
 		if (!document.getElementById("formerrlen"))
 			index?.appendChild(p);
-		return ;
+		return;
 	}
 	else
 		document.getElementById("formerrlen")?.remove();
@@ -60,7 +60,7 @@ async function registerUser() {
 		p.innerText = `wrong email format.`;
 		if (!document.getElementById("formerrmail"))
 			index?.appendChild(p);
-		return ;
+		return;
 	}
 	else
 		document.getElementById('formerrmail')?.remove();
@@ -70,13 +70,13 @@ async function registerUser() {
 			and a length of at least 12 characters.`;
 		if (!document.getElementById("formerrpass"))
 			index?.appendChild(p);
-		return ;
+		return;
 	}
-	else 
+	else
 		document.getElementById('formerrpass')?.remove();
 	let myUser: User = { username: username.value, email: email.value, password: password.value };
 	try {
-		const response = await fetch("http://localhost:3003/signup", {
+		await fetch("http://localhost:3003/signup", {
 			method: 'POST',
 			credentials: 'include',
 			headers: {
@@ -84,8 +84,6 @@ async function registerUser() {
 			},
 			body: JSON.stringify(myUser)
 		});
-		const data = await response.json();
-		console.log(data.token);
 	} catch (e) {
 		console.error(e);
 	}

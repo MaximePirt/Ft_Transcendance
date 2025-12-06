@@ -6,7 +6,10 @@ import cookie from '@fastify/cookie'
 
 const fastify = Fastify();
 await fastify.register(cors, {
-	origin: 'http://localhost:5173',
+	origin: [
+		'http://localhost:5173',
+		'http://localhost:3001'
+	],
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 	credentials: true,
 	allowedHeaders: ['Content-type', 'Authorization'],
@@ -63,6 +66,15 @@ fastify.post('/signup', async function (request, reply) {
 			signed: true,
 			httpOnly: true
 		})
+		await fetch('http://localhost:3001/users', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				username: user.username,
+				email: user.email,
+				password: user.password
+			})
+		});
 		console.log('token stock in cookies !')
 	} catch (error) {
 		console.error(error);
