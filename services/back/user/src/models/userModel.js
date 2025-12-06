@@ -6,8 +6,14 @@ function findAllUsers() {
   return res;
 }
 
-function addUser() {
-  
+function addNewUser(data) {
+  try {
+    db.prepare(
+      "INSERT INTO users(username, email, password) VALUES (?, ?, ?)"
+    ).run(data.username, data.email, data.password);
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 function findUserById(id) {
@@ -48,4 +54,5 @@ function updateUserById(id, data) {
 
 module.exports = { findAllUsers,
                     findUserById,
-                    updateUserById};
+                    updateUserById,
+                    addNewUser };

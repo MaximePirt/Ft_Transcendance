@@ -19,6 +19,15 @@ async function getUserById(id) {
   return user;
 }
 
+async function addUser(data) {
+  try {
+    await userModel.addNewUser(data);
+    console.log("new user in database !");
+  } catch (e) {
+    console.error(e);
+  }
+}
+
 async function updateUser(userId, updateData)
 {
   const update = await userModel.updateUserById(userId, updateData);
@@ -52,4 +61,5 @@ async function updateAvatar(userId, data)
 module.exports = { getUsers,
                    getUserById,
                    updateUser,
-                   updateAvatar };
+                   updateAvatar,
+                   addUser };

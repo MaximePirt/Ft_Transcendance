@@ -15,7 +15,9 @@ async function userRoutes(fastify, options) {
   });
 
   fastify.post("/users", async (request, reply) => {
-    console.log(`data: ${request.body}`);
+    const data = request.body;
+    console.log(`data: ${JSON.stringify(data)}`);
+    return await userController.addUser(data);
   })
 
   fastify.get("/users/:id", async (request, reply) => {
