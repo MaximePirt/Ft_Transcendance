@@ -11,6 +11,10 @@ async function getUsers() {
 	return users;
 }
 
+async function getUser(username, password) {
+	return await userModel.findUser(username, password);
+}
+
 async function getUserById(id) {
 	const user = await userModel.findUserById(id);
 	if (!user) {
@@ -61,5 +65,6 @@ module.exports = {
 	getUserById,
 	updateUser,
 	updateAvatar,
-	addUser
+	addUser,
+	getUser
 };

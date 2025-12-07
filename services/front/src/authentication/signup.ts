@@ -14,7 +14,7 @@ index!.innerHTML = `
             <br />
             <input id="confpass" name='confpassword' type='password' placeholder='confirm password'/>
             <br />
-            <input id='button' name='signin' placeholder='submit'/>
+            <input id='button' name='signin' type='submit'/>
         </form>
     </div>
 `;
@@ -24,7 +24,6 @@ const email = document.getElementById("email") as HTMLInputElement;
 const password = document.getElementById("password") as HTMLInputElement;
 const conf = document.getElementById("confpass") as HTMLInputElement;
 const submit = document.getElementById("button") as HTMLButtonElement;
-//check la qualité du mot de passe
 
 interface User {
 	username: string,
@@ -42,8 +41,7 @@ async function registerUser() {
 		if (!document.getElementById("formerrpass"))
 			index?.appendChild(p);
 		return;
-	}
-	else
+	} else
 		document.getElementById("formerrpass")?.remove();
 	if (username.value.length == 0 || email.value.length == 0
 		|| password.value.length == 0 || conf.value.length == 0) {
@@ -52,8 +50,7 @@ async function registerUser() {
 		if (!document.getElementById("formerrlen"))
 			index?.appendChild(p);
 		return;
-	}
-	else
+	} else
 		document.getElementById("formerrlen")?.remove();
 	if (!expmail.test(email.value)) {
 		p.id = 'formerrmail';
@@ -61,8 +58,7 @@ async function registerUser() {
 		if (!document.getElementById("formerrmail"))
 			index?.appendChild(p);
 		return;
-	}
-	else
+	} else
 		document.getElementById('formerrmail')?.remove();
 	if (!exppass.test(password.value) && password.value.length < 12) {
 		p.id = 'formerrpass';
@@ -71,8 +67,7 @@ async function registerUser() {
 		if (!document.getElementById("formerrpass"))
 			index?.appendChild(p);
 		return;
-	}
-	else
+	} else
 		document.getElementById('formerrpass')?.remove();
 	let myUser: User = { username: username.value, email: email.value, password: password.value };
 	try {

@@ -51,6 +51,20 @@ function JWTgenerator(user) {
 	return token;
 }
 
+fastify.post('/signin', async function (request, reply) {
+	try {
+		const response = await fetch('http://localhost:3001/signin', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(request.body)
+		});
+		console.log('data sent to user module !');
+		console.log(response)
+	} catch (e) {
+		console.error(e);
+	}
+})
+
 let id = 0;
 fastify.post('/signup', async function (request, reply) {
 	console.log('data received !');
@@ -66,7 +80,7 @@ fastify.post('/signup', async function (request, reply) {
 			signed: true,
 			httpOnly: true
 		})
-		await fetch('http://localhost:3001/users', {
+		await fetch('http://localhost:3001/signin', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({

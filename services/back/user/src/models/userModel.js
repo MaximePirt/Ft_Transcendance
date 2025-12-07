@@ -1,9 +1,17 @@
 
 const db = require('./db');
-function findAllUsers() {
-	var res = db.prepare('SELECT * FROM users').all();
-	console.log("-------\n" + res + "-----\n");
+async function findAllUsers() {
+	var res = await db.prepare('SELECT * FROM users').all();
+	console.log("-------\n" + JSON.stringify(res) + "-----\n");
 	return res;
+}
+
+async function findUser(username, password) {
+	if (!db.prepare('SELECT username FROM users WHERE username = ?').get(username)) {
+		return await 'unknown user'
+	} else if (!db.prepare('SELECT password FROM users WHERE password = ?').get(password)) {
+		return await 'bad password'
+	}
 }
 
 function addNewUser(data) {
@@ -56,5 +64,6 @@ module.exports = {
 	findAllUsers,
 	findUserById,
 	updateUserById,
-	addNewUser
+	addNewUser,
+	findUser
 };
