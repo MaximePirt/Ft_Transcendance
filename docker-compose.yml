@@ -44,8 +44,24 @@ services:
       - db:/db
     depends_on:
        sqlite_db:
-          condition: service_completed_successfully 
-  
+          condition: service_completed_successfully
+
+  auth_api:
+    build:
+      context: ./services/back/auth
+      dockerfile: Dockerfile
+    container_name: auth_api
+    ports:
+      - "3003:3003"
+    environment:
+      - API_URL=http://api:3003
+    volumes:
+      - ./services/back/auth/.env:/app/.env:ro
+    depends_on:
+       sqlite_db:
+          condition: service_completed_successfully
+       user_api:
+          condition: service_started
 
   sqlite_db:
     build:

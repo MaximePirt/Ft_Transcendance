@@ -10,5 +10,20 @@ document.querySelector<HTMLDivElement>('#index')!.innerHTML = `
             <br />
             <input id='button' type='submit' name='signin'/>
         </form>
+
+        <div class="separator">
+            <span>OR</span>
+        </div>
+
+        <button id='google-signin-btn' type='button' class='google-btn'>
+            Sign in with Google
+        </button>
     </div>
 `;
+
+
+const googleBtn = document.getElementById('google-signin-btn') as HTMLButtonElement;
+
+googleBtn.addEventListener('click', () => {
+    window.location.href = 'http://localhost:3003/auth/google';
+});

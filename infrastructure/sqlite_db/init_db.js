@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   avatarUrl TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   lastConnexion DATETIME DEFAULT CURRENT_TIMESTAMP
 );`;
 
@@ -70,8 +70,12 @@ try {
   console.log("Table 'users' created (or already exists).");
   db.exec(createFriendsTable);
   console.log("Table 'friends' created (or already exists).");
+  db.exec(createGameTable);
+  console.log("Table 'games' created (or already exists).");
+  db.exec(createGamePlayersTable);
+  console.log("Table 'game_players' created (or already exists).");
 } catch (err) {
-  console.error("Error creating users or friends table:", err);
+  console.error("Error creating tables:", err);
   process.exit(1);
 }
 

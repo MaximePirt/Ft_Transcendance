@@ -10,6 +10,8 @@ function routes() {
 		page.src = "./src/authentication/signin.ts";
 	} else if (window.location.href === "http://localhost:5173/signup") {
 		page.src = "./src/authentication/signup.ts";
+	} else if (window.location.href.startsWith("http://localhost:5173/auth/success")) {
+		page.src = "./src/authentication/authSuccess.ts";
 	} else if (window.location.href === "http://localhost:5173/toto") {
 		page.src = "./src/AI/trainAI.ts";
 	} else if (window.location.href === "http://localhost:5173/home") {
