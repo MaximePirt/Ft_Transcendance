@@ -63,6 +63,21 @@ services:
        user_api:
           condition: service_started
 
+  blockchain_api:
+    build:
+      context: ./services/back/blockchain
+      dockerfile: Dockerfile
+    container_name: blockchain_api
+    ports:
+      - "3004:3004"
+    environment:
+      - API_URL=http://api:3004
+    volumes:
+      - ./services/back/blockchain/.env:/app/.env:ro
+    depends_on:
+       sqlite_db:
+          condition: service_completed_successfully
+
   sqlite_db:
     build:
       context: ./infrastructure/sqlite_db

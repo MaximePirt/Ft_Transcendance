@@ -11,6 +11,12 @@ fastify.get('/users', async (request, reply) => {
   return reply.from(usersServiceUrl)
 })
 
+// Tournament blockchain routes
+fastify.all('/tournament/*', async (request, reply) => {
+  const blockchainServiceUrl = 'http://blockchain_api:3004'
+  return reply.from(blockchainServiceUrl + request.url)
+})
+
 // Each microservice would have its own route
 // fastify.get('/example', async (request, reply) => {
 //   return reply.from('http://localhost:3002/example')
