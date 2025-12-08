@@ -1,0 +1,33 @@
+{
+  "nav": {
+    "home": "Home",
+    "play": "Play",
+    "leaderboard": "Leaderboard",
+    "profile": "Profile"
+  },
+  "auth": {
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "signout": "Sign Out",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email",
+    "or": "OR",
+    "googleSignin": "Sign in with Google",
+    "welcome": "Welcome, {{username}}!",
+    "authSuccess": "Authentication successful. Redirecting...",
+    "authFailed": "Authentication Failed"
+  },
+  "game": {
+    "title": "Pong Game",
+    "start": "Start Game",
+    "difficulty": "Difficulty",
+    "easy": "Easy",
+    "medium": "Medium",
+    "hard": "Hard"
+  },
+  "settings": {
+    "language": "Language",
+    "selectLanguage": "Select Language"
+  }
+}

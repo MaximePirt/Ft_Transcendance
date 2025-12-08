@@ -1,0 +1,33 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "play": "Jouer",
+    "leaderboard": "Classement",
+    "profile": "Profil"
+  },
+  "auth": {
+    "signin": "Se connecter",
+    "signup": "S'inscrire",
+    "signout": "Se déconnecter",
+    "username": "Nom",
+    "password": "Mot de passe",
+    "email": "Email",
+    "or": "OU",
+    "googleSignin": "Se connecter avec Google",
+    "welcome": "Bienvenue, {{username}}!",
+    "authSuccess": "Authentification réussie. Redirection...",
+    "authFailed": "Échec de l'authentification"
+  },
+  "game": {
+    "title": "Jeu Pong",
+    "start": "Démarrer le jeu",
+    "difficulty": "Difficulté",
+    "easy": "Facile",
+    "medium": "Moyen",
+    "hard": "Difficile"
+  },
+  "settings": {
+    "language": "Langue",
+    "selectLanguage": "Sélectionner la langue"
+  }
+}

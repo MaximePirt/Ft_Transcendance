@@ -1,4 +1,5 @@
 import "./style/error.css";
+import i18next from './multi-languages/config.ts';
 
 function routes() {
 	const page = document.getElementById("page") as HTMLScriptElement;
@@ -25,3 +26,4 @@ function routes() {
 }
 
 routes();
+
