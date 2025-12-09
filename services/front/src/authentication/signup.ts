@@ -14,8 +14,8 @@ index!.innerHTML = `
             <br />
             <input id="confpass" name='confpassword' type='password' placeholder='confirm password'/>
             <br />
-            <input id='button' name='signin' type='submit'/>
-        </form>
+			<input id='button' name='signup' type='button' value='submit'/>		
+		</form>
     </div>
 `;
 
@@ -23,7 +23,8 @@ const username = document.getElementById("username") as HTMLInputElement;
 const email = document.getElementById("email") as HTMLInputElement;
 const password = document.getElementById("password") as HTMLInputElement;
 const conf = document.getElementById("confpass") as HTMLInputElement;
-const submit = document.getElementById("button") as HTMLButtonElement;
+const submit = document.getElementById("button") as HTMLAnchorElement;
+const link = document.querySelector("#button") as HTMLAnchorElement;
 
 interface User {
 	username: string,
@@ -79,10 +80,19 @@ async function registerUser() {
 			},
 			body: JSON.stringify(myUser)
 		});
-		if (response.ok)
-			console.log("client registered");
-		else
-			console.log("error");
+		if (response.ok) {
+			console.log("sign up ! ;)");
+			window.location.href = "/signin";
+			if (document.getElementById("formerrbody"))
+				index?.remove();
+		} else {
+			const err = await response.json();
+			console.log("error message: ", JSON.stringify(err.message));
+			p.id = 'formerrbody';
+			p.innerText = err.message;
+			if (!document.getElementById("formerrbody"))
+				index?.appendChild(p);
+		}
 	} catch (e) {
 		console.error(e);
 	}

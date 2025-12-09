@@ -49,14 +49,16 @@ async function signinUser() {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(myUser)
 		});
-		const err = await response.json();
-		if (response.ok)
+		if (response.ok) {
 			console.log('you are connected ! :)');
-		else {
+			window.location.href = "/live-chat";
+		} else {
+			const err = await response.json();
 			console.log("error message: ", JSON.stringify(err.message));
 			p.id = 'formerrbody';
+			const old = p.innerText;
 			p.innerText = err.message;
-			if (!document.getElementById("formerrbody"))
+			if (old != err.message)
 				index?.appendChild(p);
 			return;
 		}

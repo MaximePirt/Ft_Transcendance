@@ -1,4 +1,4 @@
-
+const bcrypt = require('bcryptjs');
 const db = require('./db');
 async function findAllUsers() {
 	var res = db.prepare('SELECT * FROM users').all();
@@ -7,22 +7,25 @@ async function findAllUsers() {
 }
 
 async function findUser(username, password) {
-	console.log("username from database: ", username)
-	if (!db.prepare('SELECT username FROM users WHERE username = ?').get(username)) {
+	if (!db.prepare('SELECT username FROM users WHERE username = ?').get(username))
 		return 'unknown user'
-	} else if (!db.prepare('SELECT password FROM users WHERE password = ?').get(password)) {
-		return 'bad password'
-	}
+	const bddpass = await db.prepare('SELECT password FROM users WHERE username = ?').get(username);
+	console.log("password: ", password, "username: ", username)
+	const match = await bcrypt.compare(password, bddpass.password);
+	console.log("match: ", match)
+	if (!match)
+		return "bad password"
 }
 
 function addNewUser(data) {
 	try {
-		db.prepare(
+		const istData = db.prepare(
 			"INSERT INTO users(username, email, password) VALUES (?, ?, ?)"
 		).run(data.username, data.email, data.password);
 		console.log("Data successfully sent in database !");
 	} catch (e) {
-		console.error(e);
+		console.error(e, "toto");
+		return "error"
 	}
 }
 

@@ -95,6 +95,15 @@ input, label {
     position: relative;
 }
 
+#formerrbody {
+    color: red;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    text-align: center;
+    top: 50px;
+    position: relative;
+}
+
 form > * {
 	position: relative;
 	margin-bottom: 30px;

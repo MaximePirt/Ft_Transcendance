@@ -24,12 +24,7 @@ async function getUserById(id) {
 }
 
 async function addUser(data) {
-	try {
-		userModel.addNewUser(data);
-	} catch (e) {
-		console.error(e);
-		return e;
-	}
+	return await userModel.addNewUser(data);
 }
 
 async function updateUser(userId, updateData) {

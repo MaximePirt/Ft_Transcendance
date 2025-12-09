@@ -38,7 +38,7 @@ function User(username, email, password, token) {
 	this.id = 0;
 }
 
-function Payload(id, username) {
+function Payload(username) {
 	this.username = username;
 }
 
@@ -51,8 +51,17 @@ function JWTgenerator(user) {
 	return token;
 }
 
+let id = 0;
 fastify.post('/signin', async function (request, reply) {
 	try {
+		const user = Object.create(User);
+		user.username = await request.body.username;
+		user.id = id++;
+		user.token = JWTgenerator(user);
+		reply.setCookie('token', user.token, {
+			signed: true,
+			httpOnly: true
+		});
 		const response = await fetch('http://localhost:3001/signin', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
@@ -60,7 +69,7 @@ fastify.post('/signin', async function (request, reply) {
 		});
 		console.log("request: ", JSON.stringify(request.body))
 		if (response.ok)
-			console.log('data sent to user module !');
+			console.log('user sign in !');
 		else {
 			const errmsg = await response.json();
 			console.log(response);
@@ -73,22 +82,15 @@ fastify.post('/signin', async function (request, reply) {
 	}
 })
 
-let id = 0;
 fastify.post('/signup', async function (request, reply) {
-	console.log('data received !');
 	const user = Object.create(User);
 	user.username = await request.body.username;
 	user.email = await request.body.email;
+	const pass = await request.body.password;
 	user.password = await bcrypt.hash(request.body.password, saltWorkFactor);
 	user.id = id++;
-	user.token = JWTgenerator(user);
-	console.log(`username: ${user.username}, email: ${user.email}, password: ${user.password}`);
 	try {
-		reply.setCookie('token', user.token, {
-			signed: true,
-			httpOnly: true
-		})
-		await fetch('http://localhost:3001/signup', {
+		const response = await fetch('http://localhost:3001/signup', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -97,7 +99,15 @@ fastify.post('/signup', async function (request, reply) {
 				password: user.password
 			})
 		});
-		console.log('token stock in cookies !')
+		if (response.ok)
+			console.log('user sign up !');
+		else {
+			const errmsg = await response.json();
+			console.log(response);
+			console.log("error status: ", response.status);
+			console.log("error message: ", errmsg);
+			return reply.code(404).send(errmsg);
+		}
 	} catch (error) {
 		console.error(error);
 	}
