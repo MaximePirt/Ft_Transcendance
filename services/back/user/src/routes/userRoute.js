@@ -16,19 +16,21 @@ async function userRoutes(fastify, options) {
 
 	fastify.post("/signin", async (request, reply) => {
 		const data = await request.body;
-		const users = await JSON.stringify(userController.getUsers());
+		const users = JSON.stringify(userController.getUsers());
 		console.log(`users: ${JSON.stringify(users)}`)
 		const username = data.username;
 		const password = data.password;
+		console.log("user route: ", username)
 		const err = await userController.getUser(username, password)
+
 		if (err == 'unknown user') {
-			return reply.code(400).send({ message: "unknown user" });
+			return reply.status(404).send({ message: "unknown user" });
 		} else if (err == 'bad password') {
-			return reply.code(401).send({ message: "bad password" });
+			return reply.status(404).send({ message: "bad password" });
 		}
 	})
 
-	fastify.post("/users", async (request, reply) => {
+	fastify.post("/signup", async (request, reply) => {
 		const data = request.body;
 		console.log(`username: ${JSON.stringify(data.username)}`);
 		return await userController.addUser(data);

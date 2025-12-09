@@ -58,8 +58,16 @@ fastify.post('/signin', async function (request, reply) {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(request.body)
 		});
-		console.log('data sent to user module !');
-		console.log(response)
+		console.log("request: ", JSON.stringify(request.body))
+		if (response.ok)
+			console.log('data sent to user module !');
+		else {
+			const errmsg = await response.json();
+			console.log(response);
+			console.log("error status: ", response.status);
+			console.log("error message: ", errmsg);
+			return reply.code(404).send(errmsg);
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -80,7 +88,7 @@ fastify.post('/signup', async function (request, reply) {
 			signed: true,
 			httpOnly: true
 		})
-		await fetch('http://localhost:3001/signin', {
+		await fetch('http://localhost:3001/signup', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({

@@ -71,7 +71,7 @@ async function registerUser() {
 		document.getElementById('formerrpass')?.remove();
 	let myUser: User = { username: username.value, email: email.value, password: password.value };
 	try {
-		await fetch("http://localhost:3003/signup", {
+		const response = await fetch("http://localhost:3003/signup", {
 			method: 'POST',
 			credentials: 'include',
 			headers: {
@@ -79,6 +79,10 @@ async function registerUser() {
 			},
 			body: JSON.stringify(myUser)
 		});
+		if (response.ok)
+			console.log("client registered");
+		else
+			console.log("error");
 	} catch (e) {
 		console.error(e);
 	}

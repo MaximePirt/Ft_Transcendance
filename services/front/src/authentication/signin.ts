@@ -20,43 +20,52 @@ const password = document.getElementById("password") as HTMLInputElement;
 const submit = document.getElementById("button") as HTMLButtonElement;
 
 interface User {
-    username: string,
-    password: string
+	username: string,
+	password: string
 }
 
-let myUser: User = { username: username.value, password: password.value };
 async function signinUser() {
-    const p = document.createElement('p');
-    if (username.value.length == 0) {
-       	p.id = 'formerruser';
+	const p = document.createElement('p');
+	if (username.value.length == 0) {
+		p.id = 'formerruser';
 		p.innerText = `please enter your username.`;
 		if (!document.getElementById("formerruser"))
 			index?.appendChild(p);
-		return; 
-    } else
-        document.getElementById("formerruser")?.remove();
-    if (password.value.length == 0) {
-        p.id = 'formerrpass';
+		return;
+	} else
+		document.getElementById("formerruser")?.remove();
+	if (password.value.length == 0) {
+		p.id = 'formerrpass';
 		p.innerText = `please enter your password.`;
 		if (!document.getElementById("formerrpass"))
 			index?.appendChild(p);
-		return; 
-    } else
-        document.getElementById("formerrpass")?.remove();
-    try {
-        const response = await fetch('http://localhost:3003/signin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(myUser)
-        });
-        console.log('data sent !');
-        console.log(response);
-    } catch (e) {
-        console.error(e);
-    }
+		return;
+	} else
+		document.getElementById("formerrpass")?.remove();
+	let myUser: User = { username: username.value, password: password.value };
+	try {
+		const response = await fetch('http://localhost:3003/signin', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(myUser)
+		});
+		const err = await response.json();
+		if (response.ok)
+			console.log('you are connected ! :)');
+		else {
+			console.log("error message: ", JSON.stringify(err.message));
+			p.id = 'formerrbody';
+			p.innerText = err.message;
+			if (!document.getElementById("formerrbody"))
+				index?.appendChild(p);
+			return;
+		}
+	} catch (e) {
+		console.error(e);
+	}
 }
 
 submit.addEventListener("click", (e) => {
-    e.preventDefault();
-    signinUser();
+	e.preventDefault();
+	signinUser();
 });

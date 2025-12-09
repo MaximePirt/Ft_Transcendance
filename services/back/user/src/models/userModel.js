@@ -1,16 +1,17 @@
 
 const db = require('./db');
 async function findAllUsers() {
-	var res = await db.prepare('SELECT * FROM users').all();
+	var res = db.prepare('SELECT * FROM users').all();
 	console.log("-------\n" + JSON.stringify(res) + "-----\n");
 	return res;
 }
 
 async function findUser(username, password) {
+	console.log("username from database: ", username)
 	if (!db.prepare('SELECT username FROM users WHERE username = ?').get(username)) {
-		return await 'unknown user'
+		return 'unknown user'
 	} else if (!db.prepare('SELECT password FROM users WHERE password = ?').get(password)) {
-		return await 'bad password'
+		return 'bad password'
 	}
 }
 
