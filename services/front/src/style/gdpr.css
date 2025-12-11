@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+.header {
+	position: relative;
+	max-width: 100%;
+	width: 100%;
+	text-align: center;
+	font-family: 'Montserrat', sans-serif;
+	font-weight: 800;
+	font-size: 7vw;
+    color: #FEEE91;
+    -webkit-text-stroke: 2px rgb(0, 0, 0);
+}
+
+.subtitle button {
+	max-width: 35%;
+	font-family: 'Montserrat', sans-serif;
+	text-align: center;
+	font-weight: 500;
+	font-size: 2vw;
+	background-color: #FFA239;
+	cursor: pointer;
+	padding: 1%;
+	border-radius: 10px;
+
+
+}
+
+p {
+	font-family: 'Montserrat', sans-serif;
+}
+
+.subtitle {
+	font-size: 30px;
+	text-align: center;
+	font-weight: 800;
+
+}
+
+.optitle {
+	color: #FFA239;
+}
+
+
+.gdpr {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	column-gap: 2rem;
+	row-gap: 2rem;
+	max-width: 1000px;
+	margin: 0 auto;
+	padding: 2rem;
+}
+
+ .gdpr-block {
+	grid-column: 1 / 3;
+	max-width: 450px;
+	background-color: #FEEE91;
+	padding: 1rem;
+	border-radius: 10px;
+	
+	
+
+}
+
+.gdpr-block.left {
+    justify-self: start;
+}
+
+.gdpr-block.right {
+    justify-self: end;
+
+}
+
+.gdpr-block.center {
+	justify-self: center;
+	max-width: 100%;
+	text-align: center;
+
+}
+
+.gdpr-block h2 {
+	font-family: 'Montserrat', sans-serif;
+	font-weight: 800;
+	font-size: 150%;
+	margin-bottom: 0.5rem;
+	text-align: center;
+}

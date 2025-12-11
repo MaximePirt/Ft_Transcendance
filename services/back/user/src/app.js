@@ -29,6 +29,7 @@ const purgeTask = new AsyncTask(
 );
 
 // Schedule job timing at 3 AM daily
+// TODO: Change to 3AM, currently every 2 minutes for testing
 const purgeJob = new CronJob(
   {
     cronExpression: "*/2 * * * *",

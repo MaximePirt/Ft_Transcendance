@@ -101,3 +101,13 @@ Major modification:
 	- add packages @fastify/schedule and toad-scheduler
 	- add a purge script in user/src/jobs
 	- add a cron logic in user/app.js to use purge function
+
+Name of previous commit - a19940d2edd4fb643971a44b4dc6ba6fb0c35566
+
+Minor modification:
+	- Remove wrong folders "user" at root
+
+Major modification:
+	- (front) - add gpdr folder for ts files + gpdr css and route
+	- (front) - add gpdr compliances on website
+	

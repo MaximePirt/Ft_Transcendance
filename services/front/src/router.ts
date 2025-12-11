@@ -14,6 +14,8 @@ function routes() {
 		page.src = "./src/AI/trainAI.ts";
 	} else if (window.location.href === "http://localhost:5173/home") {
 		page.src = "./src/home/home.ts";
+	} else if (window.location.href === "http://localhost:5173/gdpr") {
+		page.src = "./src/gdpr/gdpr.ts";
 	} else {
 		index!.innerHTML = `
             <p id="error">Error 404 : can't load the page bro.</p>
