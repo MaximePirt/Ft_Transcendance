@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+
+.profile-page {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.header {
+	display: flex;
+	flex-direction: row;
+	position: relative;
+	font-family: 'Montserrat', sans-serif;
+	justify-content: center;
+    top: 0;
+	text-align: center;
+	border-radius: 0 0 20px 20px;
+    background-color: #161a31;
+	gap: 60%;
+
+	
+}
+
+.header h1 {
+	font-weight: 800;
+	font-size: 30px;
+	max-width: 15%;
+	color: #FEEE91;
+	-webkit-text-stroke: 1px rgb(0, 0, 0);
+	padding-left: 2%;
+	padding-bottom: 1vh;
+	width: 100%;
+}
+
+.header .project 
+{
+	padding-right: 2%;
+}
+
+.display-menu {
+	display:flex;
+	flex: 1;
+	position: relative;
+	margin-top: 100px;
+	max-width: 100%;
+	padding-left: 1vw;
+	margin-bottom: 5%;
+
+}
+
+.menu-left {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	align-items: flex-start;
+	background-color: #161a31;
+	border-radius: 20px;
+	padding-left: 5vw;
+	padding-right: 15vw;
+	margin-right: 3vw;
+	padding-top: 3vh;
+	color: #FEEE91;
+	width: 20%;
+	font-weight: 500;
+}
+
+/* .menu-left button {
+
+} */
+
+.logout {
+	font-weight: 800;
+	color: red;
+}
+
+.menu-right {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	column-gap: 2rem;
+	row-gap: 2rem;
+	background-color: #161a31;
+	border-radius: 20px;
+	color: #FEEE91;
+	width: 70%;
+	margin-left: 5%;
+	padding-left: 2%;
+}
+
+.menu-right-presentation
+{
+	background-color: red;
+	grid-column: 1/3;
+	justify-items: center;
+	padding: 2%;
+	border-radius: 20px;
+
+}
+
+.profile-trucsup
+{
+	padding-left: 10%;
+	background-color: green;
+}
+
+.profile-info
+{
+	display: flex;
+	flex-direction: row;
+	background-color: green;
+	margin-right: 5%;
+}
+
+.profile-name{
+	padding-right: 5%;
+	background-color: pink;
+	grid-column: 2/3;
+}
+
+.stats-menu
+{
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+
+	column-gap: 3rem;
+	grid-column: 1 /3;
+	row-gap: 3rem;
+	background-color: red;
+	margin-right: 5%;
+	margin-bottom: 5%;
+	text-align: center;
+
+}
+
+.stats-history
+{
+	grid-column: 1 / 4;
+	grid-row: 1 / 4;
+	background-color: blue;
+	margin-bottom: 5%;
+}
+
+.stats-global
+{
+	grid-column: 1 / 4;
+	grid-row: 3 / 6;
+	background-color: blue;
+	margin-top: 5%;
+}
+
+.stats-right
+{
+	grid-column: 4/8;
+	grid-row:  2/5;
+	background-color: yellow;
+	color: black;
+	margin-right: 5%;
+}
+
+
+.page-footer {
+	display: flex;
+	flex-direction: row;
+	font-family: 'Montserrat', sans-serif;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	border-radius: 20px 20px 0 0;
+    background-color: #161a31;
+	color: #FEEE91;
+	height: 10vh;
+
+}
+

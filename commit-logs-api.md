@@ -115,3 +115,10 @@ Name of previous commit - ad9bb88995f7e730f037af52d1a7d44b835e5ee3
 
 Major modification:
 	- fix purgeInactivUser script - wrong script path + wrong variable name in script
+
+Name of previous commit - 777942b5585277e578d4945adaed9a9aed40d622
+
+Minor modification:
+
+Major modification:
+	- profile ts/css : add base as menu positions and separations
