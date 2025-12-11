@@ -20,11 +20,11 @@ fastify.register(schedule);
 const purgeTask = new AsyncTask(
   "purgeUsersJob",
   async () => {
-    const { cron_gdpr } = require("./src/jobs/purgeInactiveUsers");
+    const { cron_gdpr } = require("./jobs/purgeInactiveUsers");
     await cron_gdpr();
   },
   (error) => {
-    fastify.log.error("Error during purgeInactiveUsers job:", error);
+    fastify.log.error(error, "Error during purgeInactiveUsers job:");
   }
 );
 

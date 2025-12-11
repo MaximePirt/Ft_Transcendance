@@ -111,3 +111,7 @@ Major modification:
 	- (front) - add gpdr folder for ts files + gpdr css and route
 	- (front) - add gpdr compliances on website
 	
+Name of previous commit - ad9bb88995f7e730f037af52d1a7d44b835e5ee3
+
+Major modification:
+	- fix purgeInactivUser script - wrong script path + wrong variable name in script
