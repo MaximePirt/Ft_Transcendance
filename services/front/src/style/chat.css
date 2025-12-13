@@ -14,7 +14,7 @@ body {
 }
 
 .body {
-	width: 1200px;
+	width: 700px;
 	height: 600px;
 	border: solid 3px black;
 	border-radius: 20px;
@@ -25,29 +25,45 @@ body {
 }
 
 .message {
-	position: absolute;
+	position: relative;
 	border: solid 2px black;
-	border-radius: 3px;
-	width: 600px;
+	border-radius: 10px;
+	width: 400px;
 	height: 50px;
-	top: 650px;
-	left: 150px;
 	background-color: white;
+}
+
+#p1 {
+	position: relative;
+	top: 70%;
+	left: 5%;
+}
+
+#p2 {
+	position: relative;
+	float: right;
+	right: 10%;
+}
+
+#tosend {
+	position: relative;
+	top: 75%;
+	text-align: center;
 }
 
 .send {
 	position: absolute;
-	top: 650px;
-	left: 760px;
 	height: 50px;
 	width: 80px;
-	border-radius: 3px;
+	right: 20%;
+	border-radius: 10px;
 	border: solid 2px black;
-	background-color: red;
+	background-color: #FF5656;
 	font-family: 'Montserrat', sans-serif;
 }
 
 .player, .opponent {
 	font-family: 'Montserrat', sans-serif;
 	position: relative;
+	font-size: large;
 }

@@ -8,8 +8,14 @@ const fastify = Fastify();
 await fastify.register(cors, {
 	origin: [
 		'http://localhost:5173',
-		'http://localhost:3001'
+		'http://localhost:3001',
+		'http://127.0.0.1:5173',
+		'http://127.0.0.1:3001'
 	],
+	cookie: {
+		cookieName: 'token',
+		signed: false
+	},
 	methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
 	credentials: true,
 	allowedHeaders: ['Content-type', 'Authorization'],
@@ -47,9 +53,25 @@ function JWTgenerator(user) {
 	payload.username = user.username;
 	payload.id = user.id;
 	const token = fastify.jwt.sign({ payload })
-	console.log(`token: ${token}`);
 	return token;
 }
+
+fastify.decorate('authenticate', async (request, reply) => {
+	try {
+		const token = request.cookies.token
+		if (!token)
+			return reply.code(401).send({ error: "None cookies found :(" })
+		const decoded = fastify.jwt.verify(token)
+		request.user = decoded;
+	} catch (e) {
+		reply.send(e);
+	}
+})
+
+fastify.get('/me', { onRequest: [fastify.authenticate] }, async (req, reply) => {
+	
+	return req.user;
+})
 
 let id = 0;
 fastify.post('/signin', async function (request, reply) {
@@ -60,14 +82,17 @@ fastify.post('/signin', async function (request, reply) {
 		user.token = JWTgenerator(user);
 		reply.setCookie('token', user.token, {
 			signed: true,
-			httpOnly: true
+			httpOnly: true,
 		});
 		const response = await fetch('http://localhost:3001/signin', {
 			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(request.body)
+			headers: { 
+				'Content-Type': 'application/json'
+			},
+			credentials: 'include',
+			body: JSON.stringify(request.body),
+			onRequest: fastify.authenticate
 		});
-		console.log("request: ", JSON.stringify(request.body))
 		if (response.ok)
 			console.log('user sign in !');
 		else {

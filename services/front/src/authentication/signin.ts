@@ -46,6 +46,7 @@ async function signinUser() {
 	try {
 		const response = await fetch('http://localhost:3003/signin', {
 			method: 'POST',
+			credentials: 'include',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(myUser)
 		});
