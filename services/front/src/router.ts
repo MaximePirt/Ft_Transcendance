@@ -15,7 +15,7 @@ function routes() {
 	} else if (window.location.href === "http://localhost:5173/home") {
 		page.src = "./src/home/home.ts";
 	} else if (window.location.href === "http://localhost:5173/live-chat") {
-		page.src = "./src/pong/chat.ts";
+		page.src = "./src/game/chat.ts";
 	} else {
 		index!.innerHTML = `
             <p id="error">Error 404 : can't load the page bro.</p>
