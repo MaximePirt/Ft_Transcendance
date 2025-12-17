@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import '../App.css'
+import { Trans } from 'react-i18next';
 
 const topics = [
   { title: 'Culture generale', detail: 'Histoire, geo, sciences et actu pour tester ta curiosite.' },
@@ -19,9 +20,11 @@ function HomePage() {
   return (
     <main className="page">
       <div className="login-bar">
-        <button className="btn login" onClick={() => setShowLogin(true)}>
-          Se connecter
-        </button>
+        <Trans i18nKey="connect">
+          <button className="btn login" onClick={() => setShowLogin(true)}>
+            Se connecter
+          </button>
+        </Trans>
       </div>
       <div className="shell">
         <p className="eyebrow">Quiz Sprint</p>
