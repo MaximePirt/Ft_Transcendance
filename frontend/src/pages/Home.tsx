@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import '../App.css'
+import { privacyContent, termsContent } from '../content/policies'
 
 const topics = [
   { title: 'Culture generale', detail: 'Histoire, geo, sciences et actu pour tester ta curiosite.' },
@@ -15,6 +16,7 @@ const highlights = [
 
 function HomePage() {
   const [showLogin, setShowLogin] = useState(false)
+  const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
 
   return (
     <main className="page">
@@ -29,7 +31,7 @@ function HomePage() {
           <div className="copy">
             <h1>Pret a buzzer ?</h1>
             <p className="lede">
-              Lance un quiz express, defie tes potes ou revise en solo. Une page simple, juste ce qu il faut pour
+              Lance un quiz express, defie tes potes ou revise en solo. Une page simple, juste ce qu'il faut pour
               commencer.
             </p>
             <div className="actions">
@@ -64,15 +66,53 @@ function HomePage() {
         <div className="footer__inner">
           <div>
             <p className="eyebrow small">Quiz Sprint</p>
-            <p className="footer__lede">Un quiz express, quelques clics, et c est parti.</p>
+            <p className="footer__lede">Un quiz express, quelques clics, et c'est parti.</p>
           </div>
           <div className="footer__links">
             <a href="#">A propos</a>
             <a href="#">FAQ</a>
             <a href="#">Contact</a>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault()
+                setPolicy('privacy')
+              }}
+            >
+              Politiques de confidentialité
+            </a>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault()
+                setPolicy('terms')
+              }}
+            >
+              Condition d'utilisation
+            </a>
           </div>
         </div>
       </footer>
+
+      {/* Modal d'affichage des politiques (Privacy / Terms) */}
+      {policy && (
+        <div className="login-overlay" role="dialog" aria-modal="true">
+          <div className="login-card">
+            <div className="login-card__head">
+              <div>
+                <p className="eyebrow small">
+                  {policy === 'privacy' ? 'Politiques de confidentialité' : "Condition d'utilisation"}
+                </p>
+                <h2>{policy === 'privacy' ? 'Politiques de confidentialité' : "Condition d'utilisation"}</h2>
+              </div>
+              <button className="close" aria-label="Fermer" onClick={() => setPolicy(null)}>
+                ×
+              </button>
+            </div>
+            <div className="policy-content">{policy === 'privacy' ? privacyContent : termsContent}</div>
+          </div>
+        </div>
+      )}
 
       {showLogin && (
         <div className="login-overlay" role="dialog" aria-modal="true">
