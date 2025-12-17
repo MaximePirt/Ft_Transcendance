@@ -2,6 +2,7 @@ import { useState } from 'react'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next';
+import LanguageSelector from './../content/LanguageSelector.tsx'
 
 const topics = [
   { title: 'Culture generale', detail: 'Histoire, geo, sciences et actu pour tester ta curiosite.' },
@@ -22,6 +23,7 @@ function HomePage() {
 
   return (
     <main className="page">
+      <LanguageSelector />
       <div className="login-bar">
         <button className="btn login" onClick={() => setShowLogin(true)}>
           {t("connect")}
