@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
-import { Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 const topics = [
   { title: 'Culture generale', detail: 'Histoire, geo, sciences et actu pour tester ta curiosite.' },
@@ -16,17 +16,16 @@ const highlights = [
 ]
 
 function HomePage() {
+  const {t} = useTranslation()
   const [showLogin, setShowLogin] = useState(false)
   const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
 
   return (
     <main className="page">
       <div className="login-bar">
-        <Trans i18nKey="connect">
-          <button className="btn login" onClick={() => setShowLogin(true)}>
-            Se connecter
-          </button>
-        </Trans>
+        <button className="btn login" onClick={() => setShowLogin(true)}>
+          {t("connect")}
+        </button>
       </div>
       <div className="shell">
         <p className="eyebrow">Quiz Sprint</p>
