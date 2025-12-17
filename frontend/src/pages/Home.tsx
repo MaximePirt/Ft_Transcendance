@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
+import { Trans } from 'react-i18next';
 
 const topics = [
   { title: 'Culture generale', detail: 'Histoire, geo, sciences et actu pour tester ta curiosite.' },
