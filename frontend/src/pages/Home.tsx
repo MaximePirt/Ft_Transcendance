@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next';
@@ -17,6 +18,7 @@ const highlights = [
 ]
 
 function HomePage() {
+  const navigate = useNavigate()
   const {t} = useTranslation()
   const [showLogin, setShowLogin] = useState(false)
   const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
@@ -39,7 +41,9 @@ function HomePage() {
               commencer.
             </p>
             <div className="actions">
-              <button className="btn primary">Commencer un quiz</button>
+              <button className="btn primary" onClick={() => navigate('/quiz')}>
+                Commencer un quiz
+              </button>
               <button className="btn ghost">Parcourir les categories</button>
             </div>
             <div className="highlights">
