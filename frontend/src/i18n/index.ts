@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next";
 
 import enLang from './locales/en/en.json'
 import frLang from './locales/fr/fr.json'
+import arLang from './locales/ar/ar.json'
 
 i18n
   .use(initReactI18next)
@@ -13,6 +14,9 @@ i18n
       },
       fr: {
         translation: frLang,
+      },
+      ar: {
+        translation: arLang,
       },
     },
     

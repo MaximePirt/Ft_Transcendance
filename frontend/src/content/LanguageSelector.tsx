@@ -1,8 +1,10 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next"
 
 const languages = [
     {code: "fr", lang: "FRENCH"},
     {code: "en", lang: "ENGLISH"},
+    {code: "ar", lang: "ARABIC"},
 ]
 
 const LanguageSelector = () => {
@@ -11,6 +13,10 @@ const LanguageSelector = () => {
     const changeLng = (lang: string) => {
         i18n.changeLanguage(lang);
     }
+
+    useEffect(() => {
+        document.body.dir = i18n.dir()
+    }, [i18n, i18n.language])
 
     return (
         <div className="btn-lng-select">

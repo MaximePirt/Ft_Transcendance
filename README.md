@@ -10,7 +10,10 @@ vgodart is the Project Manager (PM)
 -Quiz Sprint
 -
 
-## Modules (1 pts)
+## Modules (2 pts)
 
 ### Support for multiple languages
+Member(s) : tpipi
+
+### Right-to-left (RTL) language support
 Member(s) : tpipi
