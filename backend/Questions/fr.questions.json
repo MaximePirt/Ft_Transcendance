@@ -1,0 +1,14 @@
+{
+    "Quiz": [
+        {
+            "Histoire": [
+                {
+                    "question": "en quelle année est né toto",
+                    "réponse": "2025",
+                    "difficulté": "facile"
+                }
+            ],
+            "Musiques": []
+        }
+    ]
+}

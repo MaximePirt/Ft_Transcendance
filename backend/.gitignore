@@ -1,0 +1,31 @@
+# --- Environnement Virtuel ---
+# On ne versionne JAMAIS le venv car il est spécifique à ta machine
+venv/
+.venv/
+env/
+ENV/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# --- Django ---
+# Ignorer la base de données locale (tu utiliseras PostgreSQL en Docker pour l'éval)
+db.sqlite3
+db.sqlite3-journal
+
+# Ignorer les fichiers médias (photos de profil uploadées par les users) 
+media/
+staticfiles/
+
+# --- Sécurité & Configuration (CRITIQUE pour le sujet) ---
+# Le sujet impose d'ignorer le fichier .env 
+.env
+*.env
+
+# --- OS ---
+.DS_Store
+Thumbs.db
