@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import '../App.css'
 
-// Fonction qui va créer un code random pour la salle multi, j'ai enlever le 0 pour eviter les confusions, si ya d'autres lettres a enlever on peut le faire
+// Fonction qui va créer un code random pour la salle multi, j'ai enlever le 0 pour eviter les confusions, si ya d'autres lettres a enlever on peut le faire plus tard mais je pense c'est good
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
   let code = ''
@@ -36,11 +36,6 @@ function MultiPlayerCodeRoom() {
     }
   }, [roomCode, navigate])
 
-  const copyCodeToClipboard = () => {
-    navigator.clipboard.writeText(code)
-    alert('Code copie dans le presse-papiers !')
-  }
-
   return (
     <main className="page">
       <div className="shell">
@@ -48,35 +43,26 @@ function MultiPlayerCodeRoom() {
         <div className="hero">
           <div className="copy">
             <h1>{isHost ? 'Ta salle est creee !' : 'Salle rejointe !'}</h1>
-            <div style={{ margin: '2rem 0', padding: '2rem', background: '#000000ff', borderRadius: '8px' }}>
+            <div style={{ margin: '2rem 0', padding: '2rem', background: '#ffffffff', borderRadius: '8px', border: '2px solid #000000' }}>
               <p style={{ fontSize: '1.2rem', marginBottom: '0.9rem', color: '#cac9c9ff' }}>
                 Code de la salle :
               </p>
               <p style={{ fontSize: '2.5rem', fontWeight: 'bold', letterSpacing: '0.3em', margin: '0' }}>
                 {code}
               </p>
-              {isHost && (
-                <button 
-                  className="btn ghost" 
-                  onClick={copyCodeToClipboard}
-                  style={{ marginTop: '1rem', fontSize: '0.9rem' }}
-                >
-                  📋 Copier le code
-                </button>
-              )}
             </div>
             <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
               <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Joueurs connectés :</p>
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 {players.map((player, index) => (
-                  <li key={index} style={{ padding: '0.5rem', background: '#000000ff', margin: '0.25rem 0', borderRadius: '4px' }}>
+                  <li key={index} style={{ padding: '0.5rem', background: '#ffffffff', margin: '0.25rem 0' }}>
                     👤 {player}
                   </li>
                 ))}
               </ul>
             </div>
             <p className="lede" style={{ color: '#cac9c9ff' }}>
-              {isHost 
+              {isHost
                 ? 'Partage le code ci-dessus avec tes amis pour qu\'ils puissent rejoindre !'
                 : 'En attente que l\'hote lance la partie...'}
             </p>

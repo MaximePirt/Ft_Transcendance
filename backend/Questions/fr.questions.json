@@ -3,12 +3,39 @@
         {
             "Histoire": [
                 {
-                    "question": "en quelle année est né toto",
-                    "réponse": "2025",
+                    "question": "Quelle est la loi qui autorise l’usage des contraceptifs, et notamment la contraception orale.",
+                    "type": "qcm",
+                    "réponse": "Loi Neuwirth",
+                    "options": [
+                        "Loi SRU",
+                        "Accords de Grenelle",
+                        "Loi Badinter",
+                        "Loi Neuwirth"
+                    ],
+                    "difficulté": "moyen"
+                },
+                {
+                    "question": "Qui a découvert l'Amérique ?",
+                    "type": "texte",
+                    "réponse": "Christophe Colomb",
+                    "options": [],
                     "difficulté": "facile"
                 }
             ],
-            "Musiques": []
+            "Musiques": [
+                {
+                    "question": "Quel artiste a chanté 'Bohemian Rhapsody' ?",
+                    "type": "qcm",
+                    "réponse": "Queen",
+                    "options": [
+                        "The Beatles",
+                        "Queen",
+                        "Led Zeppelin",
+                        "Pink Floyd"
+                    ],
+                    "difficulté": "moyen"
+                }
+            ]
         }
     ]
 }

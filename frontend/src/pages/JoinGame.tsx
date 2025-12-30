@@ -32,7 +32,7 @@ function JoinGame() {
           <div className="copy">
             <h1>Entre le code de la salle</h1>
             <p className="lede">Demande le code à ton ami qui a créé la partie</p>
-            
+
             <div style={{ margin: '2rem 0' }}>
               <input
                 type="text"
@@ -50,8 +50,10 @@ function JoinGame() {
                   border: '2px solid #ddd',
                   borderRadius: '8px',
                   textTransform: 'uppercase',
-                  background: '#000000ff',
-                  color: '#ffffffff'
+                  /*ici pour mettre une box/card de couleurs autour du bouton de code*/
+                  backgroundColor: '#ffffffff',
+                  /*texte*/
+                  color: '#080808ff'
                 }}
               />
               {error && (
@@ -62,8 +64,8 @@ function JoinGame() {
             </div>
 
             <div className="actions">
-              <button 
-                className="btn primary" 
+              <button
+                className="btn primary"
                 onClick={handleJoin}
                 disabled={roomCode.length !== 6}
               >

@@ -11,15 +11,15 @@ const topics = [
   { title: 'Musique', detail: 'Blind tests, paroles et fun facts des artistes que tu aimes.' },
 ]
 
-const highlights = [
-  { label: 'Questions fraiches', value: 'Mises a jour chaque semaine' },
-  { label: 'Solo ou groupe', value: 'Pret pour les soirees et aperos' },
-  { label: 'Rapide', value: '< 5 min pour un quiz' },
+const SpaceZone = [
+  { label: '\u00A0', value: ' ' }, //genere juste des espaces
+  { label: '\u00A0', value: ' ' },
+  { label: '\u00A0', value: ' ' }
 ]
 
 function HomePage() {
   const navigate = useNavigate()
-  const {t} = useTranslation()
+  const { t } = useTranslation()
   const [showLogin, setShowLogin] = useState(false)
   const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
 
@@ -35,10 +35,9 @@ function HomePage() {
         <p className="eyebrow">Quiz Sprint</p>
         <div className="hero">
           <div className="copy">
-            <h1>Pret a buzzer ?</h1>
+            <h1>Prêt à buzzer ?</h1>
             <p className="lede">
-              Lance un quiz express, defie tes potes ou revise en solo. Une page simple, juste ce qu'il faut pour
-              commencer.
+              Lance un quiz express, defie tes potes ou revise en solo.
             </p>
             <div className="actions">
               <button className="btn primary" onClick={() => navigate('/quiz')}>
@@ -46,8 +45,8 @@ function HomePage() {
               </button>
               <button className="btn ghost">Parcourir les categories</button>
             </div>
-            <div className="highlights">
-              {highlights.map((item) => (
+            <div className="SpaceZone">
+              {SpaceZone.map((item) => (
                 <div key={item.label} className="highlight">
                   <span className="label">{item.label}</span>
                   <span className="value">{item.value}</span>
@@ -56,7 +55,7 @@ function HomePage() {
             </div>
           </div>
           <div className="panel">
-            <div className="panel-title">Choisis ta categorie</div>
+            <div className="panel-title">  </div>
             <div className="grid">
               {topics.map((topic) => (
                 <article key={topic.title} className="card">
