@@ -18,7 +18,12 @@
                     "question": "Qui a découvert l'Amérique ?",
                     "type": "texte",
                     "réponse": "Christophe Colomb",
-                    "options": [],
+                    "variantes": [
+                        "Colomb",
+                        "Christopher Columbus",
+                        "Christophe Colombe",
+                        "Cristóbal Colón"
+                    ],
                     "difficulté": "facile"
                 }
             ],
@@ -32,6 +37,45 @@
                         "Queen",
                         "Led Zeppelin",
                         "Pink Floyd"
+                    ],
+                    "difficulté": "moyen"
+                }
+            ],
+            "Sports": [
+                {
+                    "question": "Quel pays a remporté la Coupe du Monde de la FIFA 2018 ?",
+                    "type": "qcm",
+                    "réponse": "France",
+                    "options": [
+                        "Brésil",
+                        "Allemagne",
+                        "France",
+                        "Argentine"
+                    ],
+                    "difficulté": "facile"
+                }
+            ],
+            "Esport": [
+                {
+                    "question": "Quel est le premier jeu sur lequel l'esport est apparu ?",
+                    "type": "texte",
+                    "réponse": "The Intergalactic Space War",
+                    "variantes": [
+                        "Space War",
+                        "The Space War",
+                        "Intergalactic Space War"
+                    ],
+                    "difficulté": "facile"
+                },
+                {
+                    "question": "Quel jeu a remporte le Game Awards du jeu esport de l'année 2025 ? ",
+                    "type": "qcm",
+                    "réponse": "Counter-Strike 2",
+                    "options": [
+                        "Dota 2",
+                        "Counter-Strike 2",
+                        "Fortnite",
+                        "League of Legends"
                     ],
                     "difficulté": "moyen"
                 }

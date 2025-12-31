@@ -7,11 +7,66 @@ interface Question {
   type: 'qcm' | 'texte'
   réponse: string
   options?: string[]
+  variantes?: string[]
   difficulté: string
 }
 
 interface QuizData {
   Quiz: Array<Record<string, Question[]>>
+}
+
+function shuffleQuestions(items: Question[]) {
+  const shuffled = [...items]
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
+function normalizeAnswer(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s'-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function levenshtein(a: string, b: string) {
+  const dp: number[][] = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0))
+  for (let i = 0; i <= a.length; i += 1) dp[i][0] = i
+  for (let j = 0; j <= b.length; j += 1) dp[0][j] = j
+  for (let i = 1; i <= a.length; i += 1) {
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost)
+    }
+  }
+  return dp[a.length][b.length]
+}
+
+function isTextAnswerCorrect(question: Question, answer: string) {
+  const accepted = [question.réponse, ...(question.variantes ?? [])]
+  const normalizedUser = normalizeAnswer(answer)
+  const normalizedAccepted = accepted.map((value) => normalizeAnswer(value))
+
+  return normalizedAccepted.some((target) => {
+    if (target === normalizedUser) return true
+
+    // Tolérer les réponses quasi-identiques (accents/typos légers)
+    const distance = levenshtein(target, normalizedUser)
+    const tolerance = Math.max(1, Math.floor(target.length * 0.2))
+    if (distance <= tolerance) return true
+
+    // Tolérer une inclusion forte (ex: on tape juste le nom principal)
+    if (normalizedUser.length >= 4 && (target.includes(normalizedUser) || normalizedUser.includes(target))) {
+      return true
+    }
+
+    return false
+  })
 }
 
 function SoloGamePage() {
@@ -35,14 +90,20 @@ function SoloGamePage() {
 
         // Extraire toutes les questions de toutes les catégories
         const allQuestions: Question[] = []
+        const seenQuestions = new Set<string>()
         if (data.Quiz && data.Quiz.length > 0) {
           const quizData = data.Quiz[0]
           for (const category in quizData) {
-            allQuestions.push(...quizData[category])
+            quizData[category].forEach((question) => {
+              if (!seenQuestions.has(question.question)) {
+                seenQuestions.add(question.question)
+                allQuestions.push(question)
+              }
+            })
           }
         }
 
-        setQuestions(allQuestions)
+        setQuestions(shuffleQuestions(allQuestions))
         setLoading(false)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue')
@@ -54,6 +115,20 @@ function SoloGamePage() {
   }, [])
 
   const handleNextQuestion = () => {
+    const currentQuestion = questions[currentQuestionIndex]
+
+    if (currentQuestion.type === 'texte') {
+      if (!userAnswer.trim()) {
+        alert('Saisis une réponse avant de continuer.')
+        return
+      }
+
+      if (!isTextAnswerCorrect(currentQuestion, userAnswer)) {
+        alert('Réponse incorrecte. Essaie encore !')
+        return
+      }
+    }
+
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
       setUserAnswer('')
