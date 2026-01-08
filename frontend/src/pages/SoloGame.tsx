@@ -69,6 +69,8 @@ function isTextAnswerCorrect(question: Question, answer: string) {
   })
 }
 
+const STORAGE_KEY = 'soloGameState:v1'
+
 function SoloGamePage() {
   const navigate = useNavigate()
   const [questions, setQuestions] = useState<Question[]>([])
@@ -77,9 +79,29 @@ function SoloGamePage() {
   const [error, setError] = useState<string | null>(null)
   const [userAnswer, setUserAnswer] = useState('')
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [score, setScore] = useState(0)
 
   useEffect(() => {
-    // Charger les questions depuis le backend
+    // Si un état est sauvegardé, le restaurer immédiatement pour éviter un reset au refresh
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed.questions?.length) {
+          setQuestions(parsed.questions)
+          setCurrentQuestionIndex(parsed.currentQuestionIndex ?? 0)
+          setUserAnswer(parsed.userAnswer ?? '')
+          setSelectedOption(parsed.selectedOption ?? null)
+          setScore(parsed.score ?? 0)
+          setLoading(false)
+          return
+        }
+      } catch (err) {
+        console.warn('[SoloGame] failed to restore saved state', err)
+      }
+    }
+
+    // Charger les questions depuis le backend si aucun état sauvegardé
     const fetchQuestions = async () => {
       try {
         const response = await fetch('http://localhost:8000/api/questions/?lang=fr')
@@ -114,30 +136,53 @@ function SoloGamePage() {
     fetchQuestions()
   }, [])
 
+  useEffect(() => {
+    if (loading || error || questions.length === 0) return
+
+    const payload = {
+      questions,
+      currentQuestionIndex,
+      userAnswer,
+      selectedOption,
+      score,
+    }
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+    } catch (err) {
+      console.warn('[SoloGame] failed to persist state', err)
+    }
+  }, [questions, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
+
   const handleNextQuestion = () => {
     const currentQuestion = questions[currentQuestionIndex]
 
-    if (currentQuestion.type === 'texte') {
-      if (!userAnswer.trim()) {
-        alert('Saisis une réponse avant de continuer.')
-        return
-      }
+    let isCorrect = false
 
-      if (!isTextAnswerCorrect(currentQuestion, userAnswer)) {
-        alert('Réponse incorrecte. Essaie encore !')
-        return
-      }
-    }
-
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1)
-      setUserAnswer('')
-      setSelectedOption(null)
+    // si pas de reponse on met faux directement
+    if (currentQuestion.type === 'qcm') {
+      isCorrect = selectedOption
+        ? normalizeAnswer(selectedOption) === normalizeAnswer(currentQuestion.réponse)
+        : false
     } else {
-      // Fin du quiz
-      alert('Quiz terminé!')
-      navigate('/quiz')
+      isCorrect = isTextAnswerCorrect(currentQuestion, userAnswer)
     }
+
+    const isLastQuestion = currentQuestionIndex === questions.length - 1
+    const finalScore = isCorrect ? score + 1 : score
+
+    setScore(finalScore)
+
+    if (isLastQuestion) {
+      localStorage.removeItem(STORAGE_KEY)
+      alert(`Quiz terminé ! Score: ${finalScore} / ${questions.length}`)
+      navigate('/quiz')
+      return
+    }
+
+    setCurrentQuestionIndex(currentQuestionIndex + 1)
+    setUserAnswer('')
+    setSelectedOption(null)
   }
 
   const handleOptionClick = (option: string) => {
@@ -207,11 +252,34 @@ function SoloGamePage() {
   return (
     <main className="page">
       <div className="shell">
-        <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <button
+            onClick={() => {
+              localStorage.removeItem(STORAGE_KEY)
+              navigate('/quiz')
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              fontSize: '1.8rem',
+              cursor: 'pointer',
+              padding: '0.5rem',
+              lineHeight: 1,
+              opacity: 0.6,
+              transition: 'opacity 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+            title="Quitter la partie"
+          >
+            🚪
+          </button>
+        </div>
         <div className="hero">
           <div className="copy">
             <h1>Partie Solo en cours</h1>
-            <p className="lede">Question {currentQuestionIndex + 1} sur {questions.length}</p>
+              <p className="lede">Question {currentQuestionIndex + 1} sur {questions.length} • Score : {score}</p>
 
             <div style={{
               marginTop: '2rem',
@@ -219,7 +287,10 @@ function SoloGamePage() {
               /*ici pour mettre une box/card de couleurs autour des questions*/
               backgroundColor: '#ffffffff',
               borderRadius: '8px',
-              textAlign: 'left'
+              textAlign: 'left',
+              position: 'relative',
+              maxWidth: '100%',
+              overflow: 'hidden'
             }}>
               <h2 style={{ marginBottom: '1rem', fontSize: '1.3rem' }}>
                 {currentQuestion.question}
@@ -227,7 +298,11 @@ function SoloGamePage() {
 
               <div style={{ marginTop: '1.5rem' }}>
                 {currentQuestion.type === 'qcm' && currentQuestion.options ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '1rem' 
+                  }}>
                     {currentQuestion.options.map((option, index) => (
                       <button
                         key={index}
@@ -241,7 +316,8 @@ function SoloGamePage() {
                           color: '#000',
                           cursor: 'pointer',
                           transition: 'all 0.2s',
-                          fontWeight: selectedOption === option ? 'bold' : 'normal'
+                          fontWeight: selectedOption === option ? 'bold' : 'normal',
+                          wordWrap: 'break-word'
                         }}
                       >
                         {option}
@@ -274,9 +350,6 @@ function SoloGamePage() {
             <div className="actions">
               <button className="btn primary" onClick={handleNextQuestion}>
                 {currentQuestionIndex === questions.length - 1 ? 'Terminer' : 'Question suivante'}
-              </button>
-              <button className="btn ghost" onClick={() => navigate('/quiz')}>
-                Quitter la partie
               </button>
             </div>
           </div>

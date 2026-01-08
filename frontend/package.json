@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "vite",
-    "backend": "cd ../backend && python3 manage.py runserver",
+    "backend": "cd ../backend && .venv/bin/python manage.py runserver",
     "juste un commentaire": "concurrently ici ne sert que pour les tests en attendant docker",
     "dev": "concurrently \"npm run start\" \"npm run backend\"",
     "build": "tsc -b && vite build",
