@@ -21,6 +21,7 @@ function HomePage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [showLogin, setShowLogin] = useState(false)
+  const [showSignup, setShowSignup] = useState(false)
   const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
 
   return (
@@ -30,7 +31,10 @@ function HomePage() {
         <button className="btn login" onClick={() => setShowLogin(true)}>
           {t("connect")}
         </button>
-      </div>
+        <button className="btn primary" onClick={() => setShowSignup(true)}>
+          S'inscrire
+        </button>
+      </div>setShowSignup
       <div className="shell">
         <p className="eyebrow">Quiz Sprint</p>
         <div className="hero">
@@ -150,6 +154,49 @@ function HomePage() {
               </label>
               <button type="submit" className="btn primary full">
                 Se connecter
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showSignup && (
+        <div className="login-overlay" role="dialog" aria-modal="true">
+          <div className="login-card">
+            <div className="login-card__head">
+              <div>
+                <p className="eyebrow small">Inscription</p>
+                <h2>Rejoins la partie</h2>
+              </div>
+              <button className="close" aria-label="Fermer" onClick={() => setShowSignup(false)}>
+                ×
+              </button>
+            </div>
+            <form
+              className="login-form"
+              onSubmit={(e) => {
+                e.preventDefault()
+                setShowSignup(false)
+              }}
+            >
+              <label className="field">
+                <span>Email</span>
+                <input type="email" placeholder="toi@email.fr" required />
+              </label>
+              <label className="field">
+                <span>Pseudo</span>
+                <input type="text" placeholder="ton pseudo" required />
+              </label>
+              <label className="field">
+                <span>Mot de passe</span>
+                <input type="password" placeholder="••••••••" required />
+              </label>
+              <label className="field">
+                <span>Confirme ton mot de passe</span>
+                <input type="password" placeholder="••••••••" required />
+              </label>
+              <button type="submit" className="btn primary full">
+                Créer un compte
               </button>
             </form>
           </div>
