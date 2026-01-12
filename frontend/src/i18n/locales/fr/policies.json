@@ -1,0 +1,98 @@
+{
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "intro": "Cette politique de confidentialité décrit la manière dont nous collectons, utilisons et protégeons vos données personnelles lorsque vous utilisez notre site et nos services.",
+    "section1": {
+      "title": "1. Responsable du traitement",
+      "content": "Le responsable du traitement des données est <Quizz Sprint>. Pour toute question concernant vos données, contactez : <vgodart@student.42angouleme.fr>."
+    },
+    "section2": {
+      "title": "2. Données collectées",
+      "intro": "Nous pouvons collecter les catégories de données suivantes :",
+      "items": [
+        "Données d'identification : nom, adresse e-mail, pseudo.",
+        "Données de connexion : adresse IP, identifiants de session, journaux serveur.",
+        "Données d'usage : actions sur le site, performances aux quiz, scores, préférences, statistiques anonymisées.",
+        "Données fournies volontairement : informations de profil, réponses aux quiz (à des fins pédagogiques).",
+        "Données d'appareil : type de navigateur, système d'exploitation, identifiant d'appareil."
+      ]
+    },
+    "section3": {
+      "title": "3. Finalités et bases légales",
+      "intro": "Les données sont traitées pour :",
+      "items": [
+        "Fournir et maintenir le service de quiz (exécution du contrat).",
+        "Gérer votre compte et profil utilisateur (exécution du contrat).",
+        "Améliorer l'expérience utilisateur et développer les fonctionnalités (intérêt légitime).",
+        "Analyser les performances aux quiz et l'apprentissage (intérêt légitime).",
+        "Respecter les obligations légales (conservation, facturation).",
+        "Marketing et communications (avec consentement si requis).",
+        "Prévenir la fraude et assurer la sécurité (intérêt légitime)."
+      ]
+    },
+    "section4": {
+      "title": "4. Cookies et suivi",
+      "content": "Nous utilisons des cookies et technologies similaires pour assurer le fonctionnement du site, mémoriser vos préférences, suivre votre progression aux quiz et analyser l'usage. Les cookies essentiels sont nécessaires au service. Les cookies d'analyse nous aident à améliorer la plateforme. Vous pouvez configurer ou refuser les cookies non essentiels via votre navigateur."
+    },
+    "section5": {
+      "title": "5. Durée de conservation",
+      "content": "Les données sont conservées pendant la durée nécessaire aux finalités mentionnées ci-dessus, sauf obligation légale contraire. Les données de compte utilisateur sont conservées jusqu'à la suppression du compte. Les scores et données de performance peuvent être conservés à des fins d'analyse statistique (anonymisées). Les durées précises sont définies dans notre politique interne."
+    },
+    "section6": {
+      "title": "6. Partage et transferts",
+      "content": "Nous pouvons partager des données avec des prestataires techniques (hébergement, analytics, paiements) uniquement lorsque cela est nécessaire au service. Tout transfert de données hors de l'Union européenne est encadré par des garanties appropriées (clauses contractuelles types, décisions d'adéquation). Nous ne vendons pas vos données à des tiers."
+    },
+    "section7": {
+      "title": "7. Sécurité",
+      "content": "Nous mettons en œuvre des mesures techniques et organisationnelles raisonnables pour protéger les données (chiffrement, accès restreint, sauvegardes). Toutefois aucune méthode de transmission sur Internet n'est totalement sécurisée. Nous auditez régulièrement nos pratiques de sécurité."
+    },
+    "section8": {
+      "title": "8. Vos droits",
+      "content": "Vous pouvez demander l'accès, la rectification, la suppression, la limitation du traitement, la portabilité de vos données ou vous opposer à leur traitement. Vous pouvez retirer votre consentement à tout moment. Pour exercer vos droits, contactez : <vgodart@student.42angouleme.fr>. Nous répondrons dans les 30 jours."
+    },
+    "section9": {
+      "title": "9. Modifications de la politique",
+      "content": "Cette politique peut être mise à jour. La version la plus récente est publiée sur le site avec la date de mise à jour. L'utilisation continue du site après les modifications constitue une acceptation de la nouvelle politique."
+    }
+  },
+  "terms": {
+    "title": "Conditions d'utilisation",
+    "intro": "Les présentes conditions régissent votre accès et votre utilisation du site. En utilisant le site, vous reconnaissez avoir lu et accepté ces conditions.",
+    "section1": {
+      "title": "1. Accès au service",
+      "content": "L'accès au site peut nécessiter la création d'un compte. Vous vous engagez à fournir des informations exactes et à protéger la confidentialité de vos identifiants. Vous êtes responsable de toute activité réalisée avec votre compte. Vous devez avoir au moins 13 ans (ou avoir le consentement parental si requis par la loi dans votre juridiction) pour utiliser ce service."
+    },
+    "section2": {
+      "title": "2. Utilisation autorisée",
+      "content": "Vous vous engagez à n'utiliser le site qu'à des fins légales et conformes aux présentes conditions. Sont notamment interdits : la fraude, la publication de contenus illégaux, la violation des droits d'un tiers, le harcèlement, la triche aux quiz, la tentative de manipulation des scores ou classements."
+    },
+    "section3": {
+      "title": "3. Règles des quiz",
+      "content": "Les quiz sont fournis à des fins de divertissement et pédagogiques. Les scores et classements sont basés sur les réponses soumises et sont fournis tels quels. Nous nous réservons le droit d'invalider les scores obtenus par triche ou violation des règles. Les litiges concernant les réponses aux quiz doivent être adressés via le formulaire de contact."
+    },
+    "section4": {
+      "title": "4. Contenu utilisateur",
+      "content": "Si vous publiez du contenu sur le site (commentaires, contributions de quiz), vous conservez les droits sur ce contenu mais accordez à l'exploitant une licence non exclusive pour l'utiliser et le diffuser dans le cadre du service. Vous garantissez que vous possédez ou avez le droit de publier ce contenu et qu'il ne viole pas les droits de tiers."
+    },
+    "section5": {
+      "title": "5. Propriété intellectuelle",
+      "content": "Tous les éléments du site (design, questions, solutions, textes, images, logos) sont protégés par le droit d'auteur et autres droits de propriété intellectuelle. Leur reproduction ou utilisation sans autorisation est interdite. Vous ne pouvez pas extraire, crawler ou télécharger systématiquement le contenu du site."
+    },
+    "section6": {
+      "title": "6. Clause de non-responsabilité",
+      "content": "Le site est fourni 'tel quel' et sans garantie expresse. L'exploitant ne saurait être tenu responsable des dommages indirects. La responsabilité, lorsqu'elle est engagée, est limitée au montant que vous avez payé au cours des 12 derniers mois, le cas échéant."
+    },
+    "section7": {
+      "title": "7. Suspension et résiliation du compte",
+      "content": "Nous pouvons suspendre ou supprimer un compte en cas de violation grave des présentes conditions, notamment en cas de triche, d'abus ou d'activité illégale. À la suppression, certaines données pourront être conservées pour respecter les obligations légales. Vous pouvez demander la suppression de votre compte à tout moment, sous réserve des obligations de conservation légale."
+    },
+    "section8": {
+      "title": "8. Litiges et droit applicable",
+      "content": "Ces conditions sont régies par le droit applicable dans le pays de l'exploitant. En cas de litige, les parties cherchent une solution amiable avant toute action judiciaire. Vous acceptez de vous soumettre à la juridiction des tribunaux compétents."
+    },
+    "section9": {
+      "title": "9. Contact",
+      "content": "Pour toute question concernant ces conditions, contactez : <vgodart@student.42angouleme.fr>."
+    }
+  }
+}

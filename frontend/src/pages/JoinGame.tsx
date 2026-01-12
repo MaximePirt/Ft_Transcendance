@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 function JoinGame() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [roomCode, setRoomCode] = useState('')
   const [error, setError] = useState('')
 
   const handleJoin = () => {
     if (roomCode.trim().length !== 6) {
-      setError('Le code doit contenir 6 caracteres')
+      setError(t('code_error'))
       return
     }
     // Rejoindre la room avec le code
@@ -27,18 +29,18 @@ function JoinGame() {
   return (
     <main className="page">
       <div className="shell">
-        <p className="eyebrow">Quiz Sprint - Rejoindre une partie</p>
+        <p className="eyebrow">Quiz Sprint - {t("join_room")}</p>
         <div className="hero">
           <div className="copy">
-            <h1>Entre le code de la salle</h1>
-            <p className="lede">Demande le code à ton ami qui a créé la partie</p>
+            <h1>{t("join_title")}</h1>
+            <p className="lede">{t("join_description")}</p>
 
             <div style={{ margin: '2rem 0' }}>
               <input
                 type="text"
                 value={roomCode}
                 onChange={handleInputChange}
-                placeholder="Ex: ABC123"
+                placeholder={t("code_placeholder")}
                 maxLength={6}
                 style={{
                   fontSize: '2rem',
@@ -69,10 +71,10 @@ function JoinGame() {
                 onClick={handleJoin}
                 disabled={roomCode.length !== 6}
               >
-                Rejoindre la partie
+                {t("join_game")}
               </button>
               <button className="btn ghost" onClick={() => navigate('/quiz')}>
-                Retour
+                {t("back")}
               </button>
             </div>
           </div>

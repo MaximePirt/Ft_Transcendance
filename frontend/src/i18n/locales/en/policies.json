@@ -1,0 +1,98 @@
+{
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "This privacy policy describes how we collect, use, and protect your personal data when you use our site and services.",
+    "section1": {
+      "title": "1. Data Controller",
+      "content": "The data controller is <Quizz Sprint>. For any questions about your data, contact: <vgodart@student.42angouleme.fr>."
+    },
+    "section2": {
+      "title": "2. Data Collected",
+      "intro": "We may collect the following categories of data:",
+      "items": [
+        "Identification data: name, email address, username.",
+        "Connection data: IP address, session identifiers, server logs.",
+        "Usage data: actions on the site, quiz performance, scores, preferences, anonymized statistics.",
+        "Voluntary data: profile information, quiz answers (for learning purposes).",
+        "Device data: browser type, operating system, device identifier."
+      ]
+    },
+    "section3": {
+      "title": "3. Purposes and Legal Bases",
+      "intro": "Data is processed for:",
+      "items": [
+        "Providing and maintaining the quiz service (contract execution).",
+        "Managing your account and user profile (contract execution).",
+        "Improving user experience and developing features (legitimate interest).",
+        "Analyzing quiz performance and learning analytics (legitimate interest).",
+        "Complying with legal obligations (retention, billing).",
+        "Marketing and communications (with consent if required).",
+        "Preventing fraud and ensuring security (legitimate interest)."
+      ]
+    },
+    "section4": {
+      "title": "4. Cookies and Tracking",
+      "content": "We use cookies and similar technologies to ensure site functionality, remember your preferences, track quiz progress, and analyze usage. Essential cookies are necessary for the service. Analytics cookies help us improve the platform. You can configure or refuse non-essential cookies via your browser."
+    },
+    "section5": {
+      "title": "5. Data Retention",
+      "content": "Data is retained for the duration necessary for the stated purposes, unless required otherwise by law. User account data is retained until account deletion. Quiz scores and performance data may be retained for statistical analysis purposes (anonymized). Specific retention periods are defined in our internal policy."
+    },
+    "section6": {
+      "title": "6. Sharing and Transfers",
+      "content": "We may share data with technical service providers (hosting, analytics, payment processing) only when necessary for the service. Any data transfer outside the European Union is governed by appropriate safeguards (standard contractual clauses, adequacy decisions). We do not sell your data to third parties."
+    },
+    "section7": {
+      "title": "7. Security",
+      "content": "We implement reasonable technical and organizational measures to protect data (encryption, restricted access, backups). However, no transmission method over the Internet is entirely secure. We regularly audit our security practices."
+    },
+    "section8": {
+      "title": "8. Your Rights",
+      "content": "You can request access, correction, deletion, limitation of processing, portability of your data, or object to their processing. You have the right to withdraw consent at any time. To exercise your rights, contact: <vgodart@student.42angouleme.fr>. We will respond within 30 days."
+    },
+    "section9": {
+      "title": "9. Policy Changes",
+      "content": "This policy may be updated. The most recent version is published on the site with the update date. Continued use of the site after changes constitutes acceptance of the new policy."
+    }
+  },
+  "terms": {
+    "title": "Terms of Use",
+    "intro": "These terms govern your access and use of the site. By using the site, you acknowledge that you have read and accepted these terms.",
+    "section1": {
+      "title": "1. Service Access",
+      "content": "Access to the site may require creating an account. You agree to provide accurate information and protect the confidentiality of your login credentials. You are responsible for all activity on your account. You must be at least 13 years old (or have parental consent if required by law in your jurisdiction) to use this service."
+    },
+    "section2": {
+      "title": "2. Authorized Use",
+      "content": "You agree to use the site only for legal purposes and in accordance with these terms. Specifically prohibited: fraud, publication of illegal content, violation of third-party rights, harassment, cheating on quizzes, attempting to manipulate scores or rankings."
+    },
+    "section3": {
+      "title": "3. Quiz Rules",
+      "content": "Quizzes are provided for entertainment and educational purposes. Quiz scores and rankings are based on submitted answers and are provided as-is. We reserve the right to invalidate scores obtained through cheating or rule violations. Disputes regarding quiz answers should be addressed through the contact form."
+    },
+    "section4": {
+      "title": "4. User-Generated Content",
+      "content": "If you publish content on the site (comments, quiz contributions), you retain rights to this content but grant the operator a non-exclusive license to use and distribute it within the service. You guarantee that you own or have the right to publish this content and that it does not violate third-party rights."
+    },
+    "section5": {
+      "title": "5. Intellectual Property",
+      "content": "All site elements (design, questions, solutions, texts, images, logos) are protected by copyright and other intellectual property rights. Their reproduction or use without authorization is prohibited. You may not scrape, crawl, or systematically download site content."
+    },
+    "section6": {
+      "title": "6. Liability Disclaimer",
+      "content": "The site is provided 'as-is' without express warranty. The operator cannot be held responsible for indirect damages. Liability, when engaged, is limited to the amount paid by you in the past 12 months, if applicable."
+    },
+    "section7": {
+      "title": "7. Account Suspension and Termination",
+      "content": "We may suspend or delete an account in case of serious violation of these terms, including cheating, abuse, or illegal activity. Upon termination, certain data may be retained to comply with legal obligations. You may request account deletion at any time, subject to legal retention requirements."
+    },
+    "section8": {
+      "title": "8. Disputes and Applicable Law",
+      "content": "These terms are governed by the applicable law of the operator's country. In case of dispute, the parties seek an amicable solution before any legal action. You agree to submit to the jurisdiction of the competent courts."
+    },
+    "section9": {
+      "title": "9. Contact",
+      "content": "For any questions about these terms, contact: <vgodart@student.42angouleme.fr>."
+    }
+  }
+}

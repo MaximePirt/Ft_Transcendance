@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 const SpaceZone = [
@@ -9,6 +10,7 @@ const SpaceZone = [
 
 function QuizPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
 
   return (
     <main className="page">
@@ -16,8 +18,8 @@ function QuizPage() {
         <p className="eyebrow">Quiz Sprint</p>
         <div className="hero">
           <div className="copy">
-            <h1>Lance ton premier quiz</h1>
-            <p className="lede">Choisis un mode de jeu et commence sans quitter la page.</p>
+            <h1>{t("quiz_title")}</h1>
+            <p className="lede">{t("quiz_description")}</p>
             <div className="SpaceZone">
               {SpaceZone.map((item) => (
                 <div key={item.label} className="highlight">
@@ -27,12 +29,12 @@ function QuizPage() {
               ))}
             </div>
             <div className="actions">
-              <button className="btn primary" onClick={() => navigate('/quiz/solo')}>🎮 Solo</button>
-              <button className="btn primary" onClick={() => navigate('/quiz/multi')}>🏠 Créer une salle</button>
-              <button className="btn primary" onClick={() => navigate('/quiz/join')}>🚪 Rejoindre une salle</button>
+              <button className="btn primary" onClick={() => navigate('/quiz/solo')}>{t("solo_mode")}</button>
+              <button className="btn primary" onClick={() => navigate('/quiz/multi')}>{t("create_room")}</button>
+              <button className="btn primary" onClick={() => navigate('/quiz/join')}>{t("join_room")}</button>
               {/*a voir comment on va gerer les tournois, je nous cree le bouton mais pas plus*/}
-              <button className="btn primary" onClick={() => navigate('')}>🏆Tournoi 🏆</button>
-              <button className="btn ghost" onClick={() => navigate('/')}> Retour à l'accueil</button>
+              <button className="btn primary" onClick={() => navigate('')}>{t("tournament")}</button>
+              <button className="btn ghost" onClick={() => navigate('/')}>{t("back_home")}</button>
             </div>
           </div>
         </div>

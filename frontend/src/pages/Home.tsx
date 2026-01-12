@@ -5,10 +5,10 @@ import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './../content/LanguageSelector.tsx'
 
-const topics = [
-  { title: 'Culture generale', detail: 'Histoire, geo, sciences et actu pour tester ta curiosite.' },
-  { title: 'Cine / Series', detail: 'Personnages cultes, repliques, bandes originales et anecdotes.' },
-  { title: 'Musique', detail: 'Blind tests, paroles et fun facts des artistes que tu aimes.' },
+const topics = (t: any) => [
+  { title: t('general_culture'), detail: t('general_culture_desc') },
+  { title: t('cinema_series'), detail: t('cinema_series_desc') },
+  { title: t('music'), detail: t('music_desc') },
 ]
 
 const SpaceZone = [
@@ -32,22 +32,22 @@ function HomePage() {
           {t("connect")}
         </button>
         <button className="btn primary" onClick={() => setShowSignup(true)}>
-          S'inscrire
+          {t("signup")}
         </button>
-      </div>setShowSignup
+      </div>
       <div className="shell">
         <p className="eyebrow">Quiz Sprint</p>
         <div className="hero">
           <div className="copy">
-            <h1>Prêt à buzzer ?</h1>
+            <h1>{t("ready")}</h1>
             <p className="lede">
-              Lance un quiz express, defie tes potes ou revise en solo.
+              {t("tagline")}
             </p>
             <div className="actions">
               <button className="btn primary" onClick={() => navigate('/quiz')}>
-                Commencer un quiz
+                {t("start_quiz")}
               </button>
-              <button className="btn ghost">Parcourir les categories</button>
+              <button className="btn ghost">{t("browse_categories")}</button>
             </div>
             <div className="SpaceZone">
               {SpaceZone.map((item) => (
@@ -61,11 +61,11 @@ function HomePage() {
           <div className="panel">
             <div className="panel-title">  </div>
             <div className="grid">
-              {topics.map((topic) => (
+              {topics(t).map((topic) => (
                 <article key={topic.title} className="card">
                   <div className="card-head">{topic.title}</div>
                   <p className="card-body">{topic.detail}</p>
-                  <span className="card-cta">Ouvrir</span>
+                  <span className="card-cta">{t("start_quiz")}</span>
                 </article>
               ))}
             </div>
@@ -77,12 +77,12 @@ function HomePage() {
         <div className="footer__inner">
           <div>
             <p className="eyebrow small">Quiz Sprint</p>
-            <p className="footer__lede">Un quiz express, quelques clics, et c'est parti.</p>
+            <p className="footer__lede">{t("footer_tagline")}</p>
           </div>
           <div className="footer__links">
-            <a href="#">A propos</a>
-            <a href="#">FAQ</a>
-            <a href="#">Contact</a>
+            <a href="#">{t("about")}</a>
+            <a href="#">{t("faq")}</a>
+            <a href="#">{t("contact")}</a>
             <a
               href="#"
               onClick={(e) => {
@@ -90,7 +90,7 @@ function HomePage() {
                 setPolicy('privacy')
               }}
             >
-              Politiques de confidentialité
+              {t("privacy_policy")}
             </a>
             <a
               href="#"
@@ -99,7 +99,7 @@ function HomePage() {
                 setPolicy('terms')
               }}
             >
-              Condition d'utilisation
+              {t("terms")}
             </a>
           </div>
         </div>
@@ -112,9 +112,9 @@ function HomePage() {
             <div className="login-card__head">
               <div>
                 <p className="eyebrow small">
-                  {policy === 'privacy' ? 'Politiques de confidentialité' : "Condition d'utilisation"}
+                  {policy === 'privacy' ? t("privacy_policy") : t("terms")}
                 </p>
-                <h2>{policy === 'privacy' ? 'Politiques de confidentialité' : "Condition d'utilisation"}</h2>
+                <h2>{policy === 'privacy' ? t("privacy_policy") : t("terms")}</h2>
               </div>
               <button className="close" aria-label="Fermer" onClick={() => setPolicy(null)}>
                 ×
@@ -130,10 +130,10 @@ function HomePage() {
           <div className="login-card">
             <div className="login-card__head">
               <div>
-                <p className="eyebrow small">Connexion</p>
-                <h2>Reviens buzzer</h2>
+                <p className="eyebrow small">{t("login_title")}</p>
+                <h2>{t("login_subtitle")}</h2>
               </div>
-              <button className="close" aria-label="Fermer" onClick={() => setShowLogin(false)}>
+              <button className="close" aria-label={t("close")} onClick={() => setShowLogin(false)}>
                 ×
               </button>
             </div>
@@ -145,15 +145,15 @@ function HomePage() {
               }}
             >
               <label className="field">
-                <span>Email</span>
-                <input type="email" placeholder="toi@email.fr" required />
+                <span>{t("email")}</span>
+                <input type="email" placeholder={t("email_placeholder")} required />
               </label>
               <label className="field">
-                <span>Mot de passe</span>
-                <input type="password" placeholder="••••••••" required />
+                <span>{t("password")}</span>
+                <input type="password" placeholder={t("password_placeholder")} required />
               </label>
               <button type="submit" className="btn primary full">
-                Se connecter
+                {t("login_button")}
               </button>
             </form>
           </div>
@@ -165,10 +165,10 @@ function HomePage() {
           <div className="login-card">
             <div className="login-card__head">
               <div>
-                <p className="eyebrow small">Inscription</p>
-                <h2>Rejoins la partie</h2>
+                <p className="eyebrow small">{t("signup_title")}</p>
+                <h2>{t("signup_subtitle")}</h2>
               </div>
-              <button className="close" aria-label="Fermer" onClick={() => setShowSignup(false)}>
+              <button className="close" aria-label={t("close")} onClick={() => setShowSignup(false)}>
                 ×
               </button>
             </div>
@@ -180,23 +180,23 @@ function HomePage() {
               }}
             >
               <label className="field">
-                <span>Email</span>
-                <input type="email" placeholder="toi@email.fr" required />
+                <span>{t("email")}</span>
+                <input type="email" placeholder={t("email_placeholder")} required />
               </label>
               <label className="field">
-                <span>Pseudo</span>
-                <input type="text" placeholder="ton pseudo" required />
+                <span>{t("username")}</span>
+                <input type="text" placeholder={t("username_placeholder")} required />
               </label>
               <label className="field">
-                <span>Mot de passe</span>
-                <input type="password" placeholder="••••••••" required />
+                <span>{t("password")}</span>
+                <input type="password" placeholder={t("password_placeholder")} required />
               </label>
               <label className="field">
-                <span>Confirme ton mot de passe</span>
-                <input type="password" placeholder="••••••••" required />
+                <span>{t("confirm_password")}</span>
+                <input type="password" placeholder={t("password_placeholder")} required />
               </label>
               <button type="submit" className="btn primary full">
-                Créer un compte
+                {t("signup_button")}
               </button>
             </form>
           </div>

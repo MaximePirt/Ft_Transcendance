@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 interface Question {
@@ -73,6 +74,7 @@ const STORAGE_KEY = 'soloGameState:v1'
 
 function SoloGamePage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [questions, setQuestions] = useState<Question[]>([])
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -128,7 +130,7 @@ function SoloGamePage() {
         setQuestions(shuffleQuestions(allQuestions))
         setLoading(false)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue')
+        setError(err instanceof Error ? err.message : t('error_occurred'))
         setLoading(false)
       }
     }
