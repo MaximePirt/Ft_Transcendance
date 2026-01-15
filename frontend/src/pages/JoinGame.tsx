@@ -43,8 +43,8 @@ function JoinGame() {
                 placeholder={t("code_placeholder")}
                 maxLength={6}
                 style={{
-                  fontSize: '2rem',
-                  padding: '1rem',
+                  fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+                  padding: 'clamp(0.75rem, 2vw, 1rem)',
                   textAlign: 'center',
                   letterSpacing: '0.3em',
                   width: '100%',
@@ -59,7 +59,7 @@ function JoinGame() {
                 }}
               />
               {error && (
-                <p style={{ color: 'red', marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                <p style={{ color: 'red', marginTop: '0.5rem', fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>
                   ⚠️ {error}
                 </p>
               )}

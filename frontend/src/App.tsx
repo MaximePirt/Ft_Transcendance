@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import HomePage from './pages/Home'
 import QuizPage from './pages/Quiz'
+import SoloGameSetup from './pages/SoloGameSetup'
 import SoloGamePage from './pages/SoloGame'
 import MultiPlayerCodeRoom from './pages/MultiPlayerCodeRoom'
 import JoinGame from './pages/JoinGame'
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/quiz" element={<QuizPage />} />
+        <Route path="/quiz/solo-setup" element={<SoloGameSetup />} />
         <Route path="/quiz/solo" element={<SoloGamePage />} />
 
         <Route path="/quiz/multi" element={<MultiPlayerCodeRoom />} />

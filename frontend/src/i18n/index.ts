@@ -20,7 +20,7 @@ i18n
       },
     },
     
-    lng: "en",
+    lng: "fr",
     fallbackLng: "fr",
     returnObjects:true,
 

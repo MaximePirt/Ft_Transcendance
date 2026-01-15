@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSelector from './../content/LanguageSelector.tsx'
 
 const topics = (t: any) => [
-  { title: t('general_culture'), detail: t('general_culture_desc') },
+  { title: t('histoire'), detail: t('histoire_desc') },
   { title: t('cinema_series'), detail: t('cinema_series_desc') },
   { title: t('music'), detail: t('music_desc') },
 ]
