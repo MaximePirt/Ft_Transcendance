@@ -40,69 +40,69 @@ services:
       - front_node_modules:/app/node_modules
     restart: on-failure
     
-  # api:
-  #   build:
-  #     context: ./services/back/api
-  #     dockerfile: Dockerfile
-  #   container_name: api
-  #   networks:
-  #     - ft_transcendance
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - API_URL=https://localhost:3000
-  #   volumes:
-  #     - db:/db
-  #     - ./services/back/api:/app
-  #   depends_on:
-  #      sqlite_db:
-  #         condition: service_completed_successfully 
-  #   command: node --watch src/app.js 
+  api:
+    build:
+      context: ./services/back/api
+      dockerfile: Dockerfile
+    container_name: api
+    networks:
+      - ft_transcendance
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=https://localhost:3000
+    volumes:
+      - db:/db
+      - ./services/back/api:/app
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully 
+    command: node --watch src/app.js 
     
-  # user_api:
-  #   build:
-  #     context: ./services/back/user
-  #     dockerfile: Dockerfile
-  #   container_name: user_api
-  #   networks:
-  #     - ft_transcendance
-  #   ports:
-  #     - "3001:3001"
-  #   environment:
-  #     - API_URL=https://localhost:3001
-  #   volumes:
-  #     - db:/db
-  #     - ./services/back/user/src:/app/src
-  #     - /app/node_modules
-  #     - vault-secrets:/secrets:ro
-  #     - ./shared:/scripts:ro
-  #   depends_on:
-  #     sqlite_db:
-  #         condition: service_completed_successfully 
-  #   command: node --watch src/app.js
+  user_api:
+    build:
+      context: ./services/back/user
+      dockerfile: Dockerfile
+    container_name: user_api
+    networks:
+      - ft_transcendance
+    ports:
+      - "3001:3001"
+    environment:
+      - API_URL=https://localhost:3001
+    volumes:
+      - db:/db
+      - ./services/back/user/src:/app/src
+      - /app/node_modules
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully 
+    command: node --watch src/app.js
 
-  # auth_api:
-  #   build:
-  #     context: ./services/back/auth
-  #     dockerfile: Dockerfile
-  #   container_name: auth_api
-  #   networks:
-  #     - ft_transcendance
-  #   ports:
-  #     - "3003:3003"
-  #     - "1025:1025"
-  #   environment:
-  #     - API_URL=https://localhost:3003
-  #   volumes:
-  #   - db:/db
-  #   - ./services/back/auth:/app
-  #   - /app/node_modules
-  #   - vault-secrets:/secrets:ro
-  #   - ./shared:/scripts:ro
-  #   depends_on:
-  #     sqlite_db:
-  #         condition: service_completed_successfully
-  #   command: node --watch src/server.js
+  auth_api:
+    build:
+      context: ./services/back/auth
+      dockerfile: Dockerfile
+    container_name: auth_api
+    networks:
+      - ft_transcendance
+    ports:
+      - "3003:3003"
+      - "1025:1025"
+    environment:
+      - API_URL=https://localhost:3003
+    volumes:
+    - db:/db
+    - ./services/back/auth:/app
+    - /app/node_modules
+    - vault-secrets:/secrets:ro
+    - ./shared:/scripts:ro
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully
+    command: node --watch src/server.js
     
 
   sqlite_db:
