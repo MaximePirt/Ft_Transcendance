@@ -25,6 +25,18 @@
                         "Cristóbal Colón"
                     ],
                     "difficulté": "facile"
+                },
+                {
+                    "question": "Qui à marché sur la Lune pour la première fois ?",
+                    "type": "qcm",
+                    "réponse": "Neil Armstrong",
+                    "options": [
+                        "Buzz Aldrin",
+                        "Yuri Gagarin",
+                        "Neil Armstrong",
+                        "Michael Collins"
+                    ],
+                    "difficulté": "facile"
                 }
 
             ],

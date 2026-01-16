@@ -34,50 +34,54 @@ function JoinGame() {
           <div className="copy">
             <h1>{t("join_title")}</h1>
             <p className="lede">{t("join_description")}</p>
-
-            <div style={{ margin: '2rem 0' }}>
-              <input
-                type="text"
-                value={roomCode}
-                onChange={handleInputChange}
-                placeholder={t("code_placeholder")}
-                maxLength={6}
-                style={{
-                  fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-                  padding: 'clamp(0.75rem, 2vw, 1rem)',
-                  textAlign: 'center',
-                  letterSpacing: '0.3em',
-                  width: '100%',
-                  maxWidth: '400px',
-                  border: '2px solid #ddd',
-                  borderRadius: '8px',
-                  textTransform: 'uppercase',
-                  /*ici pour mettre une box/card de couleurs autour du bouton de code*/
-                  backgroundColor: '#ffffffff',
-                  /*texte*/
-                  color: '#080808ff'
-                }}
-              />
-              {error && (
-                <p style={{ color: 'red', marginTop: '0.5rem', fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>
-                  ⚠️ {error}
-                </p>
-              )}
-            </div>
-
             <div className="actions">
-              <button
-                className="btn primary"
-                onClick={handleJoin}
-                disabled={roomCode.length !== 6}
-              >
-                {t("join_game")}
-              </button>
               <button className="btn ghost" onClick={() => navigate('/quiz')}>
                 {t("back")}
               </button>
             </div>
           </div>
+        </div>
+
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <input
+            type="text"
+            value={roomCode}
+            onChange={handleInputChange}
+            placeholder={t("code_placeholder")}
+            maxLength={6}
+            style={{
+              fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+              padding: 'clamp(0.75rem, 2vw, 1rem)',
+              textAlign: 'center',
+              letterSpacing: '0.3em',
+              width: '100%',
+              maxWidth: '400px',
+              border: '2px solid #000000',
+              borderRadius: '8px',
+              textTransform: 'uppercase',
+              backgroundColor: '#ffffffff',
+              color: '#080808ff',
+            }}
+          />
+          {error && (
+            <p style={{ color: 'red', marginTop: '0.5rem', fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>
+              ⚠️ {error}
+            </p>
+          )}
+        </div>
+
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <button
+            className="btn primary"
+            onClick={handleJoin}
+            disabled={roomCode.length !== 6}
+            style={{
+              opacity: roomCode.length === 6 ? 1 : 0.5,
+              cursor: roomCode.length === 6 ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {t("join_game")}
+          </button>
         </div>
       </div>
     </main>

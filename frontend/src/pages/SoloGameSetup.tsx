@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 const themes = (t: any) => [
-  { id: 'All', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }) },
-  { id: 'Histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }) },
-  { id: 'Musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }) },
-  { id: 'Sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }) },
-  { id: 'Cinéma', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }) },
-  { id: 'Jeux vidéo', title: t('video_games', { defaultValue: 'Jeux vidéo' }), detail: t('video_games_desc', { defaultValue: '' }) },
-  { id: 'Echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }) },
-  { id: 'Informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }) },
+  { id: 'All', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Cinéma', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Jeux vidéo', title: t('video_games', { defaultValue: 'Jeux vidéo' }), detail: t('video_games_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
 ]
 
 function SoloGameSetup() {
@@ -116,6 +116,25 @@ function SoloGameSetup() {
                     transition: 'background-color 0.2s',
                   }}
                 >
+                  {theme.id === 'Histoire' && (
+                    <img
+                      src={selectedThemes.has('Histoire') ? '/theme-icokns/Histoire.gif' : '/theme-icons/Histoire.png'}
+                      alt="Histoire"
+                      style={{
+                        marginRight: '1rem',
+                        width: '64px',
+                        height: '64px',
+                        imageRendering: 'pixelated',
+                        flexShrink: 0,
+                      }}
+                      onError={(e) => {
+                        const img = e.currentTarget as HTMLImageElement
+                        if (img.src.endsWith('/Histoire.gif')) {
+                          img.src = '/Histoire.png'
+                        }
+                      }}
+                    />
+                  )}
                   <input
                     type="checkbox"
                     checked={selectedThemes.has(theme.id)}

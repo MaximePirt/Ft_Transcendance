@@ -47,7 +47,7 @@ function HomePage() {
               <button className="btn primary" onClick={() => navigate('/quiz')}>
                 {t("start_quiz")}
               </button>
-              <button className="btn ghost">{t("browse_categories")}</button>
+              <button className="btn ghost">{t("daily_challenge")}</button>
             </div>
             <div className="SpaceZone">
               {SpaceZone.map((item) => (
