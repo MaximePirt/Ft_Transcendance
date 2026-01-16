@@ -116,6 +116,7 @@ services:
       - vault_agent
     volumes:
       - db:/db
+      - ./infrastructure/sqlite_db/questions:/questions:ro
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
     

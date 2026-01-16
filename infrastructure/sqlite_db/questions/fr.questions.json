@@ -3,6 +3,7 @@
         {
             "Histoire": [
                 {
+                    "id": "history.law.contraceptives",
                     "question": "Quelle est la loi qui autorise l’usage des contraceptifs, et notamment la contraception orale.",
                     "type": "qcm",
                     "réponse": "Loi Neuwirth",
@@ -12,9 +13,10 @@
                         "Loi Badinter",
                         "Loi Neuwirth"
                     ],
-                    "difficulté": "moyen"
+                    "difficulté": "medium"
                 },
                 {
+                    "id": "history.discovery.america",
                     "question": "Qui a découvert l'Amérique ?",
                     "type": "texte",
                     "réponse": "Christophe Colomb",
@@ -24,12 +26,13 @@
                         "Christophe Colombe",
                         "Cristóbal Colón"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 }
 
             ],
             "Musiques": [
                 {
+                    "id": "music.bohemian_rhapsody",
                     "question": "Quel artiste a chanté 'Bohemian Rhapsody' ?",
                     "type": "qcm",
                     "réponse": "Queen",
@@ -39,12 +42,13 @@
                         "Led Zeppelin",
                         "Pink Floyd"
                     ],
-                    "difficulté": "moyen"
+                    "difficulté": "medium"
                 }
 
             ],
             "Sports": [
                 {
+                    "id": "sports.fifa2018.winner",
                     "question": "Quel pays a remporté la Coupe du Monde de la FIFA 2018 ?",
                     "type": "qcm",
                     "réponse": "France",
@@ -54,9 +58,10 @@
                         "France",
                         "Argentine"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "sports.olympics.100m_record",
                     "question": "Qui détient le record du monde du 100 mètres masculin ?",
                     "type": "texte",
                     "réponse": "Usain Bolt",
@@ -65,11 +70,12 @@
                         "Usain",
                         "Usain St. Leo Bolt"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 }
             ],
             "Cinéma": [
                 {
+                    "id": "cinema.titanic.lead_actor",
                     "question": "Qui est l'acteur principal dans le film 'Titanic' ?",
                     "type": "qcm",
                     "réponse": "Leonardo DiCaprio",
@@ -79,9 +85,10 @@
                         "Leonardo DiCaprio",
                         "Tom Cruise"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "cinema.lalaland.director",
                     "question": "Quel est le realisateur du film 'Lalaland' ?",
                     "type": "qcm",
                     "réponse": "Damien Chazelle",
@@ -91,9 +98,10 @@
                         "Damien Chazelle",
                         "Quentin Tarantino"
                     ],
-                    "difficulté": "moyen"
+                    "difficulté": "medium"
                 },
                 {
+                    "id": "cinema.matrix.lead_actor",
                     "question": "Dans quel film de science-fiction de 1999, Keanu Reeves incarne-t-il un pirate informatique nommé Neo ?",
                     "type": "qcm",
                     "réponse": "The Matrix",
@@ -103,9 +111,10 @@
                         "Blade Runner",
                         "Minority Report"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "cinema.oscar.best_animated_film_2020",
                     "question": "Quel film a remporte l'Oscar du meilleur film d'animation en 2020 ?",
                     "type": "qcm",
                     "réponse": "Toy Story 4",
@@ -115,9 +124,10 @@
                         "Toy Story 4",
                         "Klaus"
                     ],
-                    "difficulté": "moyen"
+                    "difficulté": "medium"
                 },
                 {
+                    "id": "cinema.psychose.films",
                     "question": "Quel réalisateur est connu pour ses films à suspense tels que 'Psychose' et 'Les Oiseaux' ?",
                     "type": "texte",
                     "réponse": "Alfred Hitchcock",
@@ -126,9 +136,10 @@
                         "Alfred H.",
                         "Sir Alfred Hitchcock"
                     ],
-                    "difficulté": "moyen"
+                    "difficulté": "medium"
                 },
                 {
+                    "id": "cinema.burton.victor",
                     "question": "Quel film de Tim Burton met en scène un jeune garçon nommé Victor qui se retrouve dans le monde des morts ?",
                     "type": "qcm",
                     "réponse": "Les Noces Funèbres",
@@ -138,11 +149,12 @@
                         "Charlie et la Chocolaterie",
                         "Alice au Pays des Merveilles"
                     ],
-                    "difficulté": "difficile"
+                    "difficulté": "hard"
                 }
             ],
             "Jeux vidéo": [
                 {
+                    "id": "games.esport.first_game",
                     "question": "Quel est le premier jeu sur lequel l'esport est apparu ?",
                     "type": "texte",
                     "réponse": "The Intergalactic Space War",
@@ -151,9 +163,10 @@
                         "The Space War",
                         "Intergalactic Space War"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "games.esport.game_awards_2025",
                     "question": "Quel jeu a remporte le Game Awards du jeu esport de l'année 2025 ? ",
                     "type": "qcm",
                     "réponse": "Counter-Strike 2",
@@ -163,9 +176,10 @@
                         "Fortnite",
                         "League of Legends"
                     ],
-                    "difficulté": "moyen"
+                    "difficulté": "medium"
                 },
                 {
+                    "id": "games.league_of_legends.headquarters_country",
                     "question": "Dans quel pays se trouve le siège social de Riot Games, le développeur de League of Legends ?",
                     "type": "texte",
                     "réponse": "États-Unis",
@@ -174,9 +188,10 @@
                         "Amérique",
                         "United States"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "games.quantic_dream.first_international_game",
                     "question": "Quel est le premier jeu Francais creer par Quantic Dream a avoir ete reconnu a l'international ?",
                     "type": "qcm",
                     "réponse": "Omikron: The Nomad Soul",
@@ -186,10 +201,11 @@
                         "Omikron: The Nomad Soul",
                         "Detroit: Become Human"
                     ],
-                    "difficulté": "difficile"
+                    "difficulté": "hard"
 
                 },
                 {
+                    "id": "games.battle_royale.popular_game",
                     "question": "Quel jeu vidéo a popularisé le genre Battle Royale ?",
                     "type": "qcm",
                     "réponse": "PlayerUnknown's Battlegrounds (PUBG)",
@@ -199,9 +215,10 @@
                         "PlayerUnknown's Battlegrounds (PUBG)",
                         "Call of Duty: Warzone"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "games.legend_of_zelda.main_character",
                     "question": "Quel est le nom du protagoniste principal dans la série de jeux vidéo 'The Legend of Zelda' ?",
                     "type": "texte",
                     "réponse": "Link",
@@ -209,9 +226,10 @@
                         "Laink",
                         "Linque"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "games.minecraft.creeper_inspiration",
                     "question": "Quel annimal a servi a l'invention du creeper dans Minecraft ?",
                     "type": "texte",
                     "réponse": "Cochon",
@@ -219,11 +237,12 @@
                         "Pig",
                         "Pork"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 }
             ],
             "Echec": [
                 {
+                    "id": "chess.longest_reign_world_champion",
                     "question": "Lequel de ces joueurs d'échecs détient le record du plus long règne ininterrompu en tant que champion du monde officiel (27 ans) ?",
                     "type": "qcm",
                     "réponse": "Emanuel Lasker",
@@ -233,11 +252,12 @@
                         "Anatoly Karpov",
                         "Magnus Carlsen"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 }
             ],
             "Informatique": [
                 {
+                    "id": "informatics.ios_primary_language",
                     "question": "Quel langage de programmation est principalement utilisé pour le développement d'applications iOS ?",
                     "type": "qcm",
                     "réponse": "Swift",
@@ -247,9 +267,10 @@
                         "Swift",
                         "Objective-C"
                     ],
-                    "difficulté": "moyen"
+                    "difficulté": "medium"
                 },
                 {
+                    "id": "informatics.internet_security_protocol",
                     "question": "Quel protocole est utilisé pour sécuriser les communications sur Internet en chiffrant les données échangées entre le navigateur et le serveur web ?",
                     "type": "qcm",
                     "réponse": "HTTPS",
@@ -259,9 +280,10 @@
                         "SMTP",
                         "HTTPS"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 },
                 {
+                    "id": "informatics.linux_kernel",
                     "question": "Quel est le noyau de système d'exploitation open source le plus utilisé dans le monde ?",
                     "type": "texte",
                     "réponse": "Linux",
@@ -269,7 +291,7 @@
                         "Linux Kernel",
                         "GNU/Linux"
                     ],
-                    "difficulté": "facile"
+                    "difficulté": "easy"
                 }
             ]
         }

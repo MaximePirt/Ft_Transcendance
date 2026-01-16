@@ -9,7 +9,7 @@ if (!dbPath) {
   process.exit(1);
 }
 
-console.log(`Database path: ${dbPath}`);
+console.log(`[user-db] Database path: ${dbPath}`);
 
 console.log("=== DEBUG: Initializing database ===");
 
@@ -19,6 +19,9 @@ if (fs.existsSync(dbPath)) {
 }
 
 const db = new Database(dbPath);
+
+db.pragma("foreign_keys = ON");
+
 
 const createUsersTable = `
 CREATE TABLE IF NOT EXISTS users (
@@ -46,30 +49,6 @@ CREATE TABLE IF NOT EXISTS friends (
   CHECK (initiator_id IN (user_id, friend_id))
 );`;
 
-// TODO: Check if theses tables are still useful due to blockchain module
-
-const createGameTable = `
-CREATE TABLE IF NOT EXISTS games (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  date_played DATETIME DEFAULT CURRENT_TIMESTAMP,
-  winner_id INTEGER NULL,
-  mode TEXT CHECK( mode IN ('easy', 'medium', 'hard')) NOT NULL DEFAULT 'medium',
-  tournament INTEGER NOT NULL DEFAULT 0,
-  FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE CASCADE
-);
-`;
-
-const createGamePlayersTable = `
-CREATE TABLE IF NOT EXISTS game_players (
-  game_id INTEGER NOT NULL,
-  user_id INTEGER NOT NULL,
-  score INTEGER NOT NULL DEFAULT '0',
-  winner BOOLEAN NOT NULL DEFAULT '0',
-  PRIMARY KEY (game_id, user_id),
-  FOREIGN KEY (game_id) REFERENCES games(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-`;
 
 try {
   console.log("Creating tables...");
@@ -82,7 +61,6 @@ try {
   process.exit(1);
 }
 
-// DEBUG TODO:  ADD entry into game and game_players databases
 const tables = db
   .prepare("SELECT name FROM sqlite_master WHERE type='table'")
   .all();
@@ -92,6 +70,7 @@ console.log("Create fake data...");
 const insertUser = db.prepare(
   "INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)"
 );
+// TODO: Remove theses fakes data in prod
 const users = [
   [
     "alice",
