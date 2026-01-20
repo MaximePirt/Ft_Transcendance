@@ -36,15 +36,6 @@ async function userRoutes(fastify, options) {
 		return reply.status(200).send({ message: "ok" });
 	})
 
-	fastify.post("/signup", async (request, reply) => {
-		const data = await request.body;
-		const err = await userController.addUser(data);
-
-		console.log(`username: ${data.username}, password: ${data.password}, email: ${data.email}`);
-		console.log("err: ", err);
-		if (err == "error")
-			return reply.status(404).send({ message: "user already exist" });
-	})
 
 	fastify.get("/me_id", async (request, reply) => {
 		const username = request.headers.username;

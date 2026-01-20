@@ -1,16 +1,20 @@
-FROM node:18-alpine
+FROM node:18-bullseye-slim
 
-RUN apk add && apk update && apk add wget
-ENV CI=true
 WORKDIR /app
 
-COPY . .
-RUN wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
-RUN npm install -g pnpm@latest-10
-RUN pnpm install
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-dev \
+    build-essential \
+    pkg-config \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-EXPOSE 3003
+COPY package.json package-lock.json* ./
+RUN npm ci --only=production --build-from-source
+
+COPY . .
+
 
 ENTRYPOINT ["/scripts/vault-run.sh", "/secrets/auth_api/app.env"]
-
-CMD ["node", "--watch", "src/server.js"]
+CMD ["node", "--watch", "src/app.js"]

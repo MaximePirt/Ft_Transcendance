@@ -72,8 +72,6 @@ services:
       - API_URL=https://localhost:3001
     volumes:
       - db:/db
-      - ./services/back/user/src:/app/src
-      - /app/node_modules
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
     depends_on:
@@ -95,14 +93,12 @@ services:
       - API_URL=https://localhost:3003
     volumes:
     - db:/db
-    - ./services/back/auth:/app
-    - /app/node_modules
     - vault-secrets:/secrets:ro
     - ./shared:/scripts:ro
     depends_on:
       sqlite_db:
           condition: service_completed_successfully
-    command: node --watch src/server.js
+    command: node --watch src/app.js
     
 
   sqlite_db:

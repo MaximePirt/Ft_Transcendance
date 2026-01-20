@@ -30,10 +30,6 @@ async function getUserByUsername(username) {
 	return user;
 }
 
-async function addUser(data) {
-	return await userModel.addNewUser(data);
-}
-
 async function updateUser(userId, updateData) {
 	const update = await userModel.updateUserById(userId, updateData);
 	if (!update) {
@@ -68,6 +64,5 @@ module.exports = {
 	getUserByUsername,
 	updateUser,
 	updateAvatar,
-	addUser,
 	getUser
 };
