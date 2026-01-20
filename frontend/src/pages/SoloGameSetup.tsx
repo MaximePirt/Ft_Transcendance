@@ -114,39 +114,49 @@ function SoloGameSetup() {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
+                    position: 'relative'
                   }}
                 >
-                  {theme.id === 'Histoire' && (
+                  <div style={{ 
+                    position: 'relative', 
+                    width: '64px', 
+                    height: '64px', 
+                    marginRight: '1rem',
+                    flexShrink: 0 
+                  }}>
                     <img
-                      src={selectedThemes.has('Histoire') ? '/theme-icokns/Histoire.gif' : '/theme-icons/Histoire.png'}
-                      alt="Histoire"
+                      src={selectedThemes.has(theme.id) ? `/theme-icons/${theme.id}.gif` : `/theme-icons/${theme.id}.png`}
+                      alt={theme.title}
                       style={{
-                        marginRight: '1rem',
-                        width: '64px',
-                        height: '64px',
+                        width: '100%',
+                        height: '100%',
                         imageRendering: 'pixelated',
-                        flexShrink: 0,
+                        position: 'absolute',
+                        zIndex: 1,
+                        objectFit: 'contain'
                       }}
                       onError={(e) => {
-                        const img = e.currentTarget as HTMLImageElement
-                        if (img.src.endsWith('/Histoire.gif')) {
-                          img.src = '/Histoire.png'
-                        }
+                        const img = e.currentTarget as HTMLImageElement;
+                        img.style.display = 'none';
                       }}
                     />
-                  )}
-                  <input
-                    type="checkbox"
-                    checked={selectedThemes.has(theme.id)}
-                    onChange={() => handleThemeToggle(theme.id)}
-                    style={{
-                      marginRight: '1rem',
-                      cursor: 'pointer',
-                      width: '20px',
-                      height: '20px',
-                      flexShrink: 0,
-                    }}
-                  />
+                    <input
+                      type="checkbox"
+                      checked={selectedThemes.has(theme.id)}
+                      onChange={() => handleThemeToggle(theme.id)}
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 2,
+                        cursor: 'pointer',
+                        width: '24px',
+                        height: '24px',
+                        opacity: 0.7
+                      }}
+                    />
+                  </div>
                   <div style={{ width: '100%' }}>
                     <div style={{ fontWeight: 'bold', fontSize: 'clamp(14px, 2vw, 16px)' }}>{theme.title}</div>
                     <div style={{ fontSize: 'clamp(12px, 1.5vw, 14px)', color: '#666' }}>{theme.detail}</div>
