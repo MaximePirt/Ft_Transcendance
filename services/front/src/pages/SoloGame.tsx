@@ -5,11 +5,11 @@ import '../App.css'
 
 interface Question {
   question: string
-  type: 'qcm' | 'texte'
-  réponse: string
+  type: 'mcq' | 'text'
+  response: string
   options?: string[]
-  variantes?: string[]
-  difficulté: string
+  variants?: string[]
+  difficulty: string
 }
 
 interface QuizData {
@@ -49,14 +49,14 @@ function levenshtein(a: string, b: string) {
 }
 
 function isTextAnswerCorrect(question: Question, answer: string) {
-  const accepted = [question.réponse, ...(question.variantes ?? [])]
+  const accepted = [question.response, ...(question.variants ?? [])]
   const normalizedUser = normalizeAnswer(answer)
   const normalizedAccepted = accepted.map((value) => normalizeAnswer(value))
 
   return normalizedAccepted.some((target) => {
     if (target === normalizedUser) return true
 
-    // Tolérer les réponses quasi-identiques (accents/typos légers)
+    // Tolérer les responses quasi-identiques (accents/typos légers)
     const distance = levenshtein(target, normalizedUser)
     const tolerance = Math.max(1, Math.floor(target.length * 0.2))
     if (distance <= tolerance) return true
@@ -162,9 +162,9 @@ function SoloGamePage() {
     let isCorrect = false
 
     // si pas de reponse on met faux directement
-    if (currentQuestion.type === 'qcm') {
+    if (currentQuestion.type === 'mcq') {
       isCorrect = selectedOption
-        ? normalizeAnswer(selectedOption) === normalizeAnswer(currentQuestion.réponse)
+        ? normalizeAnswer(selectedOption) === normalizeAnswer(currentQuestion.response)
         : false
     } else {
       isCorrect = isTextAnswerCorrect(currentQuestion, userAnswer)
@@ -299,7 +299,7 @@ function SoloGamePage() {
               </h2>
 
               <div style={{ marginTop: '1.5rem' }}>
-                {currentQuestion.type === 'qcm' && currentQuestion.options ? (
+                {currentQuestion.type === 'mcq' && currentQuestion.options ? (
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
@@ -329,7 +329,7 @@ function SoloGamePage() {
                 ) : (
                   <input
                     type="text"
-                    placeholder="Votre réponse..."
+                    placeholder="Votre response..."
                     value={userAnswer}
                     onChange={(e) => setUserAnswer(e.target.value)}
                     onKeyPress={(e) => {

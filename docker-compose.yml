@@ -99,6 +99,27 @@ services:
       sqlite_db:
           condition: service_completed_successfully
     command: node --watch src/app.js
+
+
+  quiz_api:
+      build:
+        context: ./services/back/quiz
+        dockerfile: Dockerfile
+      container_name: quiz_api
+      networks:
+        - ft_transcendance
+      ports:
+        - "3002:3002"
+      environment:
+        - API_URL=https://localhost:3002
+      volumes:
+        - db:/db
+        - vault-secrets:/secrets:ro
+        - ./shared:/scripts:ro
+      depends_on:
+        sqlite_db:
+          condition: service_completed_successfully 
+      command: node --watch src/app.js
     
 
   sqlite_db:

@@ -7,6 +7,6 @@ function run(script) {
 
 console.log("Initializing all databases...");
 run("./user_db.js");
-run("./quizz_db.js");
-run("./seed_quizz.js");
+run("./quiz_db.js");
+run("./seed_quiz.js");
 console.log("All databases initialized successfully.");

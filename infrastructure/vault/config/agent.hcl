@@ -48,6 +48,13 @@ template {
 
 template {
   source      = "/vault/templates/app.env.tpl"
+  destination = "/secrets/quiz_api/app.env"
+  perms       = "0640"
+
+}
+
+template {
+  source      = "/vault/templates/app.env.tpl"
   destination = "/secrets/front/app.env"
   perms       = "0640"
 
