@@ -9,4 +9,5 @@ console.log("Initializing all databases...");
 run("./user_db.js");
 run("./quiz_db.js");
 run("./seed_quiz.js");
+run("./game_db.js");
 console.log("All databases initialized successfully.");
