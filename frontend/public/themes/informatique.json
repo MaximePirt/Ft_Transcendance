@@ -1,0 +1,11 @@
+{
+  "name": "informatique",
+  "variables": {
+    "--background-img":"url('../public/custom-assets/binary-bg.png')",
+    "--background-size":"400px 392px",
+    "--shell-shadow":"12px 12px 0px #0cf359",
+    "--secondary":"#0cf359",
+    "--accent":"#0cf359",
+    "--shadow-btn":"4px 4px 0px #0cf359"
+  }
+}

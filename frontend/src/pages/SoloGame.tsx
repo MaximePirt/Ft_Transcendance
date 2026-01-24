@@ -10,6 +10,7 @@ interface Question {
   options?: string[]
   variantes?: string[]
   difficulté: string
+  theme: string
 }
 
 interface QuizData {
@@ -70,6 +71,26 @@ function isTextAnswerCorrect(question: Question, answer: string) {
   })
 }
 
+// appliquer le style dans le DOM en fonction du theme de la question
+async function applyTheme(themeName: string) {
+  console.log(`${themeName}.json`)
+  try {
+    const res = await fetch(`/themes/${themeName}.json`)
+    const theme = await res.json()
+
+    const root = document.documentElement
+    Object.entries(theme.variables).forEach(([key, value]) => {
+      root.style.setProperty(key, value as string)
+    })
+
+  } catch (err) {
+    console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
+    if (themeName !== 'default')
+      return applyTheme('default')
+    return
+  }
+}
+
 const STORAGE_KEY = 'soloGameState:v1'
 
 function SoloGamePage() {
@@ -125,7 +146,10 @@ function SoloGamePage() {
             quizData[category].forEach((question) => {
               if (!seenQuestions.has(question.question)) {
                 seenQuestions.add(question.question)
-                allQuestions.push(question)
+                allQuestions.push({
+                ...question,
+                theme: category ? category.toLowerCase() : 'default',
+              })
               }
             })
           }
@@ -202,6 +226,13 @@ function SoloGamePage() {
     }
   }
 
+  const currentQuestion = questions[currentQuestionIndex]
+  useEffect(() => {
+    if (!currentQuestion || !currentQuestion?.theme) return
+    
+    applyTheme(currentQuestion.theme || 'default')
+  }, [currentQuestion])
+
   if (loading) {
     return (
       <main className="page">
@@ -260,8 +291,6 @@ function SoloGamePage() {
     )
   }
 
-  const currentQuestion = questions[currentQuestionIndex]
-
 return (
   <main className="page">
     <div className="shell">
@@ -271,6 +300,7 @@ return (
         <button
           className="btn-close-exit" 
           onClick={() => {
+            applyTheme("default")
             localStorage.removeItem(STORAGE_KEY)
             navigate('/quiz')
           }}
