@@ -1,7 +1,4 @@
-//TODO: ADD a table check to only create tables which haven't been created
-
 const Database = require("better-sqlite3");
-const fs = require("fs");
 
 const dbPath = process.env.DB_PATH || false;
 if (!dbPath) {
@@ -13,13 +10,8 @@ console.log(`[user-db] Database path: ${dbPath}`);
 
 console.log("=== DEBUG: Initializing database ===");
 
-if (fs.existsSync(dbPath)) {
-  console.log("Database already exists. Skipping initialization.");
-  process.exit(0);
-}
 
 const db = new Database(dbPath);
-
 db.pragma("foreign_keys = ON");
 
 
@@ -66,36 +58,44 @@ const tables = db
   .all();
 console.log("Tables created:", tables);
 
-console.log("Create fake data...");
 const insertUser = db.prepare(
   "INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)"
 );
-// TODO: Remove theses fakes data in prod
-const users = [
-  [
-    "alice",
-    "alice@example.com",
-    "password123",
-    "https://example.com/avatars/alice.png",
-  ],
-  [
-    "bob",
-    "bob@example.com",
-    "password456",
-    "https://example.com/avatars/bob.png",
-  ],
-  [
-    "charlie",
-    "charlie@example.com",
-    "password789",
-    "https://example.com/avatars/charlie.png",
-  ],
-];
 
-for (const user of users) {
-  insertUser.run(...user);
+console.log("Checking seed data...");
+const userCount = db.prepare('SELECT COUNT(*) as cnt FROM users').get().cnt;
+if (userCount === 0) {
+  console.log("Create fake data...");
+  const insertUser = db.prepare(
+    "INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)");
+  const users = [
+    [
+      "alice",
+      "alice@example.com",
+      "password123",
+      "https://example.com/avatars/alice.png",
+    ],
+    [
+      "bob",
+      "bob@example.com",
+      "password456",
+      "https://example.com/avatars/bob.png",
+    ],
+    [
+      "charlie",
+      "charlie@example.com",
+      "password789",
+      "https://example.com/avatars/charlie.png",
+    ],
+  ];
+  for (const user of users) {
+    insertUser.run(...user);
+  }
+    console.log("Fake users created.");
 }
-////////
+else {
+  console.log("Seed data already exists. Skipping fake data creation.");
+}
 
 db.close();
 console.log("Database initialized successfully!");

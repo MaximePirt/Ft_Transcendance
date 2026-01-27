@@ -2,7 +2,7 @@ const Database = require("better-sqlite3");
 const fs = require("fs");
 const path = require("path");
 
-const dbPath = process.env.QUIZ_DB_PATH || false;
+const dbPath = process.env.DB_PATH || false;
 if (!dbPath) {
   console.error("Error: QUIZ_DB_PATH environment variable is not set.");
   process.exit(1);
