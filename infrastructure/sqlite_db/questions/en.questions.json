@@ -1,0 +1,44 @@
+{
+    "Quiz": [
+        {
+            "Histoire": [
+                {
+                    "id": "history.law.contraceptives",
+                    "question": "What law authorizes the use of contraceptives, particularly oral contraception?",
+                    "type": "qcm",
+                    "réponse": "Neuwirth Law",
+                    "options": [
+                        "SRU Law",
+                        "Grenelle Agreements",
+                        "Badinter Law",
+                        "Neuwirth Law"
+                    ],
+                    "difficulté": "medium"
+                },
+                {
+                    "id": "history.discovery.america",
+                    "question": "Who discovered America?",
+                    "type": "texte",
+                    "réponse": "Christopher Columbus",
+                    "options": [],
+                    "difficulté": "easy"
+                }
+            ],
+            "Musiques": [
+                {
+                    "id": "music.bohemian_rhapsody",
+                    "question": "Which artist sang 'Bohemian Rhapsody'?",
+                    "type": "qcm",
+                    "réponse": "Queen",
+                    "options": [
+                        "The Beatles",
+                        "Queen",
+                        "Led Zeppelin",
+                        "Pink Floyd"
+                    ],
+                    "difficulté": "medium"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,44 @@
+{
+    "Quiz": [
+        {
+            "Histoire": [
+                {
+                    "id": "history.law.contraceptives",
+                    "question": "ما هو القانون الذي يجيز استخدام وسائل منع الحمل، وخاصة موانع الحمل الفموية؟",
+                    "type": "qcm",
+                    "réponse": "القانون Neuwirth",
+                    "options": [
+                        "قانون SRU",
+                        "اتفاقيات Grenelle",
+                        "القانون badinter",
+                        "القانون Neuwirth"
+                    ],
+                    "difficulté": "medium"
+                },
+                {
+                    "id": "history.discovery.america",
+                    "question": "من اكتشف أمريكا؟",
+                    "type": "texte",
+                    "réponse": "كريستوفر كولومبوس",
+                    "options": [],
+                    "difficulté": "easy"
+                }
+            ],
+            "Musiques": [
+                {
+                    "id": "music.bohemian_rhapsody",
+                    "question": "أي فنان غنى أغنية ”Bohemian Rhapsody“؟",
+                    "type": "qcm",
+                    "réponse": "Queen",
+                    "options": [
+                        "The Beatles",
+                        "Queen",
+                        "Led Zeppelin",
+                        "Pink Floyd"
+                    ],
+                    "difficulté": "medium"
+                }
+            ]
+        }
+    ]
+}
