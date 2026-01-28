@@ -20,8 +20,8 @@ i18n
       },
     },
     
-    lng: "fr",
-    fallbackLng: "fr",
+    lng: localStorage.getItem('language') || 'fr',
+    fallbackLng: 'fr',
     returnObjects:true,
 
     interpolation: {
