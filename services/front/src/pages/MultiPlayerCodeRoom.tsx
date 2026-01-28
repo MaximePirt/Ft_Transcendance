@@ -45,11 +45,27 @@ function MultiPlayerCodeRoom() {
         <div className="hero">
           <div className="copy">
             <h1>{isHost ? t("room_title_host") : t("room_title_guest")}</h1>
-            <div style={{ margin: '2rem 0', padding: '2rem', background: '#ffffffff', borderRadius: '8px', border: '2px solid #000000' }}>
-              <p style={{ fontSize: '1.2rem', marginBottom: '0.9rem', color: '#cac9c9ff' }}>
+            <div style={{ 
+              margin: '2rem 0', 
+              padding: 'clamp(1rem, 3vw, 2rem)', 
+              background: '#ffffffff', 
+              borderRadius: '8px', 
+              border: '2px solid #000000' 
+            }}>
+              <p style={{ 
+                fontSize: 'clamp(1rem, 2vw, 1.2rem)', 
+                marginBottom: '0.9rem', 
+                color: '#cac9c9ff' 
+              }}>
                 {t("room_code_label")}
               </p>
-              <p style={{ fontSize: '2.5rem', fontWeight: 'bold', letterSpacing: '0.3em', margin: '0' }}>
+              <p style={{ 
+                fontSize: 'clamp(1.5rem, 4vw, 2.5rem)', 
+                fontWeight: 'bold', 
+                letterSpacing: '0.3em', 
+                margin: '0',
+                wordBreak: 'break-all'
+              }}>
                 {code}
               </p>
             </div>
@@ -57,7 +73,12 @@ function MultiPlayerCodeRoom() {
               <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{t("players_connected")}</p>
               <ul style={{ listStyle: 'none', padding: 0 }}>
                 {players.map((player, index) => (
-                  <li key={index} style={{ padding: '0.5rem', background: '#ffffffff', margin: '0.25rem 0' }}>
+                  <li key={index} style={{ 
+                    padding: '0.5rem', 
+                    background: '#ffffffff', 
+                    margin: '0.25rem 0',
+                    fontSize: 'clamp(14px, 2vw, 16px)'
+                  }}>
                     👤 {player}
                   </li>
                 ))}

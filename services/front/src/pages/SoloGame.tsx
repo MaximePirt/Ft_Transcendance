@@ -82,6 +82,8 @@ function SoloGamePage() {
   const [userAnswer, setUserAnswer] = useState('')
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [score, setScore] = useState(0)
+  const [showAnswer, setShowAnswer] = useState(false)
+  const [isCorrect, setIsCorrect] = useState(false)
 
   useEffect(() => {
     // Si un état est sauvegardé, le restaurer immédiatement pour éviter un reset au refresh
@@ -95,6 +97,8 @@ function SoloGamePage() {
           setUserAnswer(parsed.userAnswer ?? '')
           setSelectedOption(parsed.selectedOption ?? null)
           setScore(parsed.score ?? 0)
+          setShowAnswer(false)
+          setIsCorrect(false)
           setLoading(false)
           return
         }
@@ -156,8 +160,9 @@ function SoloGamePage() {
     }
   }, [questions, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
 
-  const handleNextQuestion = () => {
+  const handleValidateAnswer = () => {
     const currentQuestion = questions[currentQuestionIndex]
+    let correct = false
 
     let isCorrect = false
 
@@ -167,17 +172,22 @@ function SoloGamePage() {
         ? normalizeAnswer(selectedOption) === normalizeAnswer(currentQuestion.response)
         : false
     } else {
-      isCorrect = isTextAnswerCorrect(currentQuestion, userAnswer)
+      correct = isTextAnswerCorrect(currentQuestion, userAnswer)
     }
 
-    const isLastQuestion = currentQuestionIndex === questions.length - 1
-    const finalScore = isCorrect ? score + 1 : score
+    setIsCorrect(correct)
+    setShowAnswer(true)
+    if (correct) {
+      setScore(score + 1)
+    }
+  }
 
-    setScore(finalScore)
+  const handleNextQuestion = () => {
+    const isLastQuestion = currentQuestionIndex === questions.length - 1
 
     if (isLastQuestion) {
       localStorage.removeItem(STORAGE_KEY)
-      alert(`Quiz terminé ! Score: ${finalScore} / ${questions.length}`)
+      alert(`Quiz terminé ! Score: ${score} / ${questions.length}`)
       navigate('/quiz')
       return
     }
@@ -185,10 +195,14 @@ function SoloGamePage() {
     setCurrentQuestionIndex(currentQuestionIndex + 1)
     setUserAnswer('')
     setSelectedOption(null)
+    setShowAnswer(false)
+    setIsCorrect(false)
   }
 
   const handleOptionClick = (option: string) => {
-    setSelectedOption(option)
+    if (!showAnswer) {
+      setSelectedOption(option)
+    }
   }
 
   if (loading) {
@@ -251,114 +265,134 @@ function SoloGamePage() {
 
   const currentQuestion = questions[currentQuestionIndex]
 
-  return (
-    <main className="page">
-      <div className="shell">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
-          <button
-            onClick={() => {
-              localStorage.removeItem(STORAGE_KEY)
-              navigate('/quiz')
-            }}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              fontSize: '1.8rem',
-              cursor: 'pointer',
-              padding: '0.5rem',
-              lineHeight: 1,
-              opacity: 0.6,
-              transition: 'opacity 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
-            title="Quitter la partie"
-          >
-            🚪
-          </button>
+return (
+  <main className="page">
+    <div className="shell">
+      {/* Header du Quiz */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px' }}>
+        <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+        <button
+          className="btn-close-exit" 
+          onClick={() => {
+            localStorage.removeItem(STORAGE_KEY)
+            navigate('/quiz')
+          }}
+          title="Quitter la partie"
+          style={{ background: 'none', border: 'none', fontSize: '2.2rem', cursor: 'pointer', padding: '0', lineHeight: '1' }}
+        >
+          🚪
+        </button>
+      </div>
+
+      {/* Zone de Titre */}
+      <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
+        <h1>Partie Solo en cours</h1>
+        <p className="lede" style={{ border: 'none', padding: 0, textAlign: 'center' }}>
+          Question <strong>{currentQuestionIndex + 1}</strong> sur {questions.length} • Score : <strong>{score}</strong>
+        </p>
+      </div>
+
+      {/* LA CARTE DE JEU (Pleine largeur) */}
+      <div className="quiz-card-full">
+        <h2 style={{ fontSize: '1.5rem', textAlign: 'center', marginBottom: '1.4rem' }}>
+          {currentQuestion.question}
+        </h2>
+
+        <div className="game-area">
+          {currentQuestion.type === 'qcm' && currentQuestion.options ? (
+            <div className="game-options-grid">
+              {currentQuestion.options.map((option, index) => {
+                const isCorrectAnswer = normalizeAnswer(option) === normalizeAnswer(currentQuestion.réponse)
+                const isSelected = selectedOption === option
+                let borderColor = '2px solid #000'
+                let backgroundColor = '#fff'
+                
+                if (showAnswer) {
+                  if (isCorrectAnswer) {
+                    borderColor = '4px solid #4CAF50'
+                    backgroundColor = '#E8F5E9'
+                  } else if (isSelected && !isCorrect) {
+                    borderColor = '4px solid #f44336'
+                    backgroundColor = '#FFEBEE'
+                  }
+                } else if (isSelected) {
+                  borderColor = '4px solid #4CAF50'
+                }
+
+                return (
+                  <button
+                    key={index}
+                    onClick={() => handleOptionClick(option)}
+                    className={`btn ${selectedOption === option ? 'primary' : 'ghost'}`}
+                    style={{ 
+                      textTransform: 'none', 
+                      fontSize: '1.1rem', 
+                      padding: '18px 16px', 
+                      minHeight: '60px', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      border: borderColor,
+                      background: backgroundColor,
+                      cursor: showAnswer ? 'default' : 'pointer',
+                      opacity: showAnswer && !isCorrectAnswer && !isSelected ? 0.6 : 1
+                    }}
+                    disabled={showAnswer}
+                  >
+                    {option}
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="field">
+              <input
+                type="text"
+                className="game-input-field"
+                placeholder="Tapez votre réponse ici..."
+                value={userAnswer}
+                onChange={(e) => setUserAnswer(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && !showAnswer && handleValidateAnswer()}
+                disabled={showAnswer}
+                style={{
+                  border: showAnswer 
+                    ? (isCorrect ? '3px solid #4CAF50' : '3px solid #f44336')
+                    : '2px solid #000',
+                  background: showAnswer
+                    ? (isCorrect ? '#E8F5E9' : '#FFEBEE')
+                    : '#fff'
+                }}
+              />
+              {showAnswer && !isCorrect && (
+                <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
+                  Bonne réponse : {currentQuestion.réponse}
+                </p>
+              )}
+            </div>
+          )}
         </div>
-        <div className="hero">
-          <div className="copy">
-            <h1>Partie Solo en cours</h1>
-              <p className="lede">Question {currentQuestionIndex + 1} sur {questions.length} • Score : {score}</p>
 
-            <div style={{
-              marginTop: '2rem',
-              padding: '1.5rem',
-              /*ici pour mettre une box/card de couleurs autour des questions*/
-              backgroundColor: '#ffffffff',
-              borderRadius: '8px',
-              textAlign: 'left',
-              position: 'relative',
-              maxWidth: '100%',
-              overflow: 'hidden'
-            }}>
-              <h2 style={{ marginBottom: '1rem', fontSize: '1.3rem' }}>
-                {currentQuestion.question}
-              </h2>
-
-              <div style={{ marginTop: '1.5rem' }}>
-                {currentQuestion.type === 'mcq' && currentQuestion.options ? (
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-                    gap: '1rem' 
-                  }}>
-                    {currentQuestion.options.map((option, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleOptionClick(option)}
-                        style={{
-                          padding: '1rem',
-                          fontSize: '1rem',
-                          borderRadius: '8px',
-                          border: selectedOption === option ? '5px solid #4CAF50' : '2px solid #ddd',
-                          backgroundColor: selectedOption === option ? '#ffffffff' : '#fff',
-                          color: '#000',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                          fontWeight: selectedOption === option ? 'bold' : 'normal',
-                          wordWrap: 'break-word'
-                        }}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <input
-                    type="text"
-                    placeholder="Votre response..."
-                    value={userAnswer}
-                    onChange={(e) => setUserAnswer(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') handleNextQuestion()
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      fontSize: '1rem',
-                      borderRadius: '4px',
-                      border: '1px solid #ddd',
-                      marginBottom: '1rem',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="actions">
-              <button className="btn primary" onClick={handleNextQuestion}>
-                {currentQuestionIndex === questions.length - 1 ? 'Terminer' : 'Question suivante'}
-              </button>
-            </div>
-          </div>
+        {/* Bouton d'action centré ou plein pied */}
+        <div className="actions" style={{ justifyContent: 'center', marginTop: '1.8rem' }}>
+          {!showAnswer ? (
+            <button 
+              className="btn secondary" 
+              style={{ minWidth: '280px' }} 
+              onClick={handleValidateAnswer}
+              disabled={currentQuestion.type === 'qcm' ? !selectedOption : !userAnswer}
+            >
+              Valider
+            </button>
+          ) : (
+            <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
+              {currentQuestionIndex === questions.length - 1 ? 'Terminer le Quiz' : 'Question suivante →'}
+            </button>
+          )}
         </div>
       </div>
-    </main>
-  )
+    </div>
+  </main>
+)
 }
 
 export default SoloGamePage
