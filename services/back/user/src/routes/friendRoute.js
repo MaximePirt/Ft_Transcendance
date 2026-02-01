@@ -1,0 +1,140 @@
+// services/back/user/src/routes/friendRoute.js
+//TODO: Modificate cookies in a function instead of repeating code
+friendController = require("../controllers/friendController")
+
+const AUTH_URL = process.env.AUTH_API_URL || false;
+if (!AUTH_URL) {
+	  console.error("AUTH_API_URL environment variable is not set.");
+	  process.exit(1);
+}
+
+async function friendRoutes(fastify, options)
+{
+	console.log("friendRoutes loaded");
+	fastify.delete("/:friendId/friends", async (request, reply) =>
+	{
+		console.log("User try to delete friend");
+		try {
+			// Get authentification user id from cookie
+			const cookieHeader = request.headers.cookie;
+			if (!cookieHeader) {
+			return reply.code(401).send({ ok: false, message: "No auth cookie" });
+			}
+			const meRes = await fetch(`${AUTH_URL}/me`, {
+			method: "GET",
+			headers: { cookie: cookieHeader },
+			});
+			if (!meRes.ok) {
+			return reply.code(401).send({ ok: false, message: "Unauthorized" });
+			}
+			const me = await meRes.json();
+			const meId = Number(me.id);
+
+			const { friendId } = request.params;
+
+			const friendIdnum = Number(friendId);
+
+			if (isNaN(meId) || isNaN(friendIdnum)) {
+				return reply.code(400).send({ ok: false, message: "Invalid userId or friendId" });
+			}
+			const res = await friendController.removeFriendHandler(meId, friendIdnum);
+        	return reply.code(res.statusCode).send(res);
+		}
+		catch (error) {
+			request.log.error(error);
+			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+		}
+	});
+
+	fastify.post("/:friendId/friends", async (request, reply) =>
+	{
+		console.log("Received request to add friend");
+		const cookieHeader = request.headers.cookie;
+		if (!cookieHeader) {
+			return reply.code(401).send({ ok: false, message: "No auth cookie" });
+		}
+		const meRes = await fetch(`${AUTH_URL}/me`, {
+			method: "GET",
+			headers: { cookie: cookieHeader },
+		});
+		if (!meRes.ok) {
+			console.log("Failed to authenticate user:", meRes.status);
+			return reply.code(401).send({ ok: false, message: "Unauthorized" });
+		}
+		console.log("Cookie Header:", cookieHeader);
+		const me = await meRes.json();
+		const meId = me.id;
+
+		const friendId = request.params.friendId;
+		const friendIdNum = Number(friendId);
+		console.log("Friend ID from params:", friendId);
+		if (Number.isNaN(friendIdNum)) {
+				return reply.code(400).send({ ok: false, message: "Invalid friendId" });
+		}
+		console.log(`Adding friend ${friendId} to user ${meId}`);
+		const res = await friendController.addFriendHandler(meId, friendIdNum);
+		
+		console.log("Add Friend Response:", res);
+		return (res);
+	});
+
+	fastify.get("/:userId/friends", async (request, reply) =>
+	{
+		try {
+			const { userId } = request.params;
+			if (!userId) {
+				return reply.code(400).send({ ok: false, message: "userId is required" });
+			}
+			const userIdnum = Number(userId);
+			if (isNaN(userIdnum)) {
+				return reply.code(400).send({ ok: false, message: "Invalid userId" });
+			}
+			const result = await friendController.listFriendsHandler(userIdnum);
+			return reply.code(200).send({ ok: true,  result });
+		}
+		catch (error) {
+			request.log.error(error);
+			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+		}
+
+	});
+
+
+	fastify.get("/:friendId/status", async (request, reply) => {
+		try {
+			// Get authentification user id from cookie
+			const cookieHeader = request.headers.cookie;
+			if (!cookieHeader) {
+			return reply.code(401).send({ ok: false, message: "No auth cookie" });
+			}
+			const meRes = await fetch(`${AUTH_URL}/me`, {
+			method: "GET",
+			headers: { cookie: cookieHeader },
+			});
+			if (!meRes.ok) {
+			return reply.code(401).send({ ok: false, message: "Unauthorized" });
+			}
+			const me = await meRes.json();
+			const meId = me.id;
+
+			// Check friend profile id
+			const { friendId } = request.params;
+			const friendIdNum = Number(friendId);
+			if (Number.isNaN(friendIdNum)) {
+				return reply.code(400).send({ ok: false, message: "Invalid friendId" });
+			}
+
+			// Check friendship status
+			const status = await friendController.getFriendshipStatus(meId, friendIdNum);
+			return reply.code(200).send({ ok: true, status });
+		} catch (error) {
+			request.log.error(error);
+			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+		}
+	});
+
+}
+
+
+
+module.exports = friendRoutes;
