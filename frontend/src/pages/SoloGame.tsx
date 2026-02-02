@@ -3,6 +3,16 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../App.css'
 
+const exitbutton = [
+  { id: 'musiques', symbol: '🚪', url: '/custom-assets/music-exit-icon.png' },
+  { id: 'echec', symbol: '🚪', url: '/custom-assets/chess-exit-icon.png' },
+  { id: 'histoire', symbol: '🚪', url: '/custom-assets/history-exit-icon.png' },
+  { id: 'sports', symbol: '🚪', url: '/custom-assets/sports-exit-icon.png' },
+  { id: 'cinéma', symbol: '🚪', url: '/custom-assets/cinema-exit-icon.png' },
+  { id: 'jeuxvidéo', symbol: '🚪', url: '/custom-assets/games-exit-icon.png' },
+  { id: 'informatique', symbol: '🚪', url: '/custom-assets/informatique-exit-icon.png' },
+]
+
 interface Question {
   question: string
   type: 'qcm' | 'texte'
@@ -297,18 +307,27 @@ return (
       {/* Header du Quiz */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px' }}>
         <p className="eyebrow">Quiz Sprint - Mode Solo</p>
-        <button
-          className="btn-close-exit" 
-          onClick={() => {
-            applyTheme("default")
-            localStorage.removeItem(STORAGE_KEY)
-            navigate('/quiz')
-          }}
-          title="Quitter la partie"
-          style={{ background: 'none', border: 'none', fontSize: '2.2rem', cursor: 'pointer', padding: '0', lineHeight: '1' }}
-        >
-          🚪
-        </button>
+         <div className="ExitButtonContainer">
+            {(() => {
+              const exitBtn = exitbutton.find(btn => btn.id === currentQuestion.theme)
+              return exitBtn && (
+                <button
+                  onClick={() => {
+                    //applyTheme("default")
+                    localStorage.removeItem(STORAGE_KEY)
+                    navigate('/quiz')
+                  }}
+                  title="Quitter la partie"
+                >
+                  {exitBtn.url ? (
+                    <img src={exitBtn.url} alt={exitBtn.symbol} />
+                  ) : (
+                    exitBtn.symbol
+                  )} 
+                </button>
+            )
+          })()}
+        </div>
       </div>
 
       {/* Zone de Titre */}

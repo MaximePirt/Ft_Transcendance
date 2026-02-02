@@ -1,4 +1,54 @@
 /* --- VARIABLES DE DESIGN SYSTEM (Module IV.1 & IV.10) --- */
+@font-face {
+    font-family: 'Gomarice';
+    src: url('/font/gomarice_rockin_record.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Rimouski';
+    src: url('/font/rimouski.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Perfograma';
+    src: url('/font/Perfograma.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Retron';
+    src: url('/font/retron2000.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Aurach';
+    src: url('/font/aurach.heavy.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Overload';
+    src: url('/font/overload.burn-regular.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'LemonMilk';
+    src: url('/font/LemonMilkRegular-X3XE2.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Chillax';
+    src: url('/font/Chillax-Regular.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Pally';
+    src: url('/font/Pally-Medium.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'Theater';
+    src: url('/font/theater.bold-condensed.ttf') format('truetype');
+}
+
 :root {
   --bg-main: #F1F1F1;
   --bg-shell: #FFFFFF;
@@ -24,6 +74,11 @@
     linear-gradient(-45deg, transparent 75%, #e5e5e5 75%);
   --background-size: 20px 20px;
   --shell-shadow: 12px 12px 0px #000;
+
+  --background-eyebrow: none;
+  --border-eyebrow: 2px solid #000000;
+  --primary-custom-font: 'Lexend', 'Inter', sans-serif;
+  --secondary-custom-font: 'Lexend', 'Inter', sans-serif;
 }
 
 * {
@@ -43,7 +98,7 @@
   flex-direction: column;
   align-items: center;
   padding: 80px 24px 40px;
-  font-family: var(--font-main);
+  font-family: var(--primary-custom-font);
 }
 
 /* Support RTL (Module IV.2) -  */
@@ -121,6 +176,7 @@
   box-shadow: var(--shadow-btn);
   transition: transform 0.1s, box-shadow 0.1s;
   text-decoration: none;
+  font-family: var(--primary-custom-font);
   font-size: 16px;
   min-height: 52px;
   letter-spacing: 0.5px;
@@ -171,11 +227,27 @@
   transform: none !important;
 }
 
+.ExitButtonContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.ExitButtonContainer button {
+  padding: 1px 4px;
+  font-size: 6px;
+  min-height: 70px;
+  border: none;
+  background-color: white;
+}
+
 /* --- ÉLÉMENTS DE CONTENU --- */
 .eyebrow {
   display: inline-block;
   background: var(--accent);
-  border: var(--border-thin);
+  background-image: var(--background-eyebrow);
+  border: var(--border-eyebrow);
   padding: 6px 16px;
   font-weight: 800;
   font-size: 14px;
@@ -190,6 +262,7 @@
 }
 
 h1 {
+  font-family: var(--secondary-custom-font);
   font-size: clamp(36px, 6vw, 68px);
   font-weight: 900;
   line-height: 1;
@@ -333,7 +406,7 @@ h2 {
 .field input {
   padding: 12px;
   border: var(--border-thin);
-  font-family: var(--font-main);
+  font-family: var(--primary-custom-font);
   font-weight: 600;
   font-size: 16px;
 }
@@ -607,7 +680,7 @@ h2 {
   width: 100%;
   padding: 20px;
   border: var(--border-thick);
-  font-family: var(--font-main);
+  font-family: var(--primary-custom-font);
   font-size: 1.25rem;
   font-weight: 700;
   background: var(--bg-main);
