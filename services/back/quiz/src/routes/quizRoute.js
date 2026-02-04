@@ -5,18 +5,26 @@ const schemas = require('../schemas/game.schemas');
 async function quizRoutes(fastify, options) {
 
 	/**
-	 * Game Sessions Management
+	 * @brief Create a new game session
+	 * @input : mode, topic, number of questions, max_players, host_id
+	 * @return : 200 + game session code if success, 500 if error
 	 */
-	// Input : mode, topic, number of questions, max_players, host_id
-	// Output : game_session_id - create new code game session
 	fastify.post('/game-sessions', {preHandler: fastify.authenticate, schema: schemas.createGameSessionSchema },
 	async (request, reply) => {
-
-		const userId = request.user.id;
-		console.log("Creating game session for user ID:", userId);
-
-		const gameSession = await quizController.createGameSession( request.body, userId);
-		return reply.code(gameSession.code | 400).send(gameSession);
+		userId = 1;
+		request.body = {
+			mode: 'medium',
+			topic: 'general',
+		};
+		try {
+			const gameSession = await quizController.createGameSession( request.body, userId);
+			console.log("Game session code:", gameSession);
+		}
+		catch (err) {
+			console.error("Error creating game session:", err);
+			return reply.code(500).send({ status: 'Error creating game session', error: err.message });
+		}
+		return reply.code(200).send({ status: 'Game session created', gameSession});
 	});
 
 
@@ -44,6 +52,19 @@ async function quizRoutes(fastify, options) {
 	// });
 
 	fastify.get('/health', async (request, reply) => {
+		userId = 1;
+		request.body = {
+			mode: 'medium',
+			topic: 'general',
+		};
+		try {
+			const gameSession = await quizController.createGameSession( request.body, userId);
+			console.log("Health check - game session details:", gameSession);
+		}
+		catch (err) {
+			console.error("Health check - error creating game session:", err);
+			return reply.code(500).send({ status: 'Quiz service unhealthy', error: err.message });
+		}
 		return reply.code(200).send({ status: 'Quiz service is healthy' });
 	});
 	console.log("Quiz routes registered");

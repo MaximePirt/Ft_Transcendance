@@ -25,6 +25,7 @@ BEGIN;
 -- Game_sessions table
 CREATE TABLE IF NOT EXISTS game_sessions (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	code TEXT UNIQUE NOT NULL,
 	started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	ended_at DATETIME,
 	status TEXT CHECK( status IN ('waiting', 'in_progress', 'completed', 'abandoned') ) NOT NULL DEFAULT 'waiting',
@@ -32,8 +33,8 @@ CREATE TABLE IF NOT EXISTS game_sessions (
 	topic TEXT,
 	question_count INTEGER NOT NULL DEFAULT 10,
 	max_players INTEGER NOT NULL DEFAULT 4,
-	winner_id INTEGER,
-	FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL
+	host_id INTEGER NOT NULL,
+	FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Game_players table - associates users with game sessions
