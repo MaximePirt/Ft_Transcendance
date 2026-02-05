@@ -29,10 +29,30 @@ async function quizRoutes(fastify, options) {
 
 
 
-	// Input : game_session_id
-	// Output : game session details (questions, players, status)
-	// fastify.get('/game-sessions/:id', async (request, reply) => {
-	// });
+	/**
+	 * @brief Get details of a game session
+	 * 		Details include questions, players, and status of the game session
+	 * @input : game_session_id
+	 * @return : 200 + game session details if success, 500 if not found
+	 */
+	fastify.get('/game-sessions/:id', {preHandler: fastify.authenticate, schema: schemas.GameSessionId},
+	async (request, reply) => {
+		const sessionId = request.params.id;
+		const sessionData = await quizController.getGameSessionData(sessionId);
+		if (!sessionData) {
+			return reply.code(404).send({ status: 'Game session not found' });
+		}
+		return reply.code(200).send({ status: 'Game session details', sessionData });
+	});
+
+	fastify.get('/test', async (request, reply) => {
+		const sessionId = 1;
+		const sessionData = await quizController.getGameSessionData(sessionId);
+		if (!sessionData) {
+			return reply.code(404).send({ status: 'Game session not found' });
+		}
+		return reply.code(200).send({ status: 'Game session details', sessionData });
+	});
 
 	// Input : game_session_id, player_id
 	// Rules : only if status is 'waiting' and max_players not reached

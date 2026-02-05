@@ -8,13 +8,6 @@ const quizModel = require('../models/quizModel');
  * @return {*} game session code
  */
 
-/*
-	Steps :
-	1. Validate input data (handled by schema)
-	2. Generate unique game session code
-	3. Insert new game session into database with status 'waiting' and adding host as first player
-	4. Return game session details including code
-*/
 async function createGameSession(sessionData, hostId) {
 	const { mode = "medium", topic = "general",
 		question_count = 10, max_players = 4 } = sessionData;
@@ -32,11 +25,26 @@ async function createGameSession(sessionData, hostId) {
 		return (sessionCode);
 	}
 	catch (err) {
-		console.error("Error generating session code:", err);c
+		console.error("Error generating session code:", err);
 		throw new Error("Failed to create game session");
 	}
 }
 
+async function getGameSessionData(sessionId)
+{
+	console.log("Fetching game session data for session ID:", sessionId);
+	const session = quizModel.getSessionById(sessionId);
+	if (!session) {
+		console.log("No game session found for ID:", sessionId);
+		return null;
+	}
+	const players = quizModel.getPlayersBySession(sessionId);
+	session.players = players;
+	console.log("Game session data with players:", session);
+	return session;
+}
+
 module.exports = {
-	createGameSession
+	createGameSession,
+	getGameSessionData
 };

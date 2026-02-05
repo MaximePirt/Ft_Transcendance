@@ -27,4 +27,21 @@ const createGameSessionSchema = {
 	}
 };
 
-module.exports = { createGameSessionSchema };
+const GameSessionId = {
+	params: {
+		type: 'object',
+		properties: {
+			id: {
+				type: 'integer',
+				minimum: 1,
+			}
+		},
+		required: ['id']
+	}
+};
+
+
+module.exports = {
+	createGameSessionSchema,
+	GameSessionId
+};

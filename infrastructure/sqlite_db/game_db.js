@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
 	topic TEXT,
 	question_count INTEGER NOT NULL DEFAULT 10,
 	max_players INTEGER NOT NULL DEFAULT 4,
-	host_id INTEGER NOT NULL,
+	host_id INTEGER NULL,
 	FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE SET NULL
 );
 

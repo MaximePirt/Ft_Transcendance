@@ -8,7 +8,7 @@ module.exports = async function authPlugin(fastify, opts) {
 
 
 	fastify.register(require("@fastify/cookie"), {
-		secret: "a-string-secret-at-least-256-bits-long",
+		secret: process.env.JWT_SECRET,
 		parseOptions: {},
 		maxAge: 60_000,
 	});
