@@ -45,20 +45,39 @@ async function quizRoutes(fastify, options) {
 		return reply.code(200).send({ status: 'Game session details', sessionData });
 	});
 
-	fastify.get('/test', async (request, reply) => {
-		const sessionId = 1;
-		const sessionData = await quizController.getGameSessionData(sessionId);
-		if (!sessionData) {
-			return reply.code(404).send({ status: 'Game session not found' });
-		}
-		return reply.code(200).send({ status: 'Game session details', sessionData });
-	});
+	/**
+	 * @brief Join a game session
+	 * @input : game_session_id
+	 * @rules : only if status is 'waiting' and max_players not reached
+	 * @return : 200 if success, 400 if game session is full or already started, 500 if error
+	 */
+	fastify.post('/game-sessions/join', {preHandler: fastify.authenticate, schema: schemas.JoinGameSessionSchema},
+	async (request, reply) => {
+		const userId = request.user.id;
+		const { code } = request.body;
+		try {
+			const res = await quizController.joinGameSession(userId, code);
 
-	// Input : game_session_id, player_id
-	// Rules : only if status is 'waiting' and max_players not reached
-	// Output : success/failure
-	// fastify.post('/game-sessions/:id/join', async (request, reply) => {
-	// });
+			// TODO: Websocket broadcast to notify other players in the session that a new player has joined
+    		// fastify.websocketBroadcast(result.session_id, 'player_joined', { userId });
+
+			return reply.code(200).send({ status: 'joined', gameSessionId: res.session_id });
+		}
+		catch (err)
+		{
+			if (err.message.includes("not found"))
+				return reply.code(404).send({ status: 'Game session not found' });
+			else if (err.message.includes("already started")
+				|| err.message.includes("full"))
+				return reply.code(400).send({ status: 'Cannot join game session', error: err.message });
+			else if (err.message.includes("already joined"))
+				return reply.code(409).send({ status: 'User has already joined this game session' });
+			else {
+				console.error("Error joining game session:", err);
+				return reply.code(500).send({ status: 'Error joining game session', error: err.message });
+			}
+		}
+	});
 
 	// Input : game_session_id, player_id, answer
 	// Effect : insert in game_answer, update player score

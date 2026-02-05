@@ -46,6 +46,18 @@ function getSessionById(sessionId)
 	return data;
 }
 
+function getSessionByCode(sessionCode)
+{
+	console.log("Model : Fetching game session by code:", sessionCode);
+	const data = db.prepare(`
+		SELECT id, code, mode, topic, question_count, max_players, host_id, status, started_at, ended_at
+		FROM game_sessions
+		WHERE code = ?
+	`).get(sessionCode);
+	console.log("Game session data retrieved:", data);
+	return data;
+}
+
 function getPlayersBySession(sessionId)
 {
 	console.log("Model : Fetching all players for game session ID:", sessionId);
@@ -64,5 +76,6 @@ module.exports = {
 	insertGameSession,
 	insertPlayerInGame,
 	getSessionById,
+	getSessionByCode,
 	getPlayersBySession
 };

@@ -40,8 +40,24 @@ const GameSessionId = {
 	}
 };
 
+const JoinGameSessionSchema = 
+{
+	body: {
+		type: 'object',
+		properties: {
+			code: {
+				type: 'string',
+				minLength: 6,
+				maxLength: 6
+			}
+		},
+		required: ['code']
+	}
+}
+
 
 module.exports = {
 	createGameSessionSchema,
-	GameSessionId
+	GameSessionId,
+	JoinGameSessionSchema
 };

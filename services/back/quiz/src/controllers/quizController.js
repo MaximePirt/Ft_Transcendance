@@ -44,7 +44,32 @@ async function getGameSessionData(sessionId)
 	return session;
 }
 
+async function joinGameSession(userId, sessionCode)
+{
+	console.log("User ID", userId, "is trying to join game session with code:", sessionCode);
+	const session = quizModel.getSessionByCode(sessionCode);
+	if (!session)
+		throw new Error("Game session not found");
+	if (session.status !== 'waiting')
+		throw new Error("Game session already started or ended : " + session.status);
+
+	const players = quizModel.getPlayersBySession(session.id);
+	if (players.length >= session.max_players)
+		throw new Error("Game session is full");
+
+	const alreadyJoined = players.some(player => player.id === userId);
+	if (alreadyJoined) {
+		console.log("User ID", userId, "has already joined game session with code:", sessionCode);
+		throw new Error("User has already joined this game session");
+	}
+
+	quizModel.insertPlayerInGame(userId, session.id);
+	console.log("User ID", userId, "successfully joined game session with code:", sessionCode);
+	return { session_id: session.id, player: { user_id: userId } };
+}
+
 module.exports = {
 	createGameSession,
-	getGameSessionData
+	getGameSessionData,
+	joinGameSession
 };
