@@ -12,19 +12,15 @@ async function quizRoutes(fastify, options) {
 	fastify.post('/game-sessions', {preHandler: fastify.authenticate, schema: schemas.createGameSessionSchema },
 	async (request, reply) => {
 		userId = 1;
-		request.body = {
-			mode: 'medium',
-			topic: 'general',
-		};
 		try {
 			const gameSession = await quizController.createGameSession( request.body, userId);
 			console.log("Game session code:", gameSession);
+			return reply.code(200).send({ status: 'Game session created', gameSession});
 		}
 		catch (err) {
 			console.error("Error creating game session:", err);
 			return reply.code(500).send({ status: 'Error creating game session', error: err.message });
 		}
-		return reply.code(200).send({ status: 'Game session created', gameSession});
 	});
 
 
@@ -51,7 +47,7 @@ async function quizRoutes(fastify, options) {
 	 * @rules : only if status is 'waiting' and max_players not reached
 	 * @return : 200 if success, 400 if game session is full or already started, 500 if error
 	 */
-	fastify.post('/game-sessions/join', {preHandler: fastify.authenticate, schema: schemas.JoinGameSessionSchema},
+	fastify.post('/game-sessions/join', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
 		const userId = request.user.id;
 		const { code } = request.body;
@@ -79,6 +75,48 @@ async function quizRoutes(fastify, options) {
 		}
 	});
 
+
+	/**
+	 * @brief Start a game session
+	 * @input : game_session_code
+	 * @rules : only host can start, only if status is 'waiting' and at least 2 players joined
+	 * @effects : change game session status to 'started', set started_at timestamp
+	 * 			Select a pool of question based on the game session settings (mode, topic, question_count)
+	 * 			and associate them with the game session
+	 * @return : Confirmation
+	 * @code 200 if success,
+	 * 		 400 if not allowed, not enough players, or game session already started,
+	 * 		 404 if session doesn't exist
+	 * 		 403 if not host,
+	 * 		 500 if error
+	 */
+	fastify.post(`/game-sessions/start`, {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
+	async (request, reply) => {
+		// const userId = request.user.id;
+		const userId = 1;
+		const { code } = request.body;
+		try {
+			const res = await quizController.startGameSession(userId, code);
+
+			//TODO : Websocket broadcast to notify players in the session that the game has started
+			// fastify.websocketBroadcast(res.session_id, 'game_started', {});
+			return reply.code(200).send({ status: 'Game session started', gameSessionId: res.session_id });
+		}
+		catch(err)
+		{
+			if (err.message.includes("not found"))
+				return reply.code(404).send({ error: err.message });
+			else if (err.message.includes("not allowed") || err.message.includes("already started") || err.message.includes("players"))
+				return reply.code(400).send({ error: err.message });
+			else if (err.message.includes("not host"))
+				return reply.code(403).send({ error: 'Only the host can start the game session' });
+			else {
+				console.error("Error starting game session:", err);
+				return reply.code(500).send({ error: 'Error starting game session', error: err.message });
+			}
+		}
+	});
+
 	// Input : game_session_id, player_id, answer
 	// Effect : insert in game_answer, update player score
 	// Output : success/failure 
@@ -92,10 +130,6 @@ async function quizRoutes(fastify, options) {
 
 	fastify.get('/health', async (request, reply) => {
 		userId = 1;
-		request.body = {
-			mode: 'medium',
-			topic: 'general',
-		};
 		try {
 			const gameSession = await quizController.createGameSession( request.body, userId);
 			console.log("Health check - game session details:", gameSession);
@@ -107,6 +141,8 @@ async function quizRoutes(fastify, options) {
 		return reply.code(200).send({ status: 'Quiz service is healthy' });
 	});
 	console.log("Quiz routes registered");
+
+
 }
 
 module.exports = quizRoutes;

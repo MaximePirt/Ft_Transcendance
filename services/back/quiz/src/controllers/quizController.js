@@ -1,6 +1,5 @@
 const quizModel = require('../models/quizModel');
 
-
 /**
  * @brief Create a new game session
  * @param {*} sessionData - : mode, topic, number of questions, max_players
@@ -9,12 +8,15 @@ const quizModel = require('../models/quizModel');
  */
 
 async function createGameSession(sessionData, hostId) {
-	const { mode = "medium", topic = "general",
-		question_count = 10, max_players = 4 } = sessionData;
+	hostId = 1;
+	const { mode, topic = null,
+			question_count, max_players = 4 } = sessionData;
+
+	const topicJson = topic && Array.isArray(topic) ? JSON.stringify(topic) : null;
 	try {
 		const sessionCode = quizModel.generateSessionCode();
 		try {
-			const insertGame = quizModel.insertGameSession(sessionCode, mode, topic, question_count, max_players, hostId);
+			const insertGame = quizModel.insertGameSession(sessionCode, mode, topicJson, question_count, max_players, hostId);
 			quizModel.insertPlayerInGame(hostId, insertGame.lastInsertRowid);
 			console.log("Game session created with code:", sessionCode);
 		}
@@ -68,8 +70,39 @@ async function joinGameSession(userId, sessionCode)
 	return { session_id: session.id, player: { user_id: userId } };
 }
 
+async function startGameSession(userId, sessionCode)
+{
+	console.log("User ID", userId, "is trying to start game session with code:", sessionCode);
+	const session = quizModel.getSessionByCode(sessionCode);
+	if (!session)
+		throw new Error("Game session not found");
+	if (session.status !== 'waiting')
+		throw new Error("Game session already started or ended : " + session.status);
+	if (session.host_id !== userId)
+		throw new Error("Only the host can start the game session");
+	console.log("Inputs validated. Starting game session with code:", sessionCode);
+	const players = quizModel.getPlayersBySession(session.id);
+	if (players.length < 1)
+		throw new Error("At least 1 player is required to start the game session");
+	console.log(players.length, "players have joined the game session. Starting the game...");
+	try {
+		quizModel.updateSessionStatus(session.id, 'in_progress');
+		console.log("Generating question pool for game session ID:", session.id);
+		const questionPool = quizModel.generateQuestionPool(session.mode, session.question_count, session.topic);
+		if (questionPool.length < session.question_count)
+			throw new Error("Not enough questions available to start the game session");
+		quizModel.insertPoolToSession(session.id, questionPool);
+		console.log("Session", session.id, "started with", questionPool.length, "questions");
+		return {code: 200, session_id: session.id};
+	}
+	catch (err) {
+		throw new Error("Failed to start game session: " + err.message);
+	}
+}
+
 module.exports = {
 	createGameSession,
 	getGameSessionData,
-	joinGameSession
+	joinGameSession,
+	startGameSession
 };

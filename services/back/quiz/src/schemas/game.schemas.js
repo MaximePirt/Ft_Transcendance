@@ -4,22 +4,25 @@ const createGameSessionSchema = {
     properties: {
 		mode: { 
 			type: 'string', 
-			enum: ['easy', 'medium', 'hard'],
-			default: 'medium'
+			enum: ['easy', 'medium', 'hard', 'random'],
+			default: 'random'
 		},
-		topic: {
-			type: 'string',
-			default: 'general'
+		topic: { 
+			oneOf: [
+				{ type: 'array', 
+					items: { type: 'string' } },
+				{ type: 'null' }
+			],
 		},
 		question_count: { 
 			type: 'integer', 
-			minimum: 5, 
+			minimum: 1, 
 			maximum: 20,
-			default: 10
+			default: 2
 		},
 		max_players: { 
 			type: 'integer', 
-			minimum: 2, 
+			minimum: 1, 
 			maximum: 8,
 			default: 4 
 		}
@@ -40,7 +43,7 @@ const GameSessionId = {
 	}
 };
 
-const JoinGameSessionSchema = 
+const GameSessionCode = 
 {
 	body: {
 		type: 'object',
@@ -59,5 +62,5 @@ const JoinGameSessionSchema =
 module.exports = {
 	createGameSessionSchema,
 	GameSessionId,
-	JoinGameSessionSchema
+	GameSessionCode
 };

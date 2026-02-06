@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
 	started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	ended_at DATETIME,
 	status TEXT CHECK( status IN ('waiting', 'in_progress', 'completed', 'abandoned') ) NOT NULL DEFAULT 'waiting',
-	mode TEXT CHECK( mode IN ('easy', 'medium', 'hard') ) NOT NULL DEFAULT 'medium',
+	mode TEXT CHECK( mode IN ('easy', 'medium', 'hard', 'random') ) NOT NULL DEFAULT 'random',
 	topic TEXT,
 	question_count INTEGER NOT NULL DEFAULT 10,
 	max_players INTEGER NOT NULL DEFAULT 4,
@@ -49,6 +49,17 @@ CREATE TABLE IF NOT EXISTS game_players (
 	PRIMARY KEY (game_session_id, user_id),
 	FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create a question pool
+CREATE TABLE IF NOT EXISTS game_session_questions (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	game_session_id INTEGER NOT NULL,
+	question_id INTEGER NOT NULL,
+	question_order INTEGER NOT NULL,
+	FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
+	FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE SET NULL,
+	UNIQUE(game_session_id, question_id)
 );
 
 -- Game_answers table - save answers given by users during game_sessions
