@@ -69,6 +69,10 @@ async function userRoutes(fastify, options) {
 		return res;
 	});
 
+	fastify.get("/users/:id", async (request, reply) => {
+		const userId = request.params.id;
+		return await userController.getUserById(userId);
+	});
 
 	// Update informations
 	fastify.patch("/:id", async (request, reply) => {
@@ -114,7 +118,12 @@ async function userRoutes(fastify, options) {
 		return { onlineStatus: user.onlineStatus };
 	});
 
-
+	// Route to update user information
+	fastify.put("/users/:id", async (request, reply) => {
+		const userId = request.params.id;
+		const userData = request.body;
+		return await userController.updateUser(userId, userData);
+	});
 
 }
 

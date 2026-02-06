@@ -82,7 +82,6 @@ services:
   auth_api:
     build:
       context: ./services/back/auth
-      dockerfile: Dockerfile
     container_name: auth_api
     networks:
       - ft_transcendance

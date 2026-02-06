@@ -28,6 +28,7 @@ const listFriend = db.prepare(`
   AND u.id != ?
 `);
 
+
 //	Functions
 
 function addFriend(userId, friendId) {
@@ -105,6 +106,7 @@ function listFriends(userId) {
 
   return listFriend.all(userId, userId, userId);
 }
+
 
 function getFriendshipStatus(userId, friendId) {
   var min = userId < friendId ? userId : friendId;
