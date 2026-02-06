@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import '../App.css'
 
 const languages = [
@@ -11,7 +12,7 @@ const languages = [
 
 
 //en attendant la data base
-const userProfile = {
+const defaultUserProfile = {
 	username: 'PlayerOne',
 	email: 'player@quiz.sprint',
 	joinYear: 2024,
@@ -35,13 +36,6 @@ type FriendRequest = {
 	username: string
 	type: 'received' | 'sent'
 }
-
-// Données temporaires pour les amis
-const UserFriends: Friend[] = [
-	{ id: '1', username: 'tototrucmuche', status: 'online' },
-	{ id: '2', username: 'footlover95', status: 'offline' },
-	{ id: '3', username: 'ft_joy', status: 'online' },
-]
 
 const UserFriendRequests: FriendRequest[] = [
 	{ id: '4', username: '123', type: 'received' },
@@ -84,66 +78,230 @@ const titleOptions: TitleOption[] = [
 	{ id: 'music', text: 'profile_title_music' },
 ]
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+
 type CardState = {
 	bgColor: string
 	stickers: Sticker[]
 	titles: string[]
 	description: string
+	preferredLanguage?: string
 }
 
-const STORAGE_KEY = 'profileCard'
 const MAX_STICKERS = 3
 const MAX_TITLES = 2
 
 function ProfilUser() {
 	const navigate = useNavigate()
+	const { username: routeUsername } = useParams()
 	const { t, i18n } = useTranslation()
+	const { user, isAuthenticated, isAuthReady } = useAuth()
+	const isPublicView = Boolean(routeUsername) && routeUsername !== user?.username
+	const canEdit = !isPublicView
+	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
 	const [description, setDescription] = useState('')
+	const [preferredLanguage, setPreferredLanguage] = useState(i18n.language)
 	const [hydrated, setHydrated] = useState(false)
-	const [friends, setFriends] = useState<Friend[]>(UserFriends)
+	const [isSaving, setIsSaving] = useState(false)
+	const [saveError, setSaveError] = useState('')
+	const [saveSuccess, setSaveSuccess] = useState(false)
+	const [friends, setFriends] = useState<Friend[]>([])
 	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>(UserFriendRequests)
 	const [friendSearchInput, setFriendSearchInput] = useState('')
+	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+
+
+	// Rediriger si non authentifié
+	useEffect(() => {
+		if (isPublicView) return
+		if (!isAuthReady) return
+		if (!isAuthenticated) {
+			navigate('/')
+		}
+	}, [isAuthenticated, isAuthReady, isPublicView, navigate])
+
+	// Charger les données de l'utilisateur
+	useEffect(() => {
+		if (user && !isPublicView) {
+			setUserProfile({
+				username: user.username,
+				email: user.email,
+				joinYear: new Date().getFullYear(),
+				stats: {
+					gamesPlayed: 42,
+					winRate: 68,
+					bestScore: 9860,
+					streak: 7,
+				},
+				favorites: ['cinema', 'music', 'computer_science'],
+			})
+		}
+	}, [user, isPublicView])
 
 	useEffect(() => {
-		try {
-			const raw = localStorage.getItem(STORAGE_KEY)
-			if (!raw) {
-				setHydrated(true)
-				return
+		if (!profileUsername) return
+		
+		// Charger les données depuis le serveur en priorité
+		const loadProfileCard = async () => {
+			try {
+				const userIdResponse = await fetch(`${API_BASE}/userid/${profileUsername}`)
+				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+				const { id } = await userIdResponse.json()
+
+				const response = await fetch(`${API_BASE}/users/${id}`)
+				if (response.ok) {
+					const userData = await response.json()
+					setUserProfile({
+						username: userData.username || profileUsername,
+						email: userData.email || '',
+						joinYear: new Date(userData.created_at || Date.now()).getFullYear(),
+						stats: {
+							gamesPlayed: 42,
+							winRate: 68,
+							bestScore: 9860,
+							streak: 7,
+						},
+						favorites: ['cinema', 'music', 'computer_science'],
+					})
+					let parsedStickers: Sticker[] = []
+					let parsedTitles: string[] = [titleOptions[0].id, titleOptions[1].id]
+					
+					// Charger les données de personnalisation depuis le serveur
+					if (userData.profileCardBgColor) setBgColor(userData.profileCardBgColor)
+					
+					if (userData.profileCardStickers) {
+						try {
+							const parsed = JSON.parse(userData.profileCardStickers)
+							if (Array.isArray(parsed)) {
+								parsedStickers = parsed
+								setStickers(parsed)
+							}
+						} catch (e) {
+							console.warn('Failed to parse stickers', e)
+						}
+					}
+					
+					if (userData.profileCardTitles) {
+						try {
+							const parsed = JSON.parse(userData.profileCardTitles)
+							if (Array.isArray(parsed) && parsed.length) {
+								parsedTitles = parsed
+								setTitles(parsed.slice(0, MAX_TITLES))
+							}
+						} catch (e) {
+							console.warn('Failed to parse titles', e)
+						}
+					}
+					
+					if (userData.profileCardDescription) {
+						setDescription(userData.profileCardDescription.slice(0, 40))
+					}
+					
+					if (userData.preferredLanguage) {
+						setPreferredLanguage(userData.preferredLanguage)
+					}
+					
+					setHydrated(true)
+					return
+				}
+			} catch (e) {
+				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
 			}
-			const parsed = JSON.parse(raw) as CardState
-			if (parsed.bgColor) setBgColor(parsed.bgColor)
-			if (Array.isArray(parsed.stickers)) setStickers(parsed.stickers)
-			if (Array.isArray(parsed.titles) && parsed.titles.length) setTitles(parsed.titles.slice(0, MAX_TITLES))
-			if (typeof parsed.description === 'string') setDescription(parsed.description.slice(0, 40))
-		} catch (e) {
-			console.warn('[ProfileCard] failed to load saved state', e)
-		} finally {
 			setHydrated(true)
 		}
-	}, [])
+		
+		loadProfileCard()
+	}, [profileUsername, canEdit, i18n, isPublicView])
+
+		useEffect(() => {
+			if (!user || !canEdit) return
+			const loadFriends = async () => {
+				try {
+					const userIdResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+					if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+					const { id } = await userIdResponse.json()
+
+					const response = await fetch(`${API_BASE}/${id}/friends`)
+					if (!response.ok) throw new Error('Failed to load friends')
+					const data = await response.json()
+					const list = data?.result?.friends || data?.friends || []
+					const normalized = list.map((friend) => ({
+						id: String(friend.id),
+						username: friend.username,
+						status: 'offline',
+					}))
+					setFriends(normalized)
+				} catch (e) {
+					console.warn('[Profile] failed to load friends', e)
+				}
+			}
+
+			loadFriends()
+		}, [user, canEdit])
 
 	useEffect(() => {
 		document.body.dir = i18n.dir()
 	}, [i18n, i18n.language])
 
-	useEffect(() => {
-		if (!hydrated) return
-		const payload: CardState = { bgColor, stickers, titles, description }
+	// Auto-save désactivé (sauvegarde manuelle uniquement)
+
+	const handleSaveNow = async () => {
+		if (!user || !canEdit) return
+		setIsSaving(true)
+		setSaveError('')
+		setSaveSuccess(false)
 		try {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+			const res = await saveProfileToServer()
+			if (!res.ok) throw new Error(res.error || 'Save failed')
+			setPreferredLanguage(i18n.language)
+			setSaveSuccess(true)
 		} catch (e) {
-			console.warn('[ProfileCard] failed to save state', e)
+			setSaveError(e instanceof Error ? e.message : 'Erreur de sauvegarde')
+		} finally {
+			setIsSaving(false)
 		}
-	}, [bgColor, stickers, titles, description, hydrated])
+	}
+
+	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
+		if (!user) return { ok: false, error: 'Utilisateur non connecté' }
+		const langToSave = i18n.language
+		const userResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+		if (!userResponse.ok) {
+			const text = await userResponse.text()
+			return { ok: false, error: `User ID introuvable (${userResponse.status}) ${text}` }
+		}
+		const { id } = await userResponse.json()
+
+		const response = await fetch(`${API_BASE}/${id}`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				profileCardBgColor: bgColor,
+				profileCardStickers: JSON.stringify(stickers),
+				profileCardTitles: JSON.stringify(titles),
+				profileCardDescription: description,
+				preferredLanguage: langToSave,
+			})
+		})
+
+		if (!response.ok) {
+			const text = await response.text()
+			return { ok: false, error: `Erreur API (${response.status}) ${text}` }
+		}
+
+		return { ok: true }
+	}
 
 	type StickerPayload = { symbol: string; url?: string }
 
 	const addSticker = (payload: StickerPayload, x = 50, y = 50) => {
+		if (!canEdit) return
 		setStickers((prev) => {
 			if (prev.length >= MAX_STICKERS) return prev
 			return [...prev, { id: `${Date.now()}-${prev.length}`, symbol: payload.symbol, url: payload.url, x, y }]
@@ -151,11 +309,13 @@ function ProfilUser() {
 	}
 
 	const handleDragStart = (e: React.DragEvent<HTMLButtonElement>, payload: StickerPayload) => {
+		if (!canEdit) return
 		e.dataTransfer.setData('application/json', JSON.stringify(payload))
 		e.dataTransfer.effectAllowed = 'copy'
 	}
 
 	const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+		if (!canEdit) return
 		e.preventDefault()
 		if (stickers.length >= MAX_STICKERS) return
 		let payload: StickerPayload | null = null
@@ -173,18 +333,15 @@ function ProfilUser() {
 	}
 
 	const handleReset = () => {
+		if (!canEdit) return
 		setStickers([])
 		setBgColor('#0f0f10')
 		setTitles([titleOptions[0].id, titleOptions[1].id])
 		setDescription('')
-		try {
-			localStorage.removeItem(STORAGE_KEY)
-		} catch (e) {
-			console.warn('[ProfileCard] failed to clear storage', e)
-		}
 	}
 
 	const toggleTitle = (id: string) => {
+		if (!canEdit) return
 		setTitles((prev) => {
 			if (prev.includes(id)) return prev.filter((t) => t !== id)
 			if (prev.length >= MAX_TITLES) return prev
@@ -193,10 +350,12 @@ function ProfilUser() {
 	}
 
 	const handleRemove = (id: string) => {
+		if (!canEdit) return
 		setStickers((prev) => prev.filter((s) => s.id !== id))
 	}
 
 	const handleAcceptRequest = (id: string) => {
+		if (!canEdit) return
 		const request = friendRequests.find((r) => r.id === id)
 		if (!request) return
 		setFriends((prev) => [...prev, { id: request.id, username: request.username, status: 'online' }])
@@ -204,24 +363,32 @@ function ProfilUser() {
 	}
 
 	const handleDeclineRequest = (id: string) => {
+		if (!canEdit) return
 		setFriendRequests((prev) => prev.filter((r) => r.id !== id))
 	}
 
 	const handleRemoveFriend = (id: string) => {
+		if (!canEdit) return
 		setFriends((prev) => prev.filter((f) => f.id !== id))
 	}
 
 	const handleSendFriendRequest = () => {
+		if (!canEdit) return
 		if (!friendSearchInput.trim()) return
 		// TODO: Envoyer la requête au backend
 		console.log('Demande envoyée à:', friendSearchInput)
 		setFriendSearchInput('')
 	}
 
-	const changeLanguage = (lang: string) => {
-		i18n.changeLanguage(lang)
-		localStorage.setItem('language', lang)
-		document.body.dir = i18n.dir()
+	const changeLanguage = async (lang: string) => {
+		try {
+			await i18n.changeLanguage(lang)
+			if (canEdit) setPreferredLanguage(lang)
+			document.body.dir = i18n.dir(lang)
+			document.documentElement.lang = lang
+		} catch (e) {
+			console.warn('[Profile] failed to change language', e)
+		}
 	}
 
 	return (
@@ -238,11 +405,15 @@ function ProfilUser() {
 							<div
 								ref={dropZoneRef}
 								className="profile-card-canvas"
-								onDragOver={(e) => {
-									e.preventDefault()
-									if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-								}}
-								onDrop={handleDrop}
+								onDragOver={
+									canEdit
+										? (e) => {
+											e.preventDefault()
+											if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+										}
+										: undefined
+								}
+								onDrop={canEdit ? handleDrop : undefined}
 								style={{ background: bgColor }}
 							>
 							<div className="profile-card-avatar" aria-hidden>
@@ -263,7 +434,7 @@ function ProfilUser() {
 									key={sticker.id}
 									type="button"
 									className="sticker-node"
-									onDoubleClick={() => handleRemove(sticker.id)}
+									onDoubleClick={canEdit ? () => handleRemove(sticker.id) : undefined}
 									style={{ left: `${sticker.x}%`, top: `${sticker.y}%` }}
 								>
 									{sticker.url ? <img src={sticker.url} alt={sticker.symbol} /> : sticker.symbol}
@@ -283,16 +454,20 @@ function ProfilUser() {
 											onClick={() => changeLanguage(lng.code)}
 											className={`chip ${active ? 'chip-active' : ''}`}
 										>
-											{lng.lang}
-										</button>
+										{lng.lang}
+									</button>
 									)
 								})}
 							</div>
+							{!canEdit && (
+								<p className="pref-desc">{t('profile_share_notice')}</p>
+							)}
 						</div>
 
 					</section>
 
-					<section className="profile-card-controls">
+					{canEdit && (
+						<section className="profile-card-controls">
 						<div className="panel-title">{t('profile_customize')}</div>
 						<div className="control-group">
 							<label className="control-label" htmlFor="bg-picker">
@@ -382,15 +557,22 @@ function ProfilUser() {
 							<button className="btn ghost" type="button" onClick={handleReset}>
 								{t('profile_reset')}
 							</button>
+							<button className="btn" type="button" onClick={handleSaveNow} disabled={isSaving}>
+								{isSaving ? t('saving') : t('save')}
+							</button>
 							<button className="btn primary" type="button" onClick={() => navigate('/quiz')}>
 								{t('back')}
 							</button>
 						</div>
+						{saveError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{saveError}</p>}
+						{saveSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('save_success')}</p>}
 
-						<p className="pref-desc profile-share-note">{t('profile_share_notice')}</p>
-					</section>
+						<p className="pref-desc profile-share-notice">{t('profile_share_notice')}</p>
+						</section>
+					)}
 
-					<section className="profile-friends-section">
+					{canEdit && (
+						<section className="profile-friends-section">
 					<div className="panel-title">{t('profile_friends_section')}</div>
 
 						<div className="control-group">
@@ -489,7 +671,8 @@ function ProfilUser() {
 								)}
 							</div>
 						</div>
-					</section>
+						</section>
+					)}
 				</div>
 			</div>
 		</main>
