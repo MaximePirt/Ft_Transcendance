@@ -1,0 +1,23 @@
+{
+  "name": "default",
+  "variables": {
+    "--bg-main":"#F1F1F1",
+    "--bg-shell":"#FFFFFF",
+    "--primary":"#FFD600",
+    "--secondary":"#FF90E8",
+    "--accent":"#00E1FF",
+    "--danger":"#FF4646",
+    "--text":"#000000",
+    "--border-thick":"4px solid #000000",
+    "--border-thin":"2px solid #000000",
+    "--shadow-hard":"8px 8px 0px #000000",
+    "--shadow-btn":"4px 4px 0px #000000",
+    "--background-img":"linear-gradient(45deg, #e5e5e5 25%, transparent 25%), linear-gradient(-45deg, #e5e5e5 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e5e5 75%), linear-gradient(-45deg, transparent 75%, #e5e5e5 75%)",
+    "--background-size":"20px 20px",
+    "--shell-shadow":"12px 12px 0px #000",
+    "--background-eyebrow":"none",
+    "--border-eyebrow":"2px solid #000000",
+    "--border-shell":"4px solid #000000",
+    "--border-image":"none"
+  }
+}

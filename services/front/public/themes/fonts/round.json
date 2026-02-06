@@ -1,0 +1,7 @@
+{
+  "name": "round",
+  "variables": {
+    "--primary-custom-font":"'PlusJakarta', 'Inter', sans-serif",
+    "--secondary-custom-font":"'Pally', 'Inter', sans-serif"
+  }
+}

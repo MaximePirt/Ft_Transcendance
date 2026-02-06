@@ -1,0 +1,7 @@
+{
+  "name": "classic",
+  "variables": {
+    "--primary-custom-font":"'Neco', 'Inter', serif",
+    "--secondary-custom-font":"'Zodiak', 'Inter', serif"
+  }
+}

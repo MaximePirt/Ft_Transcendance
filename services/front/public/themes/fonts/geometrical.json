@@ -1,0 +1,7 @@
+{
+  "name": "geometrical",
+  "variables": {
+    "--primary-custom-font":"'Nippo', 'Inter', display",
+    "--secondary-custom-font":"'Bespoke', 'Inter', serif"
+  }
+}

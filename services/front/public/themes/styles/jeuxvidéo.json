@@ -1,0 +1,17 @@
+{
+  "name": "jeuxvidéo",
+  "variables": {
+    "--background-img":"url('/custom-assets/games-bg.png')",
+    "--background-size":"cover",
+    "--shell-shadow":"12px 12px 0px rgba(255, 255, 255, 0.60)",
+    "--secondary":"rgba(115, 255, 105, 0.60)",
+    "--accent":"rgba(115, 255, 105, 0.60)",
+    "--shadow-btn":"4px 4px 0px rgba(100, 215, 95, 0.70)",
+    "--background-eyebrow":"none",
+    "--border-eyebrow":"7px ridge #70FF68",
+    "--border-thick":"10px ridge #70FF68",
+    "--border-thin":"7px ridge black",
+    "--border-shell":"10px ridge #70FF68",
+    "--border-image":"none"
+  }
+}

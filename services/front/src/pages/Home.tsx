@@ -4,6 +4,8 @@ import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './../content/LanguageSelector.tsx'
+import ThemeSelector from './../content/ThemeSelector.tsx'
+import FontSelector from './../content/FontSelector.tsx'
 
 const topics = (t: any) => [
   { title: t('histoire'), detail: t('histoire_desc') },
@@ -27,6 +29,8 @@ function HomePage() {
   return (
     <main className="page">
       <LanguageSelector />
+      <ThemeSelector />
+      <FontSelector />
       <div className="login-bar">
         <button className="btn login" onClick={() => setShowLogin(true)}>
           {t("connect")}
