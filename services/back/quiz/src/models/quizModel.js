@@ -150,6 +150,91 @@ function insertPoolToSession(sessionId, questionPool)
 	});
 	insertMany(questionPool);
 	console.log("Inserted", questionPool.length, "questions into game session ID:", sessionId);
+}
+/**
+ * @brief Check if a user is part of a game session
+ * @param {*} sessionId 
+ * @param {*} userId 
+ * @returns user found in session or null if not found
+ */
+function findUserInSession(sessionId, userId)
+{
+	console.log("Model: Checking if user ID:", userId, "is in game session ID:", sessionId);
+	const player = db.prepare(`
+		SELECT u.id, u.lang
+		FROM users u
+		JOIN game_players gp ON u.id = gp.user_id
+		WHERE game_session_id = ? AND user_id = ?
+	`).get(sessionId, userId);
+	const isInSession = !!player;
+	console.log("Is user ID:", userId, "in game session ID:", sessionId, "?", isInSession);
+	console.log("Player record found:", player);
+	if (!player)
+		return null;
+	return player;
+}
+
+/**
+ * @brief Get the current question for a player in a game session based on the number of questions they have already answered
+ * 			and base on their language preference
+ * @param {*} sessionId 
+ * @param {*} player 
+ * @returns next question if success, null if no more question or error
+ */
+function getCurrentQuestionForPlayer(sessionId, player)
+{
+	console.log("Model: Fetching current question for user ID:", player.id, "in game session ID:", sessionId);
+	const question = db.prepare(`
+	SELECT 
+		gsq.question_order,
+		q.id,
+		q.type,
+		qt.question_text,
+		c.slug as category_slug,
+		ct.name as category_name
+	FROM game_session_questions gsq
+	JOIN questions q ON gsq.question_id = q.id
+	LEFT JOIN question_translations qt 
+		ON q.id = qt.question_id AND qt.lang = ?
+	LEFT JOIN categories c ON q.category_id = c.id
+	LEFT JOIN category_translations ct 
+		ON c.id = ct.category_id AND ct.lang = ?
+	WHERE gsq.game_session_id = ?
+		AND NOT EXISTS (
+		SELECT 1 FROM game_answers 
+		WHERE game_session_id = ? 
+			AND user_id = ? 
+			AND question_id = q.id
+		)
+	ORDER BY gsq.question_order
+	LIMIT 1
+	`).get(player.lang, player.lang, sessionId, sessionId, player.id);
+	if (!question)
+		return null;
+
+	if (question.type === 'mcq') {
+		const options = db.prepare(`
+		SELECT 
+		mo.position,
+		mot.label
+		FROM mcq_options mo
+		JOIN mcq_option_translations mot 
+		ON mo.id = mot.option_id AND mot.lang = ?
+		WHERE mo.question_id = ?
+		ORDER BY mo.position
+		`).all(player.lang, question.id);
+		question.options = options;
+	}
+
+	const total = db.prepare(`
+		SELECT COUNT(*) as count 
+		FROM game_session_questions 
+		WHERE game_session_id = ?
+		`).get(sessionId);
+
+	question.total_questions = total.count;
+	console.log("Current question retrieved for user ID:", player.id, "in game session ID:", sessionId, ":", question);
+	return question;
 
 }
 
@@ -163,5 +248,7 @@ module.exports = {
 	getPlayersBySession,
 	updateSessionStatus,
 	generateQuestionPool,
-	insertPoolToSession
+	insertPoolToSession,
+	findUserInSession,
+	getCurrentQuestionForPlayer
 };

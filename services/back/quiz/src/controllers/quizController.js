@@ -100,9 +100,28 @@ async function startGameSession(userId, sessionCode)
 	}
 }
 
+async function getCurrentQuestion(sessionId, userId)
+{
+	const session = quizModel.getSessionById(sessionId);
+	if (!session)
+		throw new Error("Game session not found");
+	if (session.status !== 'in_progress')
+		throw new Error("Game session is not in progress : " + session.status);
+	const player = quizModel.findUserInSession(sessionId, userId);
+	if (!player)
+		throw new Error("User is not a player in this game session");
+	const question = quizModel.getCurrentQuestionForPlayer(sessionId, player);
+	if (!question)
+		throw new Error("No current question found for this game session");
+	console.log("Current question for user ID", userId, "in game session ID:", sessionId, ":", question);
+	return question;
+}
+
+
 module.exports = {
 	createGameSession,
 	getGameSessionData,
 	joinGameSession,
-	startGameSession
+	startGameSession,
+	getCurrentQuestion
 };

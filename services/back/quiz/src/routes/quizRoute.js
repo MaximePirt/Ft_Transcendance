@@ -117,6 +117,24 @@ async function quizRoutes(fastify, options) {
 		}
 	});
 
+	fastify.get(`/game-sessions/:id/current-question`, {preHandler: fastify.authenticate, schema: schemas.GameSessionId},
+	async (request, reply) => {
+		// const userId = request.user.id;
+		const userId = 1;
+		const sessionId = request.params.id;
+
+		try {
+			const res = await quizController.getCurrentQuestion(userId, sessionId);
+			if (!res)
+				return reply.code(404).send({ error: 'No current question found for this game session' });
+			return reply.code(200).send({ status: 'Current question retrieved', question: res });
+		} catch (err) {
+			console.error("Error retrieving current question for game session:", err);
+			return reply.code(500).send({ error: 'Error retrieving current question', error: err.message });
+		}
+	});
+
+
 	// Input : game_session_id, player_id, answer
 	// Effect : insert in game_answer, update player score
 	// Output : success/failure 
@@ -129,15 +147,6 @@ async function quizRoutes(fastify, options) {
 	// });
 
 	fastify.get('/health', async (request, reply) => {
-		userId = 1;
-		try {
-			const gameSession = await quizController.createGameSession( request.body, userId);
-			console.log("Health check - game session details:", gameSession);
-		}
-		catch (err) {
-			console.error("Health check - error creating game session:", err);
-			return reply.code(500).send({ status: 'Quiz service unhealthy', error: err.message });
-		}
 		return reply.code(200).send({ status: 'Quiz service is healthy' });
 	});
 	console.log("Quiz routes registered");
