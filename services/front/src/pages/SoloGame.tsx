@@ -81,26 +81,6 @@ function isTextAnswerCorrect(question: Question, answer: string) {
   })
 }
 
-// appliquer le style dans le DOM en fonction du theme de la question
-async function applyTheme(themeName: string) {
-  console.log(`${themeName}.json`)
-  try {
-    const res = await fetch(`/themes/${themeName}.json`)
-    const theme = await res.json()
-
-    const root = document.documentElement
-    Object.entries(theme.variables).forEach(([key, value]) => {
-      root.style.setProperty(key, value as string)
-    })
-
-  } catch (err) {
-    console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
-    if (themeName !== 'default')
-      return applyTheme('default')
-    return
-  }
-}
-
 const STORAGE_KEY = 'soloGameState:v1'
 
 function SoloGamePage() {
@@ -240,11 +220,6 @@ function SoloGamePage() {
   }
 
   const currentQuestion = questions[currentQuestionIndex]
-  useEffect(() => {
-    if (!currentQuestion || !currentQuestion?.theme) return
-    
-    applyTheme(currentQuestion.theme || 'default')
-  }, [currentQuestion])
 
   if (loading) {
     return (
@@ -316,7 +291,6 @@ return (
               return exitBtn && (
                 <button
                   onClick={() => {
-                    //applyTheme("default")
                     localStorage.removeItem(STORAGE_KEY)
                     navigate('/quiz')
                   }}

@@ -1,0 +1,17 @@
+{
+  "name": "echec",
+  "variables": {
+    "--background-img":"url('/custom-assets/chess-bg.png')",
+    "--background-size":"cover",
+    "--shell-shadow":"10px 0 0 #F0F0F0, 20px 0 0 #000, 30px 0 0 #F0F0F0, 0 10px 0 #F0F0F0, 10px 10px 0 #000, 20px 10px 0 #F0F0F0, 30px 10px 0 #000, 0 20px 0 #000, 10px 20px 0 #F0F0F0, 20px 20px 0 #000, 30px 20px 0 #F0F0F0, 0 30px 0 #F0F0F0, 10px 30px 0 #000, 20px 30px 0 #F0F0F0, 30px 30px 0 #000, 5px 5px 15px 5px rgba(0,0,0,0)",
+    "--secondary":"#F7D29C",
+    "--accent":"#F7D29C",
+    "--shadow-btn":"4px 4px 0px #713812",
+    "--background-eyebrow":"none",
+    "--border-eyebrow":"solid 4px #000000",
+    "--border-thick":"dashed 4px #000000",
+    "--border-thin":"dashed 4px #000000",
+    "--border-shell":"dashed 4px #000000",
+    "--border-image":"none"
+  }
+}

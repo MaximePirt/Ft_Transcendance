@@ -1,53 +1,10 @@
 /* --- VARIABLES DE DESIGN SYSTEM (Module IV.1 & IV.10) --- */
-@font-face {
-    font-family: 'Gomarice';
-    src: url('/font/gomarice_rockin_record.ttf') format('truetype');
-}
-
-@font-face {
-    font-family: 'Rimouski';
-    src: url('/font/rimouski.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'Perfograma';
-    src: url('/font/Perfograma.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'Retron';
-    src: url('/font/retron2000.ttf') format('truetype');
-}
-
-@font-face {
-    font-family: 'Aurach';
-    src: url('/font/aurach.heavy.ttf') format('truetype');
-}
-
-@font-face {
-    font-family: 'Overload';
-    src: url('/font/overload.burn-regular.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'LemonMilk';
-    src: url('/font/LemonMilkRegular-X3XE2.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'Chillax';
-    src: url('/font/Chillax-Regular.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'Pally';
-    src: url('/font/Pally-Medium.otf') format('opentype');
-}
-
-@font-face {
-    font-family: 'Theater';
-    src: url('/font/theater.bold-condensed.ttf') format('truetype');
-}
+@import "./styles/fonts/zodiak.css";
+@import "./styles/fonts/nippo.css";
+@import "./styles/fonts/bespoke.css";
+@import "./styles/fonts/neco.css";
+@import "./styles/fonts/pally.css";
+@import "./styles/fonts/plus-jakarta.css";
 
 :root {
   --bg-main: #F1F1F1;
@@ -66,7 +23,6 @@
   --border-thin: 2px solid #000000;
   --shadow-hard: 8px 8px 0px #000000;
   --shadow-btn: 4px 4px 0px #000000;
-  --font-main: 'Lexend', 'Inter', sans-serif;
 
   --background-img: linear-gradient(45deg, #e5e5e5 25%, transparent 25%),
     linear-gradient(-45deg, #e5e5e5 25%, transparent 25%),
@@ -79,6 +35,8 @@
   --border-eyebrow: 2px solid #000000;
   --primary-custom-font: 'Lexend', 'Inter', sans-serif;
   --secondary-custom-font: 'Lexend', 'Inter', sans-serif;
+  --border-shell: 4px solid #000000;
+  --border-image: none;
 }
 
 * {
@@ -152,11 +110,52 @@
   box-shadow: 2px 2px 0px #000;
 }
 
+.theme-combobox {
+  position: fixed;
+  top: 100px;
+  left: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: var(--border-thin);
+  box-shadow: var(--shadow-btn);
+  text-decoration: none;
+  font-family: var(--primary-custom-font);
+  font-size: 16px;
+  min-height: 52px;
+  letter-spacing: 0.5px;
+}
+
+.font-combobox {
+  position: fixed;
+  top: 180px;
+  left: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: var(--border-thin);
+  box-shadow: var(--shadow-btn);
+  text-decoration: none;
+  font-family: var(--primary-custom-font);
+  font-size: 16px;
+  min-height: 52px;
+  letter-spacing: 0.5px;
+}
+
 /* --- LE CONTENEUR PRINCIPAL (SHELL) --- [cite: 178] */
 .shell {
   width: min(1200px, 100%);
   background: var(--bg-shell);
-  border: var(--border-thick);
+  border: var(--border-shell);
+  border-image: var(--border-image);
   box-shadow: var(--shell-shadow);
   padding: clamp(28px, 5vw, 48px);
   margin-bottom: 40px;
@@ -247,6 +246,7 @@
   display: inline-block;
   background: var(--accent);
   background-image: var(--background-eyebrow);
+  background-size: cover;
   border: var(--border-eyebrow);
   padding: 6px 16px;
   font-weight: 800;
@@ -284,13 +284,13 @@ h2 {
   font-weight: 500;
   line-height: 1.6;
   margin-bottom: 32px;
-  border-left: 6px solid var(--secondary);
+  border-left: 6px solid var(--primary);
   padding-left: 18px;
 }
 
 [dir="rtl"] .lede {
   border-left: none;
-  border-right: 6px solid var(--secondary);
+  border-right: 6px solid var(--primary);
   padding-left: 0;
   padding-right: 15px;
 }
@@ -605,12 +605,12 @@ h2 {
 
   .lede {
     padding-left: 12px;
-    border-left: 5px solid var(--secondary);
+    border-left: 5px solid var(--primary);
   }
 
   [dir="rtl"] .lede {
     padding-right: 12px;
-    border-right: 5px solid var(--secondary);
+    border-right: 5px solid var(--primary);
   }
 
   .btn {
@@ -1069,7 +1069,7 @@ h2 {
   width: 100%;
   padding: 12px;
   border: var(--border-thin);
-  font-family: var(--font-main);
+  font-family: var(--primary-custom-font);
   font-weight: 700;
 }
 

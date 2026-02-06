@@ -1,0 +1,18 @@
+@font-face {
+  font-family: 'Nippo';
+  src: url('/fonts/Nippo//Nippo-Regular.woff2') format('woff2'),
+       url('/fonts/Nippo//Nippo-Regular.woff') format('woff'),
+       url('/fonts/Nippo//Nippo-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Nippo';
+  src: url('/fonts/Nippo//Nippo-Bold.woff2') format('woff2'),
+       url('/fonts/Nippo//Nippo-Bold.woff') format('woff'),
+       url('/fonts/Nippo//Nippo-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
