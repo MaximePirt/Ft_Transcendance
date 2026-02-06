@@ -1,0 +1,209 @@
+services:
+
+  nginx:
+    build:
+      context: ./infrastructure/nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    networks:
+      - ft_transcendance
+    depends_on:
+      vault_agent:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/data/logs:/var/log/nginx
+      - ./infrastructure/nginx/data/certs:/etc/nginx/certs
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
+      - modsec-data:/var/cache/modsecurity
+
+
+
+
+  front:
+    build:
+      context: ./services/front
+      dockerfile: Dockerfile
+    container_name: front
+    networks:
+      - ft_transcendance
+    #TODO: This port exposure is only for development purposes
+    ports:
+      - "5173:5173"
+    environment:
+      - FRONT_URL=https://localhost/
+    volumes:
+      - ./services/front:/app
+      - front_node_modules:/app/node_modules
+    restart: on-failure
+    
+  api:
+    build:
+      context: ./services/back/api
+      dockerfile: Dockerfile
+    container_name: api
+    networks:
+      - ft_transcendance
+    ports:
+      - "3000:3000"
+    environment:
+      - API_URL=https://localhost:3000
+    volumes:
+      - db:/db
+      - ./services/back/api:/app
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully 
+    command: node --watch src/app.js 
+    
+  user_api:
+    build:
+      context: ./services/back/user
+      dockerfile: Dockerfile
+    container_name: user_api
+    networks:
+      - ft_transcendance
+    ports:
+      - "3001:3001"
+    environment:
+      - API_URL=https://localhost:3001
+    volumes:
+      - db:/db
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully 
+    command: node --watch src/app.js
+
+  auth_api:
+    build:
+      context: ./services/back/auth
+    container_name: auth_api
+    networks:
+      - ft_transcendance
+    ports:
+      - "3003:3003"
+      - "1025:1025"
+    environment:
+      - API_URL=https://localhost:3003
+    volumes:
+    - db:/db
+    - vault-secrets:/secrets:ro
+    - ./shared:/scripts:ro
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully
+    command: node --watch src/app.js
+
+
+  quiz_api:
+      build:
+        context: ./services/back/quiz
+        dockerfile: Dockerfile
+      container_name: quiz_api
+      networks:
+        - ft_transcendance
+      ports:
+        - "3002:3002"
+      environment:
+        - API_URL=https://localhost:3002
+      volumes:
+        - db:/db
+        - vault-secrets:/secrets:ro
+        - ./shared:/scripts:ro
+      depends_on:
+        sqlite_db:
+          condition: service_completed_successfully 
+      command: node --watch src/app.js
+    
+
+  sqlite_db:
+    build:
+      context: ./infrastructure/sqlite_db
+      dockerfile: Dockerfile
+    container_name: sqlite_db
+    networks:
+      - ft_transcendance
+    depends_on:
+      - vault_agent
+    volumes:
+      - db:/db
+      - ./infrastructure/sqlite_db/questions:/questions:ro
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
+    
+
+
+  vault:
+    build:
+      context: ./infrastructure/vault
+      dockerfile: Dockerfile
+    container_name: vault
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    tmpfs:
+      - /run:rw,noexec,nosuid,nodev
+      - /tmp:rw,noexec,nosuid,nodev
+    environment:
+      VAULT_ADDR: https://vault:8200
+      VAULT_CACERT: /vault/certs/vault.cert
+    volumes:
+      - vault_data:/vault/data
+      - ./infrastructure/vault/file:/vault/file
+      - ./infrastructure/vault/certs:/vault/certs
+      - ./infrastructure/vault/config:/vault/config
+      - ./secrets:/run/secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -skf https://vault:8200/v1/sys/health | jq -e '.sealed==false' >/dev/null"]
+      interval: 3s
+      timeout: 2s
+      retries: 40
+
+  vault_agent:
+    image: hashicorp/vault:1.20
+    container_name: vault-agent
+    command: ["/vault/vault-agent-entrypoint.sh"]
+    cap_add:
+      - IPC_LOCK
+    depends_on:
+      vault:
+        condition: service_healthy
+    volumes:
+      - ./infrastructure/vault/file:/vault/file:rw
+      - vault-secrets:/secrets
+      - ./infrastructure/vault:/vault
+    environment:
+      - VAULT_ADDR=https://vault:8200
+      - VAULT_CACERT=/vault/certs/vault.cert
+    healthcheck:
+      test: ["CMD-SHELL", "[ -s /secrets/api/app.env ]  && [ -s /secrets/front/app.env ] && [ -s /secrets/nginx/app.env ]"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+networks:
+  ft_transcendance:
+    name: ft_transcendance
+    driver: bridge
+
+volumes:
+  vault_data:
+  vault-secrets:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  modsec-data:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  db:
+    driver: local
+  front_node_modules:
