@@ -7,10 +7,12 @@ import MultiPlayerCodeRoom from './pages/MultiPlayerCodeRoom'
 import JoinGame from './pages/JoinGame'
 import ProfilUser from './pages/ProfilUser'
 import { AuthProvider } from './contexts/AuthContext'
+import ThemeRetriever from './content/ThemeRetriever'
 
 function App() {
   return (
     <AuthProvider>
+      <ThemeRetriever />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/quiz" element={<QuizPage />} />

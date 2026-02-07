@@ -96,7 +96,15 @@ async function userRoutes(fastify, options) {
 		const data = await request.file();
 		if (!data)
 			return reply.code(400).send({ error: "No file uploaded" });
-		return await userController.updateAvatar(userId, data);
+		try {
+			return await userController.updateAvatar(userId, data);
+		} catch (error) {
+			request.log.error(error);
+			if (String(error?.message).includes("Invalid file type")) {
+				return reply.code(400).send({ error: "Invalid file type, only PNG and JPEG are allowed" });
+			}
+			return reply.code(500).send({ error: "Internal Server Error" });
+		}
 	});
 
 	// settings

@@ -147,10 +147,22 @@ function ProfilUser() {
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
 	const [saveSuccess, setSaveSuccess] = useState(false)
+	const [avatarUrl, setAvatarUrl] = useState('')
+	const [avatarUploading, setAvatarUploading] = useState(false)
+	const [avatarError, setAvatarError] = useState('')
+	const [avatarSuccess, setAvatarSuccess] = useState(false)
 	const [friends, setFriends] = useState<Friend[]>([])
 	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>(UserFriendRequests)
 	const [friendSearchInput, setFriendSearchInput] = useState('')
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+
+	const normalizeAvatarUrl = (url?: string) => {
+		if (!url) return ''
+		const trimmed = String(url).trim()
+		if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return ''
+		return trimmed
+	}
+	const resolveAvatarUrl = (url: string) => (url.startsWith('http') ? url : `${API_BASE}${url}`)
 
 
 	// Rediriger si non authentifié
@@ -217,6 +229,7 @@ function ProfilUser() {
 						},
 						favorites: ['cinema', 'music', 'computer_science'],
 					})
+					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
 					let parsedStickers: Sticker[] = []
 					let parsedTitles: string[] = [titleOptions[0].id, titleOptions[1].id]
 					
@@ -318,23 +331,71 @@ function ProfilUser() {
 		setSaveSuccess(false)
 		try {
 			const res = await saveProfileToServer()
-			if (!res.ok) throw new Error(res.error || 'Save failed')
+			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
 			setPreferredLanguage(i18n.language)
 			setSaveSuccess(true)
 		} catch (e) {
-			setSaveError(e instanceof Error ? e.message : 'Erreur de sauvegarde')
+			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
 		} finally {
 			setIsSaving(false)
 		}
 	}
 
+	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (!user || !canEdit) return
+		const file = e.target.files?.[0]
+		if (!file) return
+		setAvatarError('')
+		setAvatarSuccess(false)
+		if (file.size > 2 * 1024 * 1024) {
+			setAvatarError(t('profile_avatar_error_size'))
+			e.target.value = ''
+			return
+		}
+		if (!['image/png', 'image/jpeg'].includes(file.type)) {
+			setAvatarError(t('profile_avatar_error_type'))
+			e.target.value = ''
+			return
+		}
+		setAvatarUploading(true)
+		try {
+			const userResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('profile_avatar_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+			const formData = new FormData()
+			formData.append('file', file)
+			const uploadResponse = await fetch(`${API_BASE}/${id}/avatar`, {
+				method: 'PATCH',
+				body: formData,
+			})
+			if (!uploadResponse.ok) {
+				const text = await uploadResponse.text()
+				throw new Error(t('profile_avatar_error_api', { status: uploadResponse.status, detail: text || '-' }))
+			}
+			const data = await uploadResponse.json()
+			if (data?.avatarUrl) setAvatarUrl(data.avatarUrl)
+			setAvatarSuccess(true)
+			e.target.value = ''
+		} catch (err) {
+			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
+		} finally {
+			setAvatarUploading(false)
+		}
+	}
+
 	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
-		if (!user) return { ok: false, error: 'Utilisateur non connecté' }
+		if (!user) return { ok: false, error: t('save_error_not_authenticated') }
 		const langToSave = i18n.language
 		const userResponse = await fetch(`${API_BASE}/userid/${user.username}`)
 		if (!userResponse.ok) {
 			const text = await userResponse.text()
-			return { ok: false, error: `User ID introuvable (${userResponse.status}) ${text}` }
+			return {
+				ok: false,
+				error: t('save_error_user_id', { status: userResponse.status, detail: text || '-' }),
+			}
 		}
 		const { id } = await userResponse.json()
 
@@ -356,7 +417,10 @@ function ProfilUser() {
 
 		if (!response.ok) {
 			const text = await response.text()
-			return { ok: false, error: `Erreur API (${response.status}) ${text}` }
+			return {
+				ok: false,
+				error: t('save_error_api', { status: response.status, detail: text || '-' }),
+			}
 		}
 
 		return { ok: true }
@@ -485,8 +549,16 @@ function ProfilUser() {
 								onDrop={canEdit ? handleDrop : undefined}
 								style={{ background: bgColor }}
 							>
-							<div className="profile-card-avatar" aria-hidden>
-								{userProfile.username.slice(0, 1)}
+							<div className="profile-card-avatar">
+								{avatarUrl ? (
+									<img
+										src={resolveAvatarUrl(avatarUrl)}
+										alt={t('profile_avatar_alt', { name: userProfile.username })}
+										onError={() => setAvatarUrl('')}
+									/>
+								) : (
+									<span aria-hidden>{userProfile.username.slice(0, 1)}</span>
+								)}
 							</div>
 							<h2 className="profile-card-name">{userProfile.username}</h2>
 							{description && <p className="profile-card-tagline">{description}</p>}
@@ -538,6 +610,25 @@ function ProfilUser() {
 					{canEdit && (
 						<section className="profile-card-controls">
 						<div className="panel-title">{t('profile_customize')}</div>
+						<div className="control-group">
+							<label className="control-label" htmlFor="avatar-upload">
+								{t('profile_avatar_label')}
+							</label>
+							<div className="control-row">
+								<input
+									id="avatar-upload"
+									type="file"
+									accept="image/png,image/jpeg"
+									onChange={handleAvatarChange}
+									disabled={avatarUploading}
+								/>
+							</div>
+							<p className="pref-desc">
+								{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}
+							</p>
+							{avatarError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{avatarError}</p>}
+							{avatarSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('profile_avatar_success')}</p>}
+						</div>
 						<div className="control-group">
 							<label className="control-label" htmlFor="bg-picker">
 								{t('profile_bg_label')}

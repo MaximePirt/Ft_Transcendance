@@ -40,9 +40,7 @@ async function updateUser(userId, updateData) {
 
 async function updateAvatar(userId, data) {
 	if (!["image/png", "image/jpeg"].includes(data.mimetype)) {
-		return reply
-			.code(400)
-			.send({ error: "Invalid file type, only PNG and JPEG are allowed" });
+		throw new Error("Invalid file type, only PNG and JPEG are allowed");
 	}
 	const ext = data.mimetype === "image/png" ? "png" : "jpg";
 	const filePath = `/uploads/avatars/${userId}-${Date.now()}.${ext}`;

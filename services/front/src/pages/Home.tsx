@@ -71,20 +71,11 @@ function HomePage() {
       <div className="login-bar">
         {isAuthenticated ? (
           <>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
-              <span style={{ marginRight: '1rem', color: '#000' }}>
+            <div className="login-welcome">
+              <span className="login-welcome__text">
                 {t('welcome')}, {user?.username}!
               </span>
-              <a 
-                onClick={logout} 
-                style={{ 
-                  fontSize: '0.75rem', 
-                  color: '#666', 
-                  cursor: 'pointer', 
-                  textDecoration: 'underline',
-                  marginRight: '1rem'
-                }}
-              >
+              <a className="login-welcome__logout" onClick={logout}>
                 {t("logout")}
               </a>
             </div>
@@ -115,7 +106,6 @@ function HomePage() {
               <button className="btn primary" onClick={() => navigate('/quiz')}>
                 {t("start_quiz")}
               </button>
-              <button className="btn ghost">{t("daily_challenge")}</button>
             </div>
             <div className="SpaceZone">
               {SpaceZone.map((item) => (
