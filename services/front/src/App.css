@@ -150,6 +150,20 @@
   letter-spacing: 0.5px;
 }
 
+.profile-card-controls .theme-combobox,
+.profile-card-controls .font-combobox {
+  position: static;
+  top: auto;
+  left: auto;
+  width: 100%;
+  max-width: 240px;
+}
+
+.theme-font-row {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 /* --- LE CONTENEUR PRINCIPAL (SHELL) --- [cite: 178] */
 .shell {
   width: min(1200px, 100%);

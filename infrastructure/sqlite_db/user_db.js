@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS users (
   profileCardStickers TEXT DEFAULT '[]',
   profileCardTitles TEXT DEFAULT '["cinema","quiz_master"]',
   profileCardDescription TEXT DEFAULT '',
-  preferredLanguage TEXT DEFAULT 'en'
+  preferredLanguage TEXT DEFAULT 'en',
+  theme TEXT DEFAULT 'default',
+  font TEXT DEFAULT 'default'
 );`;
 
 const createFriendsTable = `
@@ -75,6 +77,8 @@ ensureUserColumn('profileCardStickers', "TEXT DEFAULT '[]'", '[]');
 ensureUserColumn('profileCardTitles', "TEXT DEFAULT '[\"cinema\",\"quiz_master\"]'", '["cinema","quiz_master"]');
 ensureUserColumn('profileCardDescription', "TEXT DEFAULT ''", '');
 ensureUserColumn('preferredLanguage', "TEXT DEFAULT 'en'", 'en');
+ensureUserColumn('theme', "TEXT DEFAULT 'default'", 'default');
+ensureUserColumn('font', "TEXT DEFAULT 'default'", 'default');
 
 const tables = db
   .prepare("SELECT name FROM sqlite_master WHERE type='table'")

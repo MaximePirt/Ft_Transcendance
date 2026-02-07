@@ -4,8 +4,6 @@ import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './../content/LanguageSelector.tsx'
-import ThemeSelector from './../content/ThemeSelector.tsx'
-import FontSelector from './../content/FontSelector.tsx'
 import { useAuth } from '../contexts/AuthContext'
 
 const topics = (t: any) => [
@@ -70,8 +68,6 @@ function HomePage() {
   return (
     <main className="page">
       <LanguageSelector />
-      <ThemeSelector />
-      <FontSelector />
       <div className="login-bar">
         {isAuthenticated ? (
           <>

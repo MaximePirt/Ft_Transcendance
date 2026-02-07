@@ -24,6 +24,8 @@ try {
   ensureUserColumn('profileCardTitles', "TEXT DEFAULT '[\"cinema\",\"quiz_master\"]'", '["cinema","quiz_master"]');
   ensureUserColumn('profileCardDescription', "TEXT DEFAULT ''", '');
   ensureUserColumn('preferredLanguage', "TEXT DEFAULT 'en'", 'en');
+  ensureUserColumn('theme', "TEXT DEFAULT 'default'", 'default');
+  ensureUserColumn('font', "TEXT DEFAULT 'default'", 'default');
 } catch (error) {
   console.error('Failed to ensure users columns:', error);
 }

@@ -39,6 +39,25 @@ const ThemeSelector = () => {
     applyTheme(savedTheme)
   }, [])
 
+  useEffect(() => {
+    const handleThemeSync = () => {
+      const savedTheme = localStorage.getItem('theme') || 'default'
+      setTheme(savedTheme)
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key !== 'theme') return
+      setTheme(e.newValue || 'default')
+    }
+
+    window.addEventListener('theme-font-reset', handleThemeSync)
+    window.addEventListener('storage', handleStorage)
+    return () => {
+      window.removeEventListener('theme-font-reset', handleThemeSync)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
+
   const handleThemeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
       const selectedTheme = e.target.value
       localStorage.setItem('theme', selectedTheme)

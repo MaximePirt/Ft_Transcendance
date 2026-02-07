@@ -35,6 +35,25 @@ const FontSelector = () => {
     applyFont(savedFont)
   }, [])
 
+  useEffect(() => {
+    const handleFontSync = () => {
+      const savedFont = localStorage.getItem('font') || 'default'
+      setFont(savedFont)
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key !== 'font') return
+      setFont(e.newValue || 'default')
+    }
+
+    window.addEventListener('theme-font-reset', handleFontSync)
+    window.addEventListener('storage', handleStorage)
+    return () => {
+      window.removeEventListener('theme-font-reset', handleFontSync)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [])
+
   const handleFontChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
       const selectedFont = e.target.value
       localStorage.setItem('font', selectedFont)

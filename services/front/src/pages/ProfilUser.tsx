@@ -2,7 +2,43 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import ThemeSelector from '../content/ThemeSelector'
+import FontSelector from '../content/FontSelector'
 import '../App.css'
+
+async function applyTheme(themeName: string) {
+	console.log(`${themeName}.json`)
+	try {
+		const res = await fetch(`/themes/styles/${themeName}.json`)
+		const themeToApply = await res.json()
+
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
+		if (themeName !== 'default') return applyTheme('default')
+		return
+	}
+}
+
+async function applyFont(fontName: string) {
+	console.log(`${fontName}.json`)
+	try {
+		const res = await fetch(`/themes/fonts/${fontName}.json`)
+		const themeToApply = await res.json()
+
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
+		if (fontName !== 'default') return applyFont('default')
+		return
+	}
+}
 
 const languages = [
 	{ code: 'fr', lang: 'Français' },
@@ -100,6 +136,8 @@ function ProfilUser() {
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
+	const previousThemeRef = useRef<string | null>(null)
+	const previousFontRef = useRef<string | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
@@ -141,6 +179,18 @@ function ProfilUser() {
 			})
 		}
 	}, [user, isPublicView])
+
+	useEffect(() => {
+		if (!isPublicView) return
+		previousThemeRef.current = localStorage.getItem('theme') || 'default'
+		previousFontRef.current = localStorage.getItem('font') || 'default'
+		return () => {
+			const prevTheme = previousThemeRef.current || 'default'
+			const prevFont = previousFontRef.current || 'default'
+			applyTheme(prevTheme)
+			applyFont(prevFont)
+		}
+	}, [isPublicView])
 
 	useEffect(() => {
 		if (!profileUsername) return
@@ -204,6 +254,18 @@ function ProfilUser() {
 					if (userData.preferredLanguage) {
 						setPreferredLanguage(userData.preferredLanguage)
 					}
+
+					if (canEdit) {
+						if (userData.theme) localStorage.setItem('theme', userData.theme)
+						if (userData.font) localStorage.setItem('font', userData.font)
+					}
+
+					if (isPublicView) {
+						const themeToApply = userData.theme || 'default'
+						const fontToApply = userData.font || 'default'
+						applyTheme(themeToApply)
+						applyFont(fontToApply)
+					}
 					
 					setHydrated(true)
 					return
@@ -215,7 +277,7 @@ function ProfilUser() {
 		}
 		
 		loadProfileCard()
-	}, [profileUsername, canEdit, i18n, isPublicView])
+	}, [profileUsername, canEdit, isPublicView])
 
 		useEffect(() => {
 			if (!user || !canEdit) return
@@ -287,6 +349,8 @@ function ProfilUser() {
 				profileCardTitles: JSON.stringify(titles),
 				profileCardDescription: description,
 				preferredLanguage: langToSave,
+				theme: localStorage.getItem('theme') || 'default',
+				font: localStorage.getItem('font') || 'default',
 			})
 		})
 
@@ -338,6 +402,11 @@ function ProfilUser() {
 		setBgColor('#0f0f10')
 		setTitles([titleOptions[0].id, titleOptions[1].id])
 		setDescription('')
+		localStorage.setItem('theme', 'default')
+		localStorage.setItem('font', 'default')
+		applyTheme('default')
+		applyFont('default')
+		window.dispatchEvent(new CustomEvent('theme-font-reset'))
 	}
 
 	const toggleTitle = (id: string) => {
@@ -550,6 +619,13 @@ function ProfilUser() {
 											</button>
 										)
 									})}
+								</div>
+							</div>
+
+							<div className="control-group">
+								<div className="control-row theme-font-row">
+									<ThemeSelector />
+									<FontSelector />
 								</div>
 							</div>
 
