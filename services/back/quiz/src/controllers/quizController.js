@@ -114,6 +114,7 @@ async function getCurrentQuestion(sessionId, userId)
 	if (!question)
 		throw new Error("No current question found for this game session");
 	console.log("Current question for user ID", userId, "in game session ID:", sessionId, ":", question);
+	quizModel.recordQuestionTimer(sessionId, userId, question.id);
 	return question;
 }
 

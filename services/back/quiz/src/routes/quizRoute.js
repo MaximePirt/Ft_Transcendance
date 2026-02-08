@@ -138,8 +138,34 @@ async function quizRoutes(fastify, options) {
 	// Input : game_session_id, player_id, answer
 	// Effect : insert in game_answer, update player score
 	// Output : success/failure 
-	// fastify.post('/game-sessions/:id/answer', async (request, reply) => {
-	// });
+	/**
+	 *  Controller: submitAnswer(sessionId, userId, answerData)
+		→ Model: validateAnswer(questionId, answer)
+		→ Model: saveAnswer(sessionId, userId, questionId, answer, isCorrect, time)
+		→ Model: updatePlayerStats(sessionId, userId, points)
+	 */
+	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate, schema: schemas.GameSessionAnswer},
+	async (request, reply) => {
+		// const userId = request.user.id;
+		const userId = 1;
+		const sessionId = request.params.id;
+		const { question_id, answer} = request.body;
+
+		console.log("Received answer submission for game session ID:", sessionId, "user ID:", userId, "question ID:", question_id, "answer:", answer);
+
+		try {
+			const res = await quizController.submitAnswer(sessionId, userId, question_id, answer);
+			return reply.code(200).send({ status: 'Answer submitted', result: res });
+
+		} catch (err) {
+			console.error("Error submitting answer for game session:", err);
+			if (err.message.includes("not found"))
+				return reply.code(404).send({ error: err.message });
+			else if (err.message.includes("not a player") || err.message.includes("not in progress"))
+				return reply.code(400).send({ error: err.message });
+			return reply.code(500).send({ error: 'Error submitting answer', error: err.message });
+		}
+	});
 
 	// Input : game_session_id
 	// Output : final leaderboard sort by score

@@ -235,7 +235,16 @@ function getCurrentQuestionForPlayer(sessionId, player)
 	question.total_questions = total.count;
 	console.log("Current question retrieved for user ID:", player.id, "in game session ID:", sessionId, ":", question);
 	return question;
+}
 
+function recordQuestionTimer(sessionId, userId, questionId) {
+	db.prepare(`
+	UPDATE game_players 
+	SET current_question_time = CURRENT_TIMESTAMP
+	WHERE game_session_id = ? AND user_id = ?
+	`).run(sessionId, userId);
+
+	console.log("Question", questionId, "sent to user", userId, "at", new Date().toISOString());
 }
 
 
@@ -250,5 +259,6 @@ module.exports = {
 	generateQuestionPool,
 	insertPoolToSession,
 	findUserInSession,
-	getCurrentQuestionForPlayer
+	getCurrentQuestionForPlayer,
+	recordQuestionTimer
 };

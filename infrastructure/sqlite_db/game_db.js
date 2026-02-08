@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS game_players (
 	answered_count INTEGER NOT NULL DEFAULT 0,
 	correct_answers INTEGER NOT NULL DEFAULT 0,
 	score INTEGER NOT NULL DEFAULT 0,
+	current_question_time DATETIME DEFAULT CURRENT_TIMESTAMP,
 	is_winner BOOLEAN NOT NULL DEFAULT 0,
 	PRIMARY KEY (game_session_id, user_id),
 	FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,

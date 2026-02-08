@@ -58,9 +58,28 @@ const GameSessionCode =
 	}
 }
 
+const GameSessionAnswer = 
+{
+	params: { id: { type: 'integer' } },
+	body: {
+		type: 'object',
+		required: ['question_id', 'answer'],
+		properties: {
+			question_id: { type: 'integer', minimum: 1 },
+			answer: { 
+			oneOf: [
+				{ type: 'integer', minimum: 1, maximum: 4 },
+				{ type: 'string', minLength: 1 }
+			]
+			},
+		}
+	}
+}
+
 
 module.exports = {
 	createGameSessionSchema,
 	GameSessionId,
-	GameSessionCode
+	GameSessionCode,
+	GameSessionAnswer
 };
