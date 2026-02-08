@@ -138,6 +138,11 @@
   box-shadow: 6px 6px 0px #000;
 }
 
+[dir="rtl"] .btn-data-request {
+  right: auto;
+  left: 20px;
+}
+
 .theme-combobox {
   position: fixed;
   top: 100px;

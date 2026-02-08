@@ -81,7 +81,7 @@ function HomePage() {
               </span>
               <a 
                 onClick={logout} 
-                style={{ 
+                style={{
                   fontSize: '0.75rem', 
                   color: '#666', 
                   cursor: 'pointer', 
@@ -92,7 +92,7 @@ function HomePage() {
                 {t("logout")}
               </a>
             </div>
-            <button className="btn login" onClick={() => navigate('/user')}>
+            <button className="btn login" onClick={() => navigate('/profile')}>
               {t("profile")}
             </button>
           </>
