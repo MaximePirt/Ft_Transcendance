@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import '../App.css'
+import DataRequester from '../content/DataRequester'
 
 const languages = [
 	{ code: 'fr', lang: 'Français' },
@@ -674,6 +675,7 @@ function ProfilUser() {
 						</section>
 					)}
 				</div>
+				<DataRequester />
 			</div>
 		</main>
 	)
