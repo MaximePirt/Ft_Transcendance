@@ -1,0 +1,30 @@
+# macOS system files
+.DS_Store
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+
+
+
+# nginx
+infrastructure/nginx/data/
+
+# Vault 
+secrets/ 
+infrastructure/vault/file
+infrastructure/vault/certs/
+infrastructure/vault/logs
+note.md
+
+
+
+*/node_modules/
+*/.env
+.pnpm-store
+
+note.md
+Trans_Architecture.drawio
+.$Trans_Architecture.drawio.bkp
+*-lock.json
+filtre_tree.md

@@ -15,24 +15,23 @@ async function userRoutes(fastify, options) {
 	});
 
 	fastify.post("/signin", async (request, reply) => {
-		console.log("Signin route called");
 		const data = await request.body;
 		const username = data.username;
 		const password = data.password;
 		const user = await userController.getUser(username, password)
-
 		if (user == 'unknown user') {
+			console.log("Unknown user attempted to sign in with username:", username);
 			return reply.status(401).send({ message: "unknown user" });
 		} else if (user == 'bad password') {
+			console.log("User found but bad password for username:", username);
 			return reply.status(401).send({ message: "bad password" });
 		}
-
 		const user_id = await userController.getUserByUsername(username);
-
 		const online = await userController.updateUser(user_id.id, { onlineStatus: 1 });
 		if (!online) {
 			return reply.status(500).send({ message: "could not update online status" });
 		}
+		console.log("User signed in successfully");
 		return reply.status(200).send({ message: "ok" });
 	})
 
