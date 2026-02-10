@@ -53,7 +53,6 @@ services:
       - API_URL=https://localhost:3000
     volumes:
       - db:/db
-      - ./services/back/api:/app
     depends_on:
       sqlite_db:
           condition: service_completed_successfully 
