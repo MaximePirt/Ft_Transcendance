@@ -36,8 +36,8 @@ services:
     environment:
       - FRONT_URL=https://localhost/
     volumes:
-      - ./services/front:/app
-      - front_node_modules:/app/node_modules
+      - vault-secrets:/secrets:ro
+      - ./shared:/scripts:ro
     restart: on-failure
     
   api:
@@ -53,7 +53,6 @@ services:
       - API_URL=https://localhost:3000
     volumes:
       - db:/db
-      - ./services/back/api:/app
     depends_on:
       sqlite_db:
           condition: service_completed_successfully 

@@ -79,7 +79,7 @@ const titleOptions: TitleOption[] = [
 	{ id: 'music', text: 'profile_title_music' },
 ]
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
 
 type CardState = {
 	bgColor: string
@@ -149,7 +149,7 @@ function ProfilUser() {
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
-				const userIdResponse = await fetch(`${API_BASE}/userid/${profileUsername}`)
+				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`)
 				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 				const { id } = await userIdResponse.json()
 
@@ -222,11 +222,11 @@ function ProfilUser() {
 			if (!user || !canEdit) return
 			const loadFriends = async () => {
 				try {
-					const userIdResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+					const userIdResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
 					if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 					const { id } = await userIdResponse.json()
 
-					const response = await fetch(`${API_BASE}/${id}/friends`)
+					const response = await fetch(`${API_BASE}/users/${id}/friends`)
 					if (!response.ok) throw new Error('Failed to load friends')
 					const data = await response.json()
 					const list = data?.result?.friends || data?.friends || []
@@ -270,14 +270,14 @@ function ProfilUser() {
 	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
 		if (!user) return { ok: false, error: 'Utilisateur non connecté' }
 		const langToSave = i18n.language
-		const userResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+		const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
 		if (!userResponse.ok) {
 			const text = await userResponse.text()
 			return { ok: false, error: `User ID introuvable (${userResponse.status}) ${text}` }
 		}
 		const { id } = await userResponse.json()
 
-		const response = await fetch(`${API_BASE}/${id}`, {
+		const response = await fetch(`${API_BASE}/users/${id}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json',
