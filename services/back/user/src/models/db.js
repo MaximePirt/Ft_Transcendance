@@ -19,6 +19,7 @@ const ensureUserColumn = (name, definition, defaultValue) => {
 };
 
 try {
+  ensureUserColumn('avatarUrl', "TEXT DEFAULT '/avatar/Default.png'", '/avatar/Default.png');
   ensureUserColumn('profileCardBgColor', "TEXT DEFAULT '#0f0f10'", '#0f0f10');
   ensureUserColumn('profileCardStickers', "TEXT DEFAULT '[]'", '[]');
   ensureUserColumn('profileCardTitles', "TEXT DEFAULT '[\"cinema\",\"quiz_master\"]'", '["cinema","quiz_master"]');
@@ -26,6 +27,7 @@ try {
   ensureUserColumn('preferredLanguage', "TEXT DEFAULT 'en'", 'en');
   ensureUserColumn('theme', "TEXT DEFAULT 'default'", 'default');
   ensureUserColumn('font', "TEXT DEFAULT 'default'", 'default');
+  db.prepare("UPDATE users SET avatarUrl = ? WHERE avatarUrl IS NULL OR avatarUrl = ''").run('/avatar/Default.png');
 } catch (error) {
   console.error('Failed to ensure users columns:', error);
 }

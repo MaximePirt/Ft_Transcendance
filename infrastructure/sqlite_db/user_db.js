@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
-  avatarUrl TEXT,
+  avatarUrl TEXT DEFAULT '/avatar/Default.png',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   lastConnexion DATETIME DEFAULT CURRENT_TIMESTAMP,
   onlineStatus BOOLEAN NOT NULL DEFAULT 0,
@@ -72,6 +72,7 @@ const ensureUserColumn = (name, definition, defaultValue) => {
   }
 };
 
+ensureUserColumn('avatarUrl', "TEXT DEFAULT '/avatar/Default.png'", '/avatar/Default.png');
 ensureUserColumn('profileCardBgColor', "TEXT DEFAULT '#0f0f10'", '#0f0f10');
 ensureUserColumn('profileCardStickers', "TEXT DEFAULT '[]'", '[]');
 ensureUserColumn('profileCardTitles', "TEXT DEFAULT '[\"cinema\",\"quiz_master\"]'", '["cinema","quiz_master"]');
@@ -100,19 +101,19 @@ if (userCount === 0) {
       "alice",
       "alice@example.com",
       "password123",
-      "https://example.com/avatars/alice.png",
+      "/avatar/Default.png",
     ],
     [
       "bob",
       "bob@example.com",
       "password456",
-      "https://example.com/avatars/bob.png",
+      "/avatar/Default.png",
     ],
     [
       "charlie",
       "charlie@example.com",
       "password789",
-      "https://example.com/avatars/charlie.png",
+      "/avatar/Default.png",
     ],
   ];
   for (const user of users) {

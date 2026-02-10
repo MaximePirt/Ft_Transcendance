@@ -115,6 +115,7 @@ const titleOptions: TitleOption[] = [
 ]
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const DEFAULT_AVATAR = '/avatar/Default.png'
 
 type CardState = {
 	bgColor: string
@@ -162,7 +163,11 @@ function ProfilUser() {
 		if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return ''
 		return trimmed
 	}
-	const resolveAvatarUrl = (url: string) => (url.startsWith('http') ? url : `${API_BASE}${url}`)
+	const resolveAvatarUrl = (url: string) => {
+		if (url.startsWith('http')) return url
+		if (url.startsWith('/avatar/')) return url
+		return `${API_BASE}${url}`
+	}
 
 
 	// Rediriger si non authentifié
@@ -343,10 +348,10 @@ function ProfilUser() {
 
 	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!user || !canEdit) return
-		const file = e.target.files?.[0]
+			const file = e.target.files?.[0]
 		if (!file) return
-		setAvatarError('')
-		setAvatarSuccess(false)
+			setAvatarError('')
+			setAvatarSuccess(false)
 		if (file.size > 2 * 1024 * 1024) {
 			setAvatarError(t('profile_avatar_error_size'))
 			e.target.value = ''
@@ -508,7 +513,6 @@ function ProfilUser() {
 	const handleSendFriendRequest = () => {
 		if (!canEdit) return
 		if (!friendSearchInput.trim()) return
-		// TODO: Envoyer la requête au backend
 		console.log('Demande envoyée à:', friendSearchInput)
 		setFriendSearchInput('')
 	}
@@ -550,15 +554,13 @@ function ProfilUser() {
 								style={{ background: bgColor }}
 							>
 							<div className="profile-card-avatar">
-								{avatarUrl ? (
-									<img
-										src={resolveAvatarUrl(avatarUrl)}
-										alt={t('profile_avatar_alt', { name: userProfile.username })}
-										onError={() => setAvatarUrl('')}
-									/>
-								) : (
-									<span aria-hidden>{userProfile.username.slice(0, 1)}</span>
-								)}
+								<img
+									src={resolveAvatarUrl(avatarUrl || DEFAULT_AVATAR)}
+									alt={t('profile_avatar_alt', { name: userProfile.username })}
+									onError={() => {
+										if (avatarUrl) setAvatarUrl('')
+									}}
+								/>
 							</div>
 							<h2 className="profile-card-name">{userProfile.username}</h2>
 							{description && <p className="profile-card-tagline">{description}</p>}
@@ -780,8 +782,6 @@ function ProfilUser() {
 										.map((request) => (
 											<div key={request.id} className="friend-item friend-request-item">
 												<div className="friend-info">
-													{/*TODO : gere les avatars*/}
-													<div className="friend-avatar">{request.username.slice(0, 1)}</div>
 													<span className="friend-name">{request.username}</span>
 												</div>
 												<div className="friend-actions">
@@ -817,7 +817,6 @@ function ProfilUser() {
 									friends.map((friend) => (
 										<div key={friend.id} className="friend-item">
 											<div className="friend-info">
-												<div className="friend-avatar">{friend.username.slice(0, 1)}</div>
 												<div>
 													<span className="friend-name">{friend.username}</span>
 													<span className={`friend-status ${friend.status}`}>
