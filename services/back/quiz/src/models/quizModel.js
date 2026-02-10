@@ -247,6 +247,134 @@ function recordQuestionTimer(sessionId, userId, questionId) {
 	console.log("Question", questionId, "sent to user", userId, "at", new Date().toISOString());
 }
 
+function getAnswerTime(sessionId, userId, questionId) {
+	console.log("Model: Calculating time taken for user", userId);
+
+	const result = db.prepare(`
+		SELECT 
+			current_question_time,
+			(julianday('now') - julianday(current_question_time)) * 86400 as time_taken_seconds
+		FROM game_players
+		WHERE game_session_id = ? AND user_id = ?
+	`).get(sessionId, userId);
+
+	if (!result || !result.current_question_time) {
+		console.log("No timestamp found, returning 0");
+		return 0;
+	}
+
+	const timeTaken = Math.round(result.time_taken_seconds);
+	console.log("Time taken:", timeTaken, "seconds");
+	return timeTaken;
+}
+
+function normalizeAnswer(s) {
+	return String(s ?? '')
+		.trim()
+		.toLocaleLowerCase()
+		.normalize('NFD')  
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/['’`]/g, '')
+		.replace(/[^a-z0-9\s-]/g, ' ')
+		.replace(/\s+/g, ' ');
+}
+
+function checkAnswer(questionAnswer, answer)
+{
+	console.log("Model: Checking Answer");
+	if (!questionAnswer)
+		throw new Error("No correct answer data found for question ID: " + questionAnswer.id);
+
+	if (questionAnswer.type === 'mcq') {
+		const userAnswerNum = Number(answer);
+		if (isNaN(userAnswerNum))
+			return false;
+		let isCorrect = userAnswerNum === questionAnswer.answer;
+		return isCorrect;
+	}
+
+	if (questionAnswer.type === 'text') {
+		console.log("Validating TEXT answer. User answer:", answer, "- Correct answer:", questionAnswer.answer, "- Variants:", questionAnswer.answer);
+		const userAnswer = normalizeAnswer(answer);
+		const normalizedCorrectAnswer = normalizeAnswer(questionAnswer.answer[0]);
+		const variants = questionAnswer.answer.slice(1) || [];
+		const variantsLower = variants.map(v => normalizeAnswer(v));
+
+		const isCorrect = userAnswer === normalizedCorrectAnswer || variantsLower.includes(userAnswer);
+		return isCorrect;
+	}
+}
+
+function recordPlayerAnswer(sessionId, userId, questionId, answer, timeTaken, isCorrect)
+{
+	db.prepare(`
+	INSERT INTO game_answers (game_session_id, user_id, question_id, answer_given, time_taken, is_correct)
+	VALUES (?, ?, ?, ?, ?, ?)
+	`).run(sessionId, userId, questionId, answer.toString(), timeTaken, isCorrect ? 1 : 0);
+
+	console.log("Recorded answer for user ID:", userId, "question ID:", questionId, "in game session ID:", sessionId, "Answer:", answer, "Time taken:", timeTaken, "Correct:", isCorrect);
+}
+
+function updatePlayerScore(sessionId, userId, isCorrect, timeTaken){
+	const scoreIncrement = isCorrect ? 100 | 0 : 0; // Base points for a correct answer
+	db.prepare(`
+	UPDATE game_players 
+	SET score = score + ?, 
+	correct_answers = correct_answers + ?, 
+	answered_count = answered_count + 1
+	WHERE game_session_id = ? AND user_id = ?
+	`).run(scoreIncrement, isCorrect ? 1 : 0, sessionId, userId);
+	
+	console.log("Updated score for user ID:", userId, "in game session ID:", sessionId, "Score increment:", scoreIncrement, "Time taken:", timeTaken);
+}
+
+function getCorrectAnswerForQuestion(questionId, lang)
+{
+	const question = db.prepare(`
+	SELECT q.type, mcq.correct_option_position,
+		tat.answer AS text_answer,
+		tat.variants_json AS text_answer_variants_parsed
+	FROM questions q
+	LEFT JOIN mcq_questions mcq ON mcq.question_id = q.id
+	LEFT JOIN text_answer_translations tat
+		ON tat.question_id = q.id AND tat.lang = ?
+	WHERE q.id = ?
+	`).get(lang, questionId);
+	if (!question)
+		return null;
+	if (question.type === 'text') {
+		let variants = [];
+		try {
+			variants = JSON.parse(question.text_answer_variants_parsed);
+		} catch (err) {
+			console.log("Failed to parse text answer variants JSON for question ID:", questionId, "Error:", err);
+		}
+		return {
+			type: 'text',
+			answer: [question.text_answer, ...variants].filter(Boolean)
+		};
+	}
+	if (question.type === 'mcq') {
+		const options = db.prepare(`
+		SELECT correct_option_position
+		FROM mcq_questions
+		WHERE question_id = ?
+		`).get(questionId);
+		return options ? { type: 'mcq', answer: options.correct_option_position } : null;
+	}
+	return null;
+}
+
+function getPlayerAnswerForQuestion(sessionId, userId, questionId)
+{
+	const result = db.prepare(`
+		SELECT answer_given
+		FROM game_answers 
+		WHERE game_session_id = ? AND user_id = ? AND question_id = ?
+	`).get(sessionId, userId, questionId);
+
+	return result;
+}
 
 module.exports = {
 	generateSessionCode,
@@ -260,5 +388,11 @@ module.exports = {
 	insertPoolToSession,
 	findUserInSession,
 	getCurrentQuestionForPlayer,
-	recordQuestionTimer
+	recordQuestionTimer,
+	getAnswerTime,
+	checkAnswer,
+	recordPlayerAnswer,
+	updatePlayerScore,
+	getCorrectAnswerForQuestion,
+	getPlayerAnswerForQuestion
 };

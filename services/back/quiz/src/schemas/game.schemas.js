@@ -60,18 +60,27 @@ const GameSessionCode =
 
 const GameSessionAnswer = 
 {
-	params: { id: { type: 'integer' } },
+	params: {
+		type: 'object',
+			properties: {
+				id: {
+					type: 'integer',
+					minimum: 1
+				}
+			},
+			required: ['id']
+	},
 	body: {
 		type: 'object',
-		required: ['question_id', 'answer'],
 		properties: {
 			question_id: { type: 'integer', minimum: 1 },
 			answer: { 
 			oneOf: [
-				{ type: 'integer', minimum: 1, maximum: 4 },
+				{ type: 'integer', minimum: 0 },
 				{ type: 'string', minLength: 1 }
 			]
 			},
+		required: ['question_id', 'answer'],
 		}
 	}
 }

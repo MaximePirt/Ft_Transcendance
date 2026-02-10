@@ -144,7 +144,8 @@ async function quizRoutes(fastify, options) {
 		→ Model: saveAnswer(sessionId, userId, questionId, answer, isCorrect, time)
 		→ Model: updatePlayerStats(sessionId, userId, points)
 	 */
-	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate, schema: schemas.GameSessionAnswer},
+	//TODO: Add schema validation for answer submission (question_id, answer)
+	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate},
 	async (request, reply) => {
 		// const userId = request.user.id;
 		const userId = 1;

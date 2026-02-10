@@ -100,7 +100,7 @@ async function startGameSession(userId, sessionCode)
 	}
 }
 
-async function getCurrentQuestion(sessionId, userId)
+async function getCurrentQuestion(userId, sessionId)
 {
 	const session = quizModel.getSessionById(sessionId);
 	if (!session)
@@ -118,11 +118,58 @@ async function getCurrentQuestion(sessionId, userId)
 	return question;
 }
 
+async function submitAnswer(sessionId, userId, question_id, answer)
+{
+	Number(sessionId);
+	Number(question_id);
+	Number(userId);
+	const session = quizModel.getSessionById(sessionId);
+	if (!session)
+		throw new Error("Game session not found");
+	if (session.status !== 'in_progress')
+		throw new Error("Game session is not in progress : " + session.status);
+	const player = quizModel.findUserInSession(sessionId, userId);
+	if (!player)
+		throw new Error("User is not a player in this game session");
+	const time_taken = quizModel.getAnswerTime(sessionId, userId, question_id);
+	if (time_taken === null)
+		throw new Error("No timer found for this question and player");
+	const currentQuestion = quizModel.getCurrentQuestionForPlayer(sessionId, player);
+	if (!currentQuestion || currentQuestion.id !== question_id)
+		throw new Error("This question is not the current question for the player");
+
+	const AlreadyAnswered = quizModel.getPlayerAnswerForQuestion(sessionId, userId, question_id);
+	if (AlreadyAnswered)
+		throw new Error("Player has already submitted an answer for this question");
+
+
+	const question_answer = quizModel.getCorrectAnswerForQuestion(question_id, player.lang);
+	const isCorrect = quizModel.checkAnswer(question_answer, answer);
+	console.log("isCorrect variable just after calling checkAnswer:", isCorrect);
+
+	quizModel.recordPlayerAnswer(sessionId, userId, question_id, answer, time_taken, isCorrect);
+
+	quizModel.updatePlayerScore(sessionId, userId, isCorrect, time_taken);
+
+	const updatedPlayer = quizModel.findUserInSession(sessionId, userId);
+	console.log("User ID", userId, "submitted answer for question ID", question_id, "in game session ID:", sessionId, "Correct:", isCorrect);
+
+	const result = {
+		is_correct: isCorrect,
+		current_score: updatedPlayer.score,
+		correct_answers: question_answer,
+		total_correct: updatedPlayer.correct_answers,
+		total_answered: updatedPlayer.answered_count
+	};
+	return result;
+}
+
 
 module.exports = {
 	createGameSession,
 	getGameSessionData,
 	joinGameSession,
 	startGameSession,
-	getCurrentQuestion
+	getCurrentQuestion,
+	submitAnswer
 };
