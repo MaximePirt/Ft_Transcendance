@@ -100,8 +100,8 @@ const stickerPalette = [
 	{ id: 'fire', symbol: '🔥' },
 	{ id: 'heart', symbol: '❤️' },
 	{ id: 'star', symbol: '⭐' },
-	{ id: 'jeux_video', symbol: '🎮', url: '/theme-icons/Jeux%20vid%C3%A9o.png' },
-    { id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/Jeux%20vid%C3%A9o.gif' },
+	{ id: 'jeux_video', symbol: '🎮', url: '/theme-icons/JeuxVidéo.png' },
+    { id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/JeuxVidéo.gif' },
 ]
 
 const bgPresets = ['#0f0f10', '#111827', '#1f2937', '#0b5fff', '#8b5cf6', '#10b981', '#eab308']
@@ -114,7 +114,7 @@ const titleOptions: TitleOption[] = [
 	{ id: 'music', text: 'profile_title_music' },
 ]
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
 const DEFAULT_AVATAR = '/avatar/Default.png'
 
 type CardState = {
@@ -164,8 +164,10 @@ function ProfilUser() {
 		return trimmed
 	}
 	const resolveAvatarUrl = (url: string) => {
-		if (url.startsWith('http')) return url
+		if (url.startsWith('https://') || url.startsWith('http://')) return url
 		if (url.startsWith('/avatar/')) return url
+		if (url.startsWith('/user/avatar/')) return url
+		if (url.startsWith('/uploads/')) return `${API_BASE}/user${url}`
 		return `${API_BASE}${url}`
 	}
 
@@ -215,11 +217,11 @@ function ProfilUser() {
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
-				const userIdResponse = await fetch(`${API_BASE}/userid/${profileUsername}`)
+				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`)
 				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 				const { id } = await userIdResponse.json()
 
-				const response = await fetch(`${API_BASE}/users/${id}`)
+				const response = await fetch(`${API_BASE}/user/users/${id}`)
 				if (response.ok) {
 					const userData = await response.json()
 					setUserProfile({
@@ -301,11 +303,11 @@ function ProfilUser() {
 			if (!user || !canEdit) return
 			const loadFriends = async () => {
 				try {
-					const userIdResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+					const userIdResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
 					if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 					const { id } = await userIdResponse.json()
 
-					const response = await fetch(`${API_BASE}/${id}/friends`)
+					const response = await fetch(`${API_BASE}/user/${id}/friends`)
 					if (!response.ok) throw new Error('Failed to load friends')
 					const data = await response.json()
 					const list = data?.result?.friends || data?.friends || []
@@ -364,7 +366,7 @@ function ProfilUser() {
 		}
 		setAvatarUploading(true)
 		try {
-			const userResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+			const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
 			if (!userResponse.ok) {
 				const text = await userResponse.text()
 				throw new Error(t('profile_avatar_error_user_id', { status: userResponse.status, detail: text || '-' }))
@@ -372,7 +374,7 @@ function ProfilUser() {
 			const { id } = await userResponse.json()
 			const formData = new FormData()
 			formData.append('file', file)
-			const uploadResponse = await fetch(`${API_BASE}/${id}/avatar`, {
+			const uploadResponse = await fetch(`${API_BASE}/user/${id}/avatar`, {
 				method: 'PATCH',
 				body: formData,
 			})
@@ -394,7 +396,7 @@ function ProfilUser() {
 	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
 		if (!user) return { ok: false, error: t('save_error_not_authenticated') }
 		const langToSave = i18n.language
-		const userResponse = await fetch(`${API_BASE}/userid/${user.username}`)
+		const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
 		if (!userResponse.ok) {
 			const text = await userResponse.text()
 			return {
@@ -404,7 +406,7 @@ function ProfilUser() {
 		}
 		const { id } = await userResponse.json()
 
-		const response = await fetch(`${API_BASE}/${id}`, {
+		const response = await fetch(`${API_BASE}/user/${id}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json',

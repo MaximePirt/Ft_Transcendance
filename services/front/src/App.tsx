@@ -23,8 +23,8 @@ function App() {
         <Route path="/quiz/multi/:roomCode" element={<MultiPlayerCodeRoom />} />
         <Route path="/quiz/join" element={<JoinGame />} />
         
-        <Route path="/user" element={<ProfilUser />} />
-        <Route path="/user/:username" element={<ProfilUser />} />
+        <Route path="/profile" element={<ProfilUser />} />
+        <Route path="/profile/:username" element={<ProfilUser />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
 

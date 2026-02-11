@@ -17,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
 
 async function applyTheme(themeName: string) {
   try {
@@ -55,11 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applyPreferredLanguage = async (username: string) => {
     try {
-      const userIdResponse = await fetch(`${API_BASE}/userid/${username}`)
+      const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`)
       if (!userIdResponse.ok) return
       const { id } = await userIdResponse.json()
 
-      const response = await fetch(`${API_BASE}/users/${id}`)
+      const response = await fetch(`${API_BASE}/user/users/${id}`)
       if (!response.ok) return
       const userData = await response.json()
 

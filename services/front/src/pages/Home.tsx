@@ -79,7 +79,7 @@ function HomePage() {
                 {t("logout")}
               </a>
             </div>
-            <button className="btn login" onClick={() => navigate('/user')}>
+            <button className="btn login" onClick={() => navigate('/profile')}>
               {t("profile")}
             </button>
           </>
@@ -108,8 +108,8 @@ function HomePage() {
               </button>
             </div>
             <div className="SpaceZone">
-              {SpaceZone.map((item) => (
-                <div key={item.label} className="highlight">
+              {SpaceZone.map((item, index) => (
+                <div key={`${item.label}-${index}`} className="highlight">
                   <span className="label">{item.label}</span>
                   <span className="value">{item.value}</span>
                 </div>
