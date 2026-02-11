@@ -312,7 +312,7 @@ function ProfilUser() {
 					const normalized = list.map((friend) => ({
 						id: String(friend.id),
 						username: friend.username,
-						status: 'offline',
+						status: friend.onlineStatus ? 'online' : 'offline',
 					}))
 					setFriends(normalized)
 				} catch (e) {

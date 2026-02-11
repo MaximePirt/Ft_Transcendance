@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/Home'
 import QuizPage from './pages/Quiz'
 import SoloGameSetup from './pages/SoloGameSetup'
@@ -25,6 +25,8 @@ function App() {
         
         <Route path="/user" element={<ProfilUser />} />
         <Route path="/user/:username" element={<ProfilUser />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
     </AuthProvider>
