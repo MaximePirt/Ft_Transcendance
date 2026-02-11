@@ -124,10 +124,13 @@ async function quizRoutes(fastify, options) {
 		const sessionId = request.params.id;
 
 		try {
-			const res = await quizController.getCurrentQuestion(userId, sessionId);
-			if (!res)
+			const {question, remaining_ms, status} = await quizController.getCurrentQuestion(userId, sessionId);
+			if (!question)
+			{
+
 				return reply.code(404).send({ error: 'No current question found for this game session' });
-			return reply.code(200).send({ status: 'Current question retrieved', question: res });
+			}
+			return reply.code(200).send({ status: 'Current question retrieved', question: question, remaining_ms, game_status: status });
 		} catch (err) {
 			console.error("Error retrieving current question for game session:", err);
 			return reply.code(500).send({ error: 'Error retrieving current question', error: err.message });

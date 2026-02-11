@@ -1,4 +1,9 @@
 const quizModel = require('../models/quizModel');
+const { expireCurrentQuestion } = require('../jobs/expireCurrentQuestion');
+const sessionTimer = require('../jobs/sessionTimer');
+
+
+const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 15000);
 
 /**
  * @brief Create a new game session
@@ -92,6 +97,8 @@ async function startGameSession(userId, sessionCode)
 		if (questionPool.length < session.question_count)
 			throw new Error("Not enough questions available to start the game session");
 		quizModel.insertPoolToSession(session.id, questionPool);
+		quizModel.initSessionQuestionTimer(session.id);
+		sessionTimer.scheduleTimer(session.id, expireCurrentQuestion);
 		console.log("Session", session.id, "started with", questionPool.length, "questions");
 		return {code: 200, session_id: session.id};
 	}
@@ -110,12 +117,23 @@ async function getCurrentQuestion(userId, sessionId)
 	const player = quizModel.findUserInSession(sessionId, userId);
 	if (!player)
 		throw new Error("User is not a player in this game session");
-	const question = quizModel.getCurrentQuestionForPlayer(sessionId, player);
-	if (!question)
+
+	const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
+
+	const order = session.current_question_order;
+	if (!order)
+		return { game_status: 'in_progress', question: null, remaining_ms };
+
+	const question = quizModel.getQuestionByOrderForPlayer(sessionId, order, player.lang);
+	if (!question && session.current_question_order > quizModel.getTotalQuestionsForSession(sessionId))
+	{
+		quizModel.updateSessionStatus(sessionId, 'completed');
+		return { game_status: 'completed', question: null, remaining_ms: 0 };
+	}
+	else if (!question)
 		throw new Error("No current question found for this game session");
 	console.log("Current question for user ID", userId, "in game session ID:", sessionId, ":", question);
-	quizModel.recordQuestionTimer(sessionId, userId, question.id);
-	return question;
+	return { game_status: session.status, question, remaining_ms };
 }
 
 async function submitAnswer(sessionId, userId, question_id, answer)
@@ -131,17 +149,18 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 	const player = quizModel.findUserInSession(sessionId, userId);
 	if (!player)
 		throw new Error("User is not a player in this game session");
-	const time_taken = quizModel.getAnswerTime(sessionId, userId, question_id);
-	if (time_taken === null)
-		throw new Error("No timer found for this question and player");
-	const currentQuestion = quizModel.getCurrentQuestionForPlayer(sessionId, player);
-	if (!currentQuestion || currentQuestion.id !== question_id)
+	
+	const currentQuestionId = quizModel.getCurrentQuestionId(sessionId);
+	if (!currentQuestionId || currentQuestionId !== question_id)
 		throw new Error("This question is not the current question for the player");
 
 	const AlreadyAnswered = quizModel.getPlayerAnswerForQuestion(sessionId, userId, question_id);
 	if (AlreadyAnswered)
 		throw new Error("Player has already submitted an answer for this question");
 
+	const time_taken = quizModel.getTimeTakenFromSession(sessionId);
+	if (time_taken === null)
+		throw new Error("No timer found for this question and player");
 
 	const question_answer = quizModel.getCorrectAnswerForQuestion(question_id, player.lang);
 	const isCorrect = quizModel.checkAnswer(question_answer, answer);
@@ -150,6 +169,14 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 	quizModel.recordPlayerAnswer(sessionId, userId, question_id, answer, time_taken, isCorrect);
 
 	quizModel.updatePlayerScore(sessionId, userId, isCorrect, time_taken);
+
+	if (quizModel.haveAllPlayersAnswered(sessionId, question_id)) {
+		sessionTimer.clearTimer(sessionId);
+		const { status } = quizModel.advanceSession(sessionId);
+		if (status === 'in_progress')
+			sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
+	}
+
 
 	const updatedPlayer = quizModel.findUserInSession(sessionId, userId);
 	console.log("User ID", userId, "submitted answer for question ID", question_id, "in game session ID:", sessionId, "Correct:", isCorrect);

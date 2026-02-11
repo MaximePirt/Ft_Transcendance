@@ -38,7 +38,8 @@ function getSessionById(sessionId)
 {
 	console.log("Model : Fetching game session by ID:", sessionId);
 	const data = db.prepare(`
-		SELECT id, code, mode, topic, question_count, max_players, host_id, status, started_at, ended_at
+		SELECT id, code, mode, topic, question_count, max_players, host_id, status, started_at, ended_at,
+			current_question_order, current_question_time
 		FROM game_sessions
 		WHERE id = ?
 	`).get(sessionId);
@@ -161,9 +162,10 @@ function findUserInSession(sessionId, userId)
 {
 	console.log("Model: Checking if user ID:", userId, "is in game session ID:", sessionId);
 	const player = db.prepare(`
-		SELECT u.id, u.lang
+		SELECT u.id, u.lang,
+			gp.score, gp.answered_count, gp.correct_answers
 		FROM users u
-		JOIN game_players gp ON u.id = gp.user_id
+		JOIN game_players gp ON gp.user_id = u.id
 		WHERE game_session_id = ? AND user_id = ?
 	`).get(sessionId, userId);
 	const isInSession = !!player;
@@ -175,97 +177,75 @@ function findUserInSession(sessionId, userId)
 }
 
 /**
- * @brief Get the current question for a player in a game session based on the number of questions they have already answered
- * 			and base on their language preference
+ * @brief Get the current question for a player in a game session, along with remaining time and game status
  * @param {*} sessionId 
- * @param {*} player 
- * @returns next question if success, null if no more question or error
+ * @param {*} questionOrder 
+ * @param {*} lang 
+ * @returns 
  */
-function getCurrentQuestionForPlayer(sessionId, player)
-{
-	console.log("Model: Fetching current question for user ID:", player.id, "in game session ID:", sessionId);
+function getQuestionByOrderForPlayer(sessionId, questionOrder, lang) {
+	console.log("Model: Fetching question by order for game session ID:", sessionId, "question order:", questionOrder, "language:", lang);
 	const question = db.prepare(`
-	SELECT 
-		gsq.question_order,
-		q.id,
-		q.type,
-		qt.question_text,
-		c.slug as category_slug,
-		ct.name as category_name
-	FROM game_session_questions gsq
-	JOIN questions q ON gsq.question_id = q.id
-	LEFT JOIN question_translations qt 
-		ON q.id = qt.question_id AND qt.lang = ?
-	LEFT JOIN categories c ON q.category_id = c.id
-	LEFT JOIN category_translations ct 
-		ON c.id = ct.category_id AND ct.lang = ?
-	WHERE gsq.game_session_id = ?
-		AND NOT EXISTS (
-		SELECT 1 FROM game_answers 
-		WHERE game_session_id = ? 
-			AND user_id = ? 
-			AND question_id = q.id
-		)
-	ORDER BY gsq.question_order
-	LIMIT 1
-	`).get(player.lang, player.lang, sessionId, sessionId, player.id);
+		SELECT
+			gsq.question_order,
+			q.id,
+			q.type,
+			qt.question_text,
+			c.slug AS category_slug,
+			ct.name AS category_name
+		FROM game_session_questions gsq
+		JOIN questions q ON gsq.question_id = q.id
+		LEFT JOIN question_translations qt
+			ON q.id = qt.question_id AND qt.lang = ?
+		LEFT JOIN categories c ON q.category_id = c.id
+		LEFT JOIN category_translations ct
+			ON c.id = ct.category_id AND ct.lang = ?
+		WHERE gsq.game_session_id = ?
+			AND gsq.question_order = ?
+		LIMIT 1
+	`).get(lang, lang, sessionId, questionOrder);
 	if (!question)
 		return null;
 
 	if (question.type === 'mcq') {
-		const options = db.prepare(`
-		SELECT 
-		mo.position,
-		mot.label
+	question.options = db.prepare(`
+		SELECT mo.position, mot.label
 		FROM mcq_options mo
-		JOIN mcq_option_translations mot 
+		JOIN mcq_option_translations mot
 		ON mo.id = mot.option_id AND mot.lang = ?
 		WHERE mo.question_id = ?
 		ORDER BY mo.position
-		`).all(player.lang, question.id);
-		question.options = options;
+	`).all(lang, question.id);
 	}
 
-	const total = db.prepare(`
-		SELECT COUNT(*) as count 
-		FROM game_session_questions 
-		WHERE game_session_id = ?
-		`).get(sessionId);
+	question.total_questions = db.prepare(`
+	SELECT COUNT(*) AS count
+	FROM game_session_questions
+	WHERE game_session_id = ?
+	`).get(sessionId).count;
 
-	question.total_questions = total.count;
-	console.log("Current question retrieved for user ID:", player.id, "in game session ID:", sessionId, ":", question);
+	console.log("Total questions for game session ID:", sessionId, ":", question.total_questions);
 	return question;
 }
 
-function recordQuestionTimer(sessionId, userId, questionId) {
-	db.prepare(`
-	UPDATE game_players 
-	SET current_question_time = CURRENT_TIMESTAMP
-	WHERE game_session_id = ? AND user_id = ?
-	`).run(sessionId, userId);
-
-	console.log("Question", questionId, "sent to user", userId, "at", new Date().toISOString());
+function initSessionQuestionTimer(sessionId) {
+	return db.prepare(`
+		UPDATE game_sessions
+		SET current_question_order = 1,
+			current_question_time  = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`).run(sessionId);
 }
 
-function getAnswerTime(sessionId, userId, questionId) {
-	console.log("Model: Calculating time taken for user", userId);
+function getRemainingMs(sessionId, durationMs) {
+	const row = db.prepare(`
+		SELECT (unixepoch('now') - unixepoch(current_question_time)) AS elapsed_s
+		FROM game_sessions
+		WHERE id = ?
+	`).get(sessionId);
 
-	const result = db.prepare(`
-		SELECT 
-			current_question_time,
-			(julianday('now') - julianday(current_question_time)) * 86400 as time_taken_seconds
-		FROM game_players
-		WHERE game_session_id = ? AND user_id = ?
-	`).get(sessionId, userId);
-
-	if (!result || !result.current_question_time) {
-		console.log("No timestamp found, returning 0");
-		return 0;
-	}
-
-	const timeTaken = Math.round(result.time_taken_seconds);
-	console.log("Time taken:", timeTaken, "seconds");
-	return timeTaken;
+	const elapsedMs = (row?.elapsed_s ?? 0) * 1000;
+	return Math.max(0, durationMs - elapsedMs);
 }
 
 function normalizeAnswer(s) {
@@ -316,7 +296,7 @@ function recordPlayerAnswer(sessionId, userId, questionId, answer, timeTaken, is
 }
 
 function updatePlayerScore(sessionId, userId, isCorrect, timeTaken){
-	const scoreIncrement = isCorrect ? 100 | 0 : 0; // Base points for a correct answer
+	const scoreIncrement = isCorrect ? 100 | 0 : 0;
 	db.prepare(`
 	UPDATE game_players 
 	SET score = score + ?, 
@@ -376,6 +356,69 @@ function getPlayerAnswerForQuestion(sessionId, userId, questionId)
 	return result;
 }
 
+
+function getCurrentQuestionId(sessionId) {
+	const session = getSessionById(sessionId);
+	if (!session || !session.current_question_order)
+		return null;
+
+	const row = db.prepare(`
+		SELECT question_id
+		FROM game_session_questions
+		WHERE game_session_id = ? AND question_order = ?
+	`).get(sessionId, session.current_question_order);
+	return row?.question_id ?? null;
+}
+
+function getTimeTakenFromSession(sessionId) {
+	const row = db.prepare(`
+		SELECT (unixepoch('now') - unixepoch(current_question_time)) AS elapsed_s
+		FROM game_sessions
+		WHERE id = ?
+	`).get(sessionId);
+
+	return Math.max(0, Math.round(row?.elapsed_s ?? 0));
+}
+
+function haveAllPlayersAnswered(sessionId, questionId) {
+	const playersCount = db.prepare(`
+		SELECT COUNT(*) AS c
+		FROM game_players
+		WHERE game_session_id = ?
+	`).get(sessionId).c;
+
+	const answersCount = db.prepare(`
+		SELECT COUNT(*) AS c
+		FROM game_answers
+		WHERE game_session_id = ? AND question_id = ?
+	`).get(sessionId, questionId).c;
+
+	return answersCount >= playersCount;
+}
+
+function advanceSession(sessionId) {
+	const session = getSessionById(sessionId);
+
+	if (!session)
+		return { status: 'abandoned' };
+
+	if (session.current_question_order >= session.question_count) {
+	updateSessionStatus(sessionId, 'completed');
+	return { status: 'completed' };
+	}
+
+	db.prepare(`
+		UPDATE game_sessions
+		SET current_question_order = current_question_order + 1,
+			current_question_time  = CURRENT_TIMESTAMP
+		WHERE id = ?
+	`).run(sessionId);
+
+	return { status: 'in_progress' };
+}
+
+
+
 module.exports = {
 	generateSessionCode,
 	insertGameSession,
@@ -387,12 +430,16 @@ module.exports = {
 	generateQuestionPool,
 	insertPoolToSession,
 	findUserInSession,
-	getCurrentQuestionForPlayer,
-	recordQuestionTimer,
-	getAnswerTime,
 	checkAnswer,
 	recordPlayerAnswer,
 	updatePlayerScore,
 	getCorrectAnswerForQuestion,
-	getPlayerAnswerForQuestion
+	getPlayerAnswerForQuestion,
+	getQuestionByOrderForPlayer,
+	initSessionQuestionTimer,
+	getCurrentQuestionId,
+	getRemainingMs,
+	haveAllPlayersAnswered,
+	advanceSession,
+	getTimeTakenFromSession
 };
