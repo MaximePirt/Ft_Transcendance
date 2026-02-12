@@ -1,6 +1,7 @@
 const quizModel = require('../models/quizModel');
 const { expireCurrentQuestion } = require('../jobs/expireCurrentQuestion');
 const sessionTimer = require('../jobs/sessionTimer');
+const wsHub = require('../ws/wsHub');
 
 
 const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 15000);
@@ -99,6 +100,8 @@ async function startGameSession(userId, sessionCode)
 		quizModel.insertPoolToSession(session.id, questionPool);
 		quizModel.initSessionQuestionTimer(session.id);
 		sessionTimer.scheduleTimer(session.id, expireCurrentQuestion);
+		wsHub.broadcast(session.id, {type: 'question_started', payload: {sessionId: session.id, question_order: session.current_question_order,
+			remaining_ms: quizModel.getRemainingMs(session.id, QUESTION_TIMER)}});
 		console.log("Session", session.id, "started with", questionPool.length, "questions");
 		return {code: 200, session_id: session.id};
 	}
@@ -138,9 +141,9 @@ async function getCurrentQuestion(userId, sessionId)
 
 async function submitAnswer(sessionId, userId, question_id, answer)
 {
-	Number(sessionId);
-	Number(question_id);
-	Number(userId);
+	sessionId = Number(sessionId);
+	question_id = Number(question_id);
+	userId = Number(userId);
 	const session = quizModel.getSessionById(sessionId);
 	if (!session)
 		throw new Error("Game session not found");
@@ -172,12 +175,19 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 
 	if (quizModel.haveAllPlayersAnswered(sessionId, question_id)) {
 		sessionTimer.clearTimer(sessionId);
-		const { status } = quizModel.advanceSession(sessionId);
+		const { status, new_order } = quizModel.advanceSession(sessionId);
 		if (status === 'in_progress')
+		{
 			sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
+			const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
+			wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
+
+		}
+		else if (status === 'completed')
+		{
+			wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
+		}
 	}
-
-
 	const updatedPlayer = quizModel.findUserInSession(sessionId, userId);
 	console.log("User ID", userId, "submitted answer for question ID", question_id, "in game session ID:", sessionId, "Correct:", isCorrect);
 

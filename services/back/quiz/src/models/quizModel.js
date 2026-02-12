@@ -403,8 +403,8 @@ function advanceSession(sessionId) {
 		return { status: 'abandoned' };
 
 	if (session.current_question_order >= session.question_count) {
-	updateSessionStatus(sessionId, 'completed');
-	return { status: 'completed' };
+		updateSessionStatus(sessionId, 'completed');
+		return { status: 'completed' };
 	}
 
 	db.prepare(`
@@ -414,7 +414,12 @@ function advanceSession(sessionId) {
 		WHERE id = ?
 	`).run(sessionId);
 
-	return { status: 'in_progress' };
+	const new_order = db.prepare(`
+		SELECT current_question_order
+		FROM game_sessions
+		WHERE id = ? `).get(sessionId).current_question_order;
+
+	return { status: 'in_progress' , new_order: new_order};
 }
 
 
