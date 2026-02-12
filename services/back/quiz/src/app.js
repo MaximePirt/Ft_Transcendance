@@ -10,7 +10,7 @@ fastify.register(require("./routes/wsRoute"));
 
 const start = async () => {
 	try {
-		await fastify.listen({ port: 3002, host: "quiz_api" });
+		await fastify.listen({ port: 3002, host: "0.0.0.0" });
 		console.log("Quiz server listening on port 3002");
 	} catch (err) {
 		fastify.log.error(err);

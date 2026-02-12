@@ -1,6 +1,8 @@
 const db = require('../models/db');
 const quizModel = require('../models/quizModel');
 const sessionTimer = require('./sessionTimer');
+const wsHub = require('../ws/wsHub');
+
 
 function expireCurrentQuestion(sessionId) {
 	const session = quizModel.getSessionById(sessionId);
@@ -46,9 +48,13 @@ function expireCurrentQuestion(sessionId) {
 	tx();
 
 	const { status } = quizModel.advanceSession(sessionId);
+	const players = quizModel.getPlayersBySession(sessionId);
+	wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
 
 	if (status === 'in_progress')
 		sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
+	else if (status === 'completed')
+		wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
 }
 
 module.exports = { expireCurrentQuestion };

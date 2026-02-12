@@ -7,8 +7,6 @@ const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 15000);
 /**
  * @brief Websocket route for quiz game sessions
  * @param {*} fastify 
- * @note To add a new communication type :
- * 		socket.on('type', (data) => {* // Handle incoming data of this type * });
  */
 
 module.exports = async function wsRoutes(fastify) {
@@ -49,10 +47,31 @@ module.exports = async function wsRoutes(fastify) {
 			payload: { sessionId, game_status: session?.status ?? 'unknown' }
 			}));
 		}
+		socket.on('message', (data) => {
+			let msg;
+			try {
+				msg = JSON.parse(data.toString());
+			} catch {
+				return;
+			}
+			if (msg.type === 'sync_request') {
+				const session = quizModel.getSessionById(sessionId);
+				socket.send(JSON.stringify({
+					type: 'session_state',
+					payload: { sessionId, game_status: session?.status ?? 'unknown' }
+				}));
+			}
+		});
 
 		socket.on('close', () => {
 			wsHub.remove(sessionId, socket);
+			wsHub.broadcast(sessionId, { type: 'player_left', payload: { sessionId, userId } });
 		});
 	});
+
+	fastify.get(`/ws/health`, { websocket: true }, (socket, req) => {
+		socket.send(JSON.stringify({ type: 'health', payload: 'ok' }));
+	});
+	console.log('Websocket routes registered');
 };
 

@@ -22,7 +22,7 @@ function broadcast(sessionId, event) {
 
 	const msg = JSON.stringify(event);
 	for (const ws of set) {
-		if (ws.readyState === ws.OPEN)
+		if (ws.readyState === 1)
 			ws.send(msg);
 	}
 }

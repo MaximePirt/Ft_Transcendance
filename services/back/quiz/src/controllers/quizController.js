@@ -72,6 +72,8 @@ async function joinGameSession(userId, sessionCode)
 	}
 
 	quizModel.insertPlayerInGame(userId, session.id);
+	const player_name = quizModel.getPlayerName(userId);
+	wsHub.broadcast(session.id, { type: 'player_joined', payload: { userId, player_name } });
 	console.log("User ID", userId, "successfully joined game session with code:", sessionCode);
 	return { session_id: session.id, player: { user_id: userId } };
 }
@@ -100,6 +102,7 @@ async function startGameSession(userId, sessionCode)
 		quizModel.insertPoolToSession(session.id, questionPool);
 		quizModel.initSessionQuestionTimer(session.id);
 		sessionTimer.scheduleTimer(session.id, expireCurrentQuestion);
+		wsHub.broadcast(session.id, {type: 'game_started', payload: { sessionId: session.id }});
 		wsHub.broadcast(session.id, {type: 'question_started', payload: {sessionId: session.id, question_order: session.current_question_order,
 			remaining_ms: quizModel.getRemainingMs(session.id, QUESTION_TIMER)}});
 		console.log("Session", session.id, "started with", questionPool.length, "questions");
@@ -141,9 +144,7 @@ async function getCurrentQuestion(userId, sessionId)
 
 async function submitAnswer(sessionId, userId, question_id, answer)
 {
-	sessionId = Number(sessionId);
 	question_id = Number(question_id);
-	userId = Number(userId);
 	const session = quizModel.getSessionById(sessionId);
 	if (!session)
 		throw new Error("Game session not found");
@@ -176,6 +177,8 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 	if (quizModel.haveAllPlayersAnswered(sessionId, question_id)) {
 		sessionTimer.clearTimer(sessionId);
 		const { status, new_order } = quizModel.advanceSession(sessionId);
+		const players = quizModel.getPlayersBySession(sessionId);
+		wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
 		if (status === 'in_progress')
 		{
 			sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);

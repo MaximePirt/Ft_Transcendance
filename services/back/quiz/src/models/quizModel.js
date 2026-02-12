@@ -423,6 +423,11 @@ function advanceSession(sessionId) {
 }
 
 
+function getPlayerName(userId) {
+	const res = db.prepare(`SELECT username FROM users WHERE id = ? `).get(userId);
+	return res?.username ?? 'Unknown Player';
+}
+
 
 module.exports = {
 	generateSessionCode,
@@ -446,5 +451,6 @@ module.exports = {
 	getRemainingMs,
 	haveAllPlayersAnswered,
 	advanceSession,
-	getTimeTakenFromSession
+	getTimeTakenFromSession,
+	getPlayerName
 };

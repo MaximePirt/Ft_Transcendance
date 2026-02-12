@@ -1,5 +1,7 @@
 quizController = require('../controllers/quizController');
 const schemas = require('../schemas/game.schemas');
+const wsHub = require('../ws/wsHub');
+
 
 
 async function quizRoutes(fastify, options) {
@@ -49,14 +51,11 @@ async function quizRoutes(fastify, options) {
 	 */
 	fastify.post('/game-sessions/join', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
-		const userId = request.user.id;
+		// const userId = request.user.id;
+		const userId = 2;
 		const { code } = request.body;
 		try {
 			const res = await quizController.joinGameSession(userId, code);
-
-			// TODO: Websocket broadcast to notify other players in the session that a new player has joined
-    		// fastify.websocketBroadcast(result.session_id, 'player_joined', { userId });
-
 			return reply.code(200).send({ status: 'joined', gameSessionId: res.session_id });
 		}
 		catch (err)
@@ -100,6 +99,7 @@ async function quizRoutes(fastify, options) {
 
 			//TODO : Websocket broadcast to notify players in the session that the game has started
 			// fastify.websocketBroadcast(res.session_id, 'game_started', {});
+			// wsHub.broadcast(res.session_id, {type: 'game_started', payload: { sessionId: res.session_id }});
 			return reply.code(200).send({ status: 'Game session started', gameSessionId: res.session_id });
 		}
 		catch(err)
@@ -150,9 +150,9 @@ async function quizRoutes(fastify, options) {
 	//TODO: Add schema validation for answer submission (question_id, answer)
 	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate},
 	async (request, reply) => {
-		// const userId = request.user.id;
+		// const userId = Number(request.user.id);
 		const userId = 1;
-		const sessionId = request.params.id;
+		const sessionId = Number(request.params.id);
 		const { question_id, answer} = request.body;
 
 		console.log("Received answer submission for game session ID:", sessionId, "user ID:", userId, "question ID:", question_id, "answer:", answer);
