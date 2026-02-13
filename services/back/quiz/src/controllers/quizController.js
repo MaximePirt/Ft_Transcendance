@@ -263,7 +263,7 @@ async function getLeaderboard(sessionId)
 	if (!session)
 		throw new Error("Game session not found");
 	const leaderboard = quizModel.getLeaderboardForSession(sessionId);
-	return leaderboard;
+	return {session, leaderboard};
 	
 }
 

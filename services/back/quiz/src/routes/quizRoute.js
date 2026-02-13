@@ -215,12 +215,13 @@ async function quizRoutes(fastify, options) {
 	fastify.get('/game-sessions/:id/leaderboard', async (request, reply) => {
 		const sessionId = Number(request.params.id);
 		try {
-			const leaderboard = await quizController.getLeaderboard(sessionId);
-			return reply.code(200).send({ status: 'Leaderboard retrieved', leaderboard });
+			const {session, leaderboard} = await quizController.getLeaderboard(sessionId);
+			wsHub.broadcast(sessionId, {type: 'leaderboard_update', payload: {sessionId, leaderboard}});
+			return reply.code(200).send({ status: 'Leaderboard retrieved', session, leaderboard });
 		}
 		catch (err)
 		{
-			console.error("Error retrieving leaderboard for game sesson:", err);
+			console.error("Error retrieving leaderboard for game session:", err);
 			if (err.message.includes("not found"))
 				return reply.code(404).send({ error: err.message });
 			return reply.code(500).send({ error: 'Error retrieving leaderboard', error: err.message });
