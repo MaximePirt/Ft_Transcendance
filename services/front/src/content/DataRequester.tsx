@@ -1,22 +1,22 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
 
-function getsignup()
-{
-    const email = "test@gmail.com"
-    const username = "test"
-    const password = "test"
+// function getsignup()
+// {
+//     const email = "test@gmail.com"
+//     const username = "test"
+//     const password = "test"
 
-    fetch(`${API_BASE}/auth/signup`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, username, password }),
-    })
-    .then((res) => res.json())
-    .then((data) => console.log(data))
-    .catch((err) => console.error(err));
-}
+//     fetch(`${API_BASE}/auth/signup`, {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify({ email, username, password }),
+//     })
+//     .then((res) => res.json())
+//     .then((data) => console.log(data))
+//     .catch((err) => console.error(err));
+// }
 
 // fastify.post("/signin", async function (request, reply) {
 // 	try {
@@ -75,25 +75,24 @@ async function getlogin()
 async function getPlayerInfo() {
     const USERNAME = 'alice'
 
-    // await getlogin();
-    // const res = await fetch(`${API_BASE}/auth/me`, {
-    //         method: "GET",
-    //         credentials: "include",
-    // })
-    // console.log("Response from /auth/me:", res);
+    await getlogin();
+    const res = await fetch(`${API_BASE}/auth/me`, {
+            method: "GET",
+            credentials: "include",
+    })
+    console.log("Response from /auth/me:", res);
     
-    // const me_user = await res.json();
-    // console.log(me_user)
-    const userIdResponse = await fetch(`${API_BASE}/userid/${USERNAME}`)
-	if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+    const me_user = await res.json();
+    console.log(me_user)
+    // const userIdResponse = await fetch(`${API_BASE}/userid/${USERNAME}`)
+	// if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 
-    const { id } = await userIdResponse.json()
+    // const { id } = await userIdResponse.json()
     
-    const response = await fetch(`${API_BASE}/users/${id}`)
-    if (!response.ok) throw new Error('Failed to resolve user profile')
-
-    const dataJson = await response.json()
-    const data = JSON.stringify(dataJson) 
+    // const response = await fetch(`${API_BASE}/users/${id}`)
+    // if (!response.ok) throw new Error('Failed to resolve user profile')
+    // const dataJson = await response.json()
+    const data = JSON.stringify(me_user) 
 
     const blob = new Blob([data], { type: "application/json" });
     const href = URL.createObjectURL(blob);
