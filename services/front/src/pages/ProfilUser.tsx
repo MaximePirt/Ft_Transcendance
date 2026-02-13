@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
 import '../App.css'
+import DataRequester from '../content/DataRequester'
 
 async function applyTheme(themeName: string) {
 	console.log(`${themeName}.json`)
@@ -842,6 +843,7 @@ function ProfilUser() {
 						</section>
 					)}
 				</div>
+				<DataRequester />
 			</div>
 		</main>
 	)

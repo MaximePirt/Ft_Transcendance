@@ -135,6 +135,39 @@
   box-shadow: 2px 2px 0px #000;
 }
 
+.btn-data-request {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 32px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: var(--border-thin);
+  box-shadow: var(--shadow-btn);
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-decoration: none;
+  font-family: var(--primary-custom-font);
+  font-size: 16px;
+  min-height: 52px;
+  letter-spacing: 0.5px;
+  background: var(--primary);
+  color: #000;
+}
+
+.btn-data-request:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #000;
+}
+
+[dir="rtl"] .btn-data-request {
+  right: auto;
+  left: 20px;
+}
+
 .theme-combobox {
   position: fixed;
   top: 100px;

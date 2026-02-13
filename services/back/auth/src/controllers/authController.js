@@ -55,8 +55,6 @@ async function signupUser(request, reply) {
 
 async function codeVerification(frontAuth) {
 	const code = Math.round(facode);
-	console.log("front authentication:", frontAuth);
-	console.log("back authentication:", code.toString());
 	if (code != frontAuth)
 		return { ok:false, err: "Bad authentication code" };
 	return { ok:true, message: "Code verified successfully" };

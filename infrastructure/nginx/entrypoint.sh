@@ -1,10 +1,15 @@
 #!/bin/bash
-# set -euo pipefail
+set -euo pipefail
 
 while [ ! -f /secrets/nginx/app.env ]; do
     echo "[INFO] Waiting for /secrets/nginx/app.env to be available..."
     sleep 2
 done
+
+echo "[INFO] Normalizing secrets line endings..."
+if [ -f /secrets/nginx/app.env ]; then
+    sed -i 's/\r$//' /secrets/nginx/app.env
+fi
 
 # Load environment variables from the .env file
 set -o allexport
@@ -41,6 +46,7 @@ if [[ -f "$CERT_FILE" && -f "$KEY_FILE" ]]; then
 else
     echo "[INFO] Attempting to generate SSL certificate for $DOMAIN_NAME & api.$DOMAIN_NAME..."
 
+    set +e
     certbot certonly --standalone --non-interactive --agree-tos \
         --email "$ADMIN_EMAIL" \
         -d "$DOMAIN_NAME" \
