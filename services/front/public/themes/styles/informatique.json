@@ -1,0 +1,17 @@
+{
+  "name": "informatique",
+  "variables": {
+    "--background-img":"url('/custom-assets/binary-bg.png')",
+    "--background-size":"400px 392px",
+    "--shell-shadow":"12px 12px 0px #0cf359",
+    "--secondary":"#0cf359",
+    "--accent":"#0cf359",
+    "--shadow-btn":"4px 4px 0px #0cf359",
+    "--background-eyebrow":"none",
+    "--border-eyebrow":"2px solid #000000",
+    "--border-thick":"4px solid #000000",
+    "--border-thin":"2px solid #000000",
+    "--border-shell":"4px solid #000000",
+    "--border-image":"none"
+  }
+}

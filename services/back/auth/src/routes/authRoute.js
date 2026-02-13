@@ -11,12 +11,20 @@ function Payload(username) {
 	this.username = username;
 }
 
-function JWTgenerator(user) {
+function JWTgenerator(fastify, user) {
 	const payload = Object.create(Payload);
 	payload.username = user.username;
 	payload.id = user.id;
 	const token = fastify.jwt.sign({ payload });
 	return token;
+}
+
+function User(username, email, password, token) {
+	this.username = username;
+	this.email = email;
+	this.password = password;
+	this.token = token;
+	this.id = 0;
 }
 
 
@@ -48,26 +56,24 @@ async function authRoute(fastify, options) {
 
 
 	fastify.post('/signup', async function (request, reply) {
-		console.log("Signup route called");
 		const res = await authController.signupUser(request, reply);
 		if (!res || !res.ok)
 		{
 			return reply.code(404).send({ error: "Signup failed" });
 		}
-		console.log("user sign up !");
 		return reply.code(200).send({ ok: true, message: "Signup successful" });
 	})
 
 	fastify.post("/signin", async function (request, reply) {
 	try {
 		const response = await fetch(`${user_api_url}/signin`, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-		},
-		credentials: "include",
-		body: JSON.stringify(request.body),
-		onRequest: fastify.authenticate,
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			credentials: "include",
+			body: JSON.stringify(request.body),
+			onRequest: fastify.authenticate,
 		});
 		if (!response.ok) {
 		const errmsg = await response.json();
@@ -75,14 +81,13 @@ async function authRoute(fastify, options) {
 		}
 		else
 			console.log("user sign in !");
-
 		const user = Object.create(User);
 		user.username = await request.body.username;
-		user.id = await getId(user.username);
+		user.id = await fetch(`${user_api_url}/userid/${user.username}`).then(res => res.json()).then(data => data.id);
 		if (!user.id) {
 			return reply.code(404).send({ error: "User ID not found" });
 		}
-		user.token = JWTgenerator(user);
+		user.token = JWTgenerator(fastify, user);
 		reply.setCookie("token", user.token, {
 		httpOnly: true,
 		signed: false,

@@ -1,0 +1,17 @@
+{
+  "name": "histoire",
+  "variables": {
+    "--background-img":"url('/custom-assets/history-bg.png')",
+    "--background-size":"cover",
+    "--shell-shadow":"none",
+    "--secondary":"#fae1a5",
+    "--accent":"#fae1a5",
+    "--shadow-btn":"4px 4px 0px #fae1a5",
+    "--background-eyebrow":"none",
+    "--border-eyebrow":"solid 4px black",
+    "--border-thick":"solid 4px black",
+    "--border-thin":"solid 2px black",
+    "--border-shell":"solid 50px black",
+    "--border-image":"url('/custom-assets/stamp-border.png') 50 round"
+  }
+}
