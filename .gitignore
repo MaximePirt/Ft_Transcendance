@@ -10,7 +10,8 @@ npm-debug.log
 # nginx
 infrastructure/nginx/data/
 
-# Vault 
+# Vault
+sec/
 secrets/ 
 infrastructure/vault/file
 infrastructure/vault/certs/
