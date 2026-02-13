@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS questions (
   external_id TEXT UNIQUE,
   category_id INTEGER NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('mcq', 'text')),
-  difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard')),
+  difficulty TEXT NOT NULL CHECK (difficulty IN ('easy', 'medium', 'hard', 'random')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT

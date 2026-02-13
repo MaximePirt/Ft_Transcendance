@@ -8,17 +8,17 @@ npm-debug.log
 
 
 # nginx
-infrastructure/nginx/data/
-
-# Vault
 sec/
+infrastructure/nginx/data
+
+# Vault 
 secrets/ 
 infrastructure/vault/file
 infrastructure/vault/certs/
 infrastructure/vault/logs
 note.md
 
-
+nginx/data
 
 */node_modules/
 */.env

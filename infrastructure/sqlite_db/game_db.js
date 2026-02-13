@@ -25,15 +25,18 @@ BEGIN;
 -- Game_sessions table
 CREATE TABLE IF NOT EXISTS game_sessions (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	code TEXT UNIQUE NOT NULL,
 	started_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	ended_at DATETIME,
 	status TEXT CHECK( status IN ('waiting', 'in_progress', 'completed', 'abandoned') ) NOT NULL DEFAULT 'waiting',
-	mode TEXT CHECK( mode IN ('easy', 'medium', 'hard') ) NOT NULL DEFAULT 'medium',
+	mode TEXT CHECK( mode IN ('easy', 'medium', 'hard', 'random') ) NOT NULL DEFAULT 'random',
 	topic TEXT,
 	question_count INTEGER NOT NULL DEFAULT 10,
 	max_players INTEGER NOT NULL DEFAULT 4,
-	winner_id INTEGER,
-	FOREIGN KEY (winner_id) REFERENCES users(id) ON DELETE SET NULL
+	host_id INTEGER NULL,
+	current_question_order INTEGER NOT NULL DEFAULT 0,
+	current_question_time DATETIME,
+	FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- Game_players table - associates users with game sessions
@@ -44,10 +47,24 @@ CREATE TABLE IF NOT EXISTS game_players (
 	answered_count INTEGER NOT NULL DEFAULT 0,
 	correct_answers INTEGER NOT NULL DEFAULT 0,
 	score INTEGER NOT NULL DEFAULT 0,
+	current_question_time DATETIME DEFAULT CURRENT_TIMESTAMP,
 	is_winner BOOLEAN NOT NULL DEFAULT 0,
+	is_active BOOLEAN NOT NULL DEFAULT 1,
+	disconnected_at DATETIME,
 	PRIMARY KEY (game_session_id, user_id),
 	FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Create a question pool
+CREATE TABLE IF NOT EXISTS game_session_questions (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	game_session_id INTEGER NOT NULL,
+	question_id INTEGER NOT NULL,
+	question_order INTEGER NOT NULL,
+	FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
+	FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE SET NULL,
+	UNIQUE(game_session_id, question_id)
 );
 
 -- Game_answers table - save answers given by users during game_sessions
@@ -64,6 +81,10 @@ CREATE TABLE IF NOT EXISTS game_answers (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE SET NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_game_answers_session_user_question
+ON game_answers(game_session_id, user_id, question_id);
+
 
 COMMIT;
 `;
