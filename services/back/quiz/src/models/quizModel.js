@@ -63,10 +63,10 @@ function getPlayersBySession(sessionId)
 {
 	console.log("Model : Fetching all players for game session ID:", sessionId);
 	const players = db.prepare(`
-		SELECT u.id, u.username, gp.joined_at, gp.answered_count, gp.correct_answers, gp.score
+		SELECT u.id, u.username, gp.joined_at, gp.answered_count, gp.correct_answers, gp.score, gp.is_active
 		FROM game_players gp
 		JOIN users u ON gp.user_id = u.id
-		WHERE gp.game_session_id = ?
+		WHERE gp.game_session_id = ? AND gp.is_active = 1
 	`).all(sessionId);
 	console.log("Players retrieved for session ID", sessionId, ":", players);
 	return players;
@@ -163,14 +163,13 @@ function findUserInSession(sessionId, userId)
 	console.log("Model: Checking if user ID:", userId, "is in game session ID:", sessionId);
 	const player = db.prepare(`
 		SELECT u.id, u.lang,
-			gp.score, gp.answered_count, gp.correct_answers
+			gp.score, gp.answered_count, gp.correct_answers, gp.is_active
 		FROM users u
 		JOIN game_players gp ON gp.user_id = u.id
 		WHERE game_session_id = ? AND user_id = ?
 	`).get(sessionId, userId);
 	const isInSession = !!player;
 	console.log("Is user ID:", userId, "in game session ID:", sessionId, "?", isInSession);
-	console.log("Player record found:", player);
 	if (!player)
 		return null;
 	return player;
@@ -274,7 +273,6 @@ function checkAnswer(questionAnswer, answer)
 	}
 
 	if (questionAnswer.type === 'text') {
-		console.log("Validating TEXT answer. User answer:", answer, "- Correct answer:", questionAnswer.answer, "- Variants:", questionAnswer.answer);
 		const userAnswer = normalizeAnswer(answer);
 		const normalizedCorrectAnswer = normalizeAnswer(questionAnswer.answer[0]);
 		const variants = questionAnswer.answer.slice(1) || [];
@@ -384,15 +382,15 @@ function haveAllPlayersAnswered(sessionId, questionId) {
 	const playersCount = db.prepare(`
 		SELECT COUNT(*) AS c
 		FROM game_players
-		WHERE game_session_id = ?
+		WHERE game_session_id = ? AND is_active = 1
 	`).get(sessionId).c;
 
 	const answersCount = db.prepare(`
 		SELECT COUNT(*) AS c
-		FROM game_answers
-		WHERE game_session_id = ? AND question_id = ?
+		FROM game_answers ga
+		JOIN game_players gp ON gp.user_id = ga.user_id AND gp.game_session_id = ga.game_session_id
+		WHERE ga.game_session_id = ? AND ga.question_id = ? AND gp.is_active = 1
 	`).get(sessionId, questionId).c;
-
 	return answersCount >= playersCount;
 }
 
@@ -429,6 +427,43 @@ function getPlayerName(userId) {
 }
 
 
+function removePlayerFromSession(sessionId, userId) {
+	const res = db.prepare(`
+		DELETE FROM game_players
+		WHERE game_session_id = ? AND user_id = ?`).run(sessionId, userId);
+	if (res.changes !== 1)
+		throw new Error("Failed to remove player from game session");
+}
+
+
+function setPlayerActive(sessionId, userId, active) {
+	return db.prepare(`
+		UPDATE game_players
+		SET is_active = ?, disconnected_at = CASE WHEN ? = 0 THEN CURRENT_TIMESTAMP ELSE NULL END
+		WHERE game_session_id = ? AND user_id = ?
+	`).run(active ? 1 : 0, active ? 1 : 0, sessionId, userId);
+}
+
+function getNextActivePlayer(sessionId, excludeUserId) {
+	return db.prepare(`
+		SELECT user_id
+		FROM game_players
+		WHERE game_session_id = ?
+			AND is_active = 1
+			AND user_id != ?
+		ORDER BY joined_at ASC
+		LIMIT 1
+	`).get(sessionId, excludeUserId);
+}
+
+function transferHost(sessionId, newHostId) {
+	return db.prepare(`
+		UPDATE game_sessions SET host_id = ?
+		WHERE id = ?
+	`).run(newHostId, sessionId);
+}
+
+
 module.exports = {
 	generateSessionCode,
 	insertGameSession,
@@ -452,5 +487,9 @@ module.exports = {
 	haveAllPlayersAnswered,
 	advanceSession,
 	getTimeTakenFromSession,
-	getPlayerName
+	getPlayerName,
+	removePlayerFromSession,
+	setPlayerActive,
+	getNextActivePlayer,
+	transferHost
 };

@@ -75,6 +75,9 @@ async function joinGameSession(userId, sessionCode)
 	const player_name = quizModel.getPlayerName(userId);
 	wsHub.broadcast(session.id, { type: 'player_joined', payload: { userId, player_name } });
 	console.log("User ID", userId, "successfully joined game session with code:", sessionCode);
+	const currentPlayers = quizModel.getPlayersBySession(session.id);
+	console.log("Current players in session ID", session.id, "after user joined:", currentPlayers);
+	wsHub.broadcast(session.id, { type: 'scoreboard_updated', payload: { sessionId: session.id, players: currentPlayers } });
 	return { session_id: session.id, player: { user_id: userId } };
 }
 
@@ -187,13 +190,10 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 
 		}
 		else if (status === 'completed')
-		{
 			wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
-		}
 	}
 	const updatedPlayer = quizModel.findUserInSession(sessionId, userId);
 	console.log("User ID", userId, "submitted answer for question ID", question_id, "in game session ID:", sessionId, "Correct:", isCorrect);
-
 	const result = {
 		is_correct: isCorrect,
 		current_score: updatedPlayer.score,
@@ -205,11 +205,61 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 }
 
 
+async function leaveGameSession(sessionId, userId)
+{
+	const session = quizModel.getSessionById(sessionId);
+	if (!session)
+		throw new Error("Game session not found");
+	const player = quizModel.findUserInSession(sessionId, userId);
+	if (!player || player.is_active === 0)
+		return ;
+	console.log("User ID", userId, "is leaving game session ID:", sessionId);
+	quizModel.setPlayerActive(sessionId, userId, false);
+	wsHub.broadcast(sessionId, { type: 'player_left', payload: { sessionId, userId } });
+	if (session.host_id === userId)
+	{
+		const nextHost = quizModel.getNextActivePlayer(sessionId, userId);
+		if (nextHost?.user_id)
+		{
+			quizModel.transferHost(sessionId, nextHost.user_id);
+			console.log("Host left the game session. Transferred host role to user ID:", nextHost.user_id);
+			wsHub.broadcast(sessionId, { type: 'host_transferred', payload: { newHostId: nextHost.user_id } });
+		}
+		else
+		{
+			quizModel.updateSessionStatus(sessionId, 'abandoned');
+			wsHub.broadcast(sessionId, { type: 'session_ended', payload: { sessionId } });
+			return ;
+		}
+	}
+	const currentPlayers = quizModel.getPlayersBySession(sessionId);
+	wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players: currentPlayers } });
+	if (session.status === 'in_progress')
+	{
+		const question_id = quizModel.getCurrentQuestionId(sessionId);
+		if (quizModel.haveAllPlayersAnswered(sessionId, question_id))
+		{
+			sessionTimer.clearTimer(sessionId);
+			const { status, new_order } = quizModel.advanceSession(sessionId);
+			if (status === 'in_progress')
+			{
+				sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
+				const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
+				wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
+			}
+			else
+				wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
+		}
+	}
+}
+
+
 module.exports = {
 	createGameSession,
 	getGameSessionData,
 	joinGameSession,
 	startGameSession,
 	getCurrentQuestion,
-	submitAnswer
+	submitAnswer,
+	leaveGameSession
 };

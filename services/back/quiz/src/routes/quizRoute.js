@@ -96,10 +96,6 @@ async function quizRoutes(fastify, options) {
 		const { code } = request.body;
 		try {
 			const res = await quizController.startGameSession(userId, code);
-
-			//TODO : Websocket broadcast to notify players in the session that the game has started
-			// fastify.websocketBroadcast(res.session_id, 'game_started', {});
-			// wsHub.broadcast(res.session_id, {type: 'game_started', payload: { sessionId: res.session_id }});
 			return reply.code(200).send({ status: 'Game session started', gameSessionId: res.session_id });
 		}
 		catch(err)
@@ -138,14 +134,10 @@ async function quizRoutes(fastify, options) {
 	});
 
 
-	// Input : game_session_id, player_id, answer
-	// Effect : insert in game_answer, update player score
-	// Output : success/failure 
 	/**
-	 *  Controller: submitAnswer(sessionId, userId, answerData)
-		→ Model: validateAnswer(questionId, answer)
-		→ Model: saveAnswer(sessionId, userId, questionId, answer, isCorrect, time)
-		→ Model: updatePlayerStats(sessionId, userId, points)
+	 * @brief Submit an answer for the current question in a game session
+	 * @input : game_session_id, question_id, answer
+	 * @rules : only if user is a player in the game session and status is 'in_progress'
 	 */
 	//TODO: Add schema validation for answer submission (question_id, answer)
 	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate},
@@ -169,6 +161,26 @@ async function quizRoutes(fastify, options) {
 				return reply.code(400).send({ error: err.message });
 			return reply.code(500).send({ error: 'Error submitting answer', error: err.message });
 		}
+	});
+
+	fastify.delete('/game-sessions/:id/players/me', {preHandler: fastify.authenticate},
+	async (request, reply) => {
+		// const userId = Number(request.user.id);
+		const userId = 1;
+		const session = Number(request.params.id);
+		try {
+			await quizController.leaveGameSession(session, userId);
+			return reply.code(204).send();
+		}
+		catch (err) {
+			console.log("Error leaving game session:", err);
+			if (err.message.includes("not found"))
+				return reply.code(404).send({ error: err.message });
+			else if (err.message.includes("not a player"))
+				return reply.code(400).send({ error: err.message });
+			return reply.code(500).send({ error: 'Error leaving game session', error: err.message });
+		}
+	
 	});
 
 	// Input : game_session_id

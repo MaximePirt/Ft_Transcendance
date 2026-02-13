@@ -15,6 +15,7 @@ function expireCurrentQuestion(sessionId) {
 		SELECT gp.user_id
 		FROM game_players gp
 		WHERE gp.game_session_id = ?
+			AND gp.is_active = 1
 			AND NOT EXISTS (
 			SELECT 1 FROM game_answers ga
 			WHERE ga.game_session_id = gp.game_session_id
