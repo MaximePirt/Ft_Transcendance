@@ -8,6 +8,7 @@ fastify.register(require("@fastify/cors"), {
   origin: [
     'http://localhost/',
     'http://user_api:3001',
+    
   ],
   cookie: {
     cookieName: 'token',

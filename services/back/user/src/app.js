@@ -11,13 +11,18 @@ It listen on porte 3001
 */
 
 const fastify = require("fastify")({ logger: true });
+const path = require("path");
 fastify.register(require("@fastify/multipart"));
+fastify.register(require("@fastify/static"), {
+  root: path.join(__dirname, "..", "uploads"),
+  prefix: "/uploads/",
+});
 fastify.register(require("./routes/userRoute"));
 fastify.register(require("./routes/friendRoute"));
 
 
 fastify.register(require("@fastify/cors"), {
-	origin: ["http://localhost:5173", "http://user_api:3001"],
+  origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://user_api:3001"],
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 	credentials: true,
 	allowedHeaders: ["Content-type", "Authorization"],
@@ -45,7 +50,7 @@ const purgeTask = new AsyncTask(
 // TODO: Change to 3AM, currently every 2 minutes for testing
 const purgeJob = new CronJob(
   {
-    cronExpression: "*/2 * * * *",
+	cronExpression: "*/20 * * * *",
   },
   purgeTask
 );
@@ -54,7 +59,7 @@ const start = async () => {
   try {
     await fastify.ready();
     fastify.scheduler.addCronJob(purgeJob);
-    await fastify.listen({ port: 3001, host: "user_api" });
+    await fastify.listen({ port: 3001, host: "0.0.0.0" });
     console.log("Microservice Users listening on port 3001");
   } catch (err) {
     fastify.log.error(err);

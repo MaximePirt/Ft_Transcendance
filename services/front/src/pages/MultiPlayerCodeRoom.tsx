@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 // Fonction qui va créer un code random pour la salle multi, j'ai enlever le 0 pour eviter les confusions, si ya d'autres lettres a enlever on peut le faire plus tard mais je pense c'est good
+// This function will be used inside quiz api to create rooms
+// TODO: remove when backend is ready
 function generateRoomCode(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
   let code = ''

@@ -1,0 +1,17 @@
+{
+  "name": "sports",
+  "variables": {
+    "--background-img":"url('/custom-assets/sports-bg.png')",
+    "--background-size":"cover",
+    "--shell-shadow":"none",
+    "--secondary":"white",
+    "--accent":"none",
+    "--shadow-btn":"4px 4px 0px #008622",
+    "--background-eyebrow":"none",
+    "--border-eyebrow":"double 7px #000000",
+    "--border-thick":"double 10px #000000",
+    "--border-thin":"double 7px #000000",
+    "--border-shell":"double 10px #000000",
+    "--border-image":"none"
+  }
+}

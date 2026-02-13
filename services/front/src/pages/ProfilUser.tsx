@@ -1,7 +1,45 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import ThemeSelector from '../content/ThemeSelector'
+import FontSelector from '../content/FontSelector'
 import '../App.css'
+import DataRequester from '../content/DataRequester'
+
+async function applyTheme(themeName: string) {
+	console.log(`${themeName}.json`)
+	try {
+		const res = await fetch(`/themes/styles/${themeName}.json`)
+		const themeToApply = await res.json()
+
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
+		if (themeName !== 'default') return applyTheme('default')
+		return
+	}
+}
+
+async function applyFont(fontName: string) {
+	console.log(`${fontName}.json`)
+	try {
+		const res = await fetch(`/themes/fonts/${fontName}.json`)
+		const themeToApply = await res.json()
+
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
+		if (fontName !== 'default') return applyFont('default')
+		return
+	}
+}
 
 const languages = [
 	{ code: 'fr', lang: 'Français' },
@@ -11,7 +49,7 @@ const languages = [
 
 
 //en attendant la data base
-const userProfile = {
+const defaultUserProfile = {
 	username: 'PlayerOne',
 	email: 'player@quiz.sprint',
 	joinYear: 2024,
@@ -35,13 +73,6 @@ type FriendRequest = {
 	username: string
 	type: 'received' | 'sent'
 }
-
-// Données temporaires pour les amis
-const UserFriends: Friend[] = [
-	{ id: '1', username: 'tototrucmuche', status: 'online' },
-	{ id: '2', username: 'footlover95', status: 'offline' },
-	{ id: '3', username: 'ft_joy', status: 'online' },
-]
 
 const UserFriendRequests: FriendRequest[] = [
 	{ id: '4', username: '123', type: 'received' },
@@ -70,8 +101,8 @@ const stickerPalette = [
 	{ id: 'fire', symbol: '🔥' },
 	{ id: 'heart', symbol: '❤️' },
 	{ id: 'star', symbol: '⭐' },
-	{ id: 'jeux_video', symbol: '🎮', url: '/theme-icons/Jeux%20vid%C3%A9o.png' },
-    { id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/Jeux%20vid%C3%A9o.gif' },
+	{ id: 'jeux_video', symbol: '🎮', url: '/theme-icons/JeuxVidéo.png' },
+    { id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/JeuxVidéo.gif' },
 ]
 
 const bgPresets = ['#0f0f10', '#111827', '#1f2937', '#0b5fff', '#8b5cf6', '#10b981', '#eab308']
@@ -84,66 +115,329 @@ const titleOptions: TitleOption[] = [
 	{ id: 'music', text: 'profile_title_music' },
 ]
 
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
+const DEFAULT_AVATAR = '/avatar/Default.png'
+
 type CardState = {
 	bgColor: string
 	stickers: Sticker[]
 	titles: string[]
 	description: string
+	preferredLanguage?: string
 }
 
-const STORAGE_KEY = 'profileCard'
 const MAX_STICKERS = 3
 const MAX_TITLES = 2
 
 function ProfilUser() {
 	const navigate = useNavigate()
+	const { username: routeUsername } = useParams()
 	const { t, i18n } = useTranslation()
+	const { user, isAuthenticated, isAuthReady } = useAuth()
+	const isPublicView = Boolean(routeUsername) && routeUsername !== user?.username
+	const canEdit = !isPublicView
+	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
+	const previousThemeRef = useRef<string | null>(null)
+	const previousFontRef = useRef<string | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
 	const [description, setDescription] = useState('')
+	const [preferredLanguage, setPreferredLanguage] = useState(i18n.language)
 	const [hydrated, setHydrated] = useState(false)
-	const [friends, setFriends] = useState<Friend[]>(UserFriends)
+	const [isSaving, setIsSaving] = useState(false)
+	const [saveError, setSaveError] = useState('')
+	const [saveSuccess, setSaveSuccess] = useState(false)
+	const [avatarUrl, setAvatarUrl] = useState('')
+	const [avatarUploading, setAvatarUploading] = useState(false)
+	const [avatarError, setAvatarError] = useState('')
+	const [avatarSuccess, setAvatarSuccess] = useState(false)
+	const [friends, setFriends] = useState<Friend[]>([])
 	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>(UserFriendRequests)
 	const [friendSearchInput, setFriendSearchInput] = useState('')
+	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+
+	const normalizeAvatarUrl = (url?: string) => {
+		if (!url) return ''
+		const trimmed = String(url).trim()
+		if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return ''
+		return trimmed
+	}
+	const resolveAvatarUrl = (url: string) => {
+		if (url.startsWith('https://') || url.startsWith('http://')) return url
+		if (url.startsWith('/avatar/')) return url
+		if (url.startsWith('/user/avatar/')) return url
+		if (url.startsWith('/uploads/')) return `${API_BASE}/user${url}`
+		return `${API_BASE}${url}`
+	}
+
+
+	// Rediriger si non authentifié
+	useEffect(() => {
+		if (isPublicView) return
+		if (!isAuthReady) return
+		if (!isAuthenticated) {
+			navigate('/')
+		}
+	}, [isAuthenticated, isAuthReady, isPublicView, navigate])
+
+	// Charger les données de l'utilisateur
+	useEffect(() => {
+		if (user && !isPublicView) {
+			setUserProfile({
+				username: user.username,
+				email: user.email,
+				joinYear: new Date().getFullYear(),
+				stats: {
+					gamesPlayed: 42,
+					winRate: 68,
+					bestScore: 9860,
+					streak: 7,
+				},
+				favorites: ['cinema', 'music', 'computer_science'],
+			})
+		}
+	}, [user, isPublicView])
 
 	useEffect(() => {
-		try {
-			const raw = localStorage.getItem(STORAGE_KEY)
-			if (!raw) {
-				setHydrated(true)
-				return
+		if (!isPublicView) return
+		previousThemeRef.current = localStorage.getItem('theme') || 'default'
+		previousFontRef.current = localStorage.getItem('font') || 'default'
+		return () => {
+			const prevTheme = previousThemeRef.current || 'default'
+			const prevFont = previousFontRef.current || 'default'
+			applyTheme(prevTheme)
+			applyFont(prevFont)
+		}
+	}, [isPublicView])
+
+	useEffect(() => {
+		if (!profileUsername) return
+		
+		// Charger les données depuis le serveur en priorité
+		const loadProfileCard = async () => {
+			try {
+				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`)
+				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+				const { id } = await userIdResponse.json()
+
+				const response = await fetch(`${API_BASE}/user/users/${id}`)
+				if (response.ok) {
+					const userData = await response.json()
+					setUserProfile({
+						username: userData.username || profileUsername,
+						email: userData.email || '',
+						joinYear: new Date(userData.created_at || Date.now()).getFullYear(),
+						stats: {
+							gamesPlayed: 42,
+							winRate: 68,
+							bestScore: 9860,
+							streak: 7,
+						},
+						favorites: ['cinema', 'music', 'computer_science'],
+					})
+					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
+					let parsedStickers: Sticker[] = []
+					let parsedTitles: string[] = [titleOptions[0].id, titleOptions[1].id]
+					
+					// Charger les données de personnalisation depuis le serveur
+					if (userData.profileCardBgColor) setBgColor(userData.profileCardBgColor)
+					
+					if (userData.profileCardStickers) {
+						try {
+							const parsed = JSON.parse(userData.profileCardStickers)
+							if (Array.isArray(parsed)) {
+								parsedStickers = parsed
+								setStickers(parsed)
+							}
+						} catch (e) {
+							console.warn('Failed to parse stickers', e)
+						}
+					}
+					
+					if (userData.profileCardTitles) {
+						try {
+							const parsed = JSON.parse(userData.profileCardTitles)
+							if (Array.isArray(parsed) && parsed.length) {
+								parsedTitles = parsed
+								setTitles(parsed.slice(0, MAX_TITLES))
+							}
+						} catch (e) {
+							console.warn('Failed to parse titles', e)
+						}
+					}
+					
+					if (userData.profileCardDescription) {
+						setDescription(userData.profileCardDescription.slice(0, 40))
+					}
+					
+					if (userData.preferredLanguage) {
+						setPreferredLanguage(userData.preferredLanguage)
+					}
+
+					if (canEdit) {
+						if (userData.theme) localStorage.setItem('theme', userData.theme)
+						if (userData.font) localStorage.setItem('font', userData.font)
+					}
+
+					if (isPublicView) {
+						const themeToApply = userData.theme || 'default'
+						const fontToApply = userData.font || 'default'
+						applyTheme(themeToApply)
+						applyFont(fontToApply)
+					}
+					
+					setHydrated(true)
+					return
+				}
+			} catch (e) {
+				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
 			}
-			const parsed = JSON.parse(raw) as CardState
-			if (parsed.bgColor) setBgColor(parsed.bgColor)
-			if (Array.isArray(parsed.stickers)) setStickers(parsed.stickers)
-			if (Array.isArray(parsed.titles) && parsed.titles.length) setTitles(parsed.titles.slice(0, MAX_TITLES))
-			if (typeof parsed.description === 'string') setDescription(parsed.description.slice(0, 40))
-		} catch (e) {
-			console.warn('[ProfileCard] failed to load saved state', e)
-		} finally {
 			setHydrated(true)
 		}
-	}, [])
+		
+		loadProfileCard()
+	}, [profileUsername, canEdit, isPublicView])
+
+		useEffect(() => {
+			if (!user || !canEdit) return
+			const loadFriends = async () => {
+				try {
+					const userIdResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
+					if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+					const { id } = await userIdResponse.json()
+
+					const response = await fetch(`${API_BASE}/user/${id}/friends`)
+					if (!response.ok) throw new Error('Failed to load friends')
+					const data = await response.json()
+					const list = data?.result?.friends || data?.friends || []
+					const normalized = list.map((friend) => ({
+						id: String(friend.id),
+						username: friend.username,
+						status: friend.onlineStatus ? 'online' : 'offline',
+					}))
+					setFriends(normalized)
+				} catch (e) {
+					console.warn('[Profile] failed to load friends', e)
+				}
+			}
+
+			loadFriends()
+		}, [user, canEdit])
 
 	useEffect(() => {
 		document.body.dir = i18n.dir()
 	}, [i18n, i18n.language])
 
-	useEffect(() => {
-		if (!hydrated) return
-		const payload: CardState = { bgColor, stickers, titles, description }
+	// Auto-save désactivé (sauvegarde manuelle uniquement)
+
+	const handleSaveNow = async () => {
+		if (!user || !canEdit) return
+		setIsSaving(true)
+		setSaveError('')
+		setSaveSuccess(false)
 		try {
-			localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+			const res = await saveProfileToServer()
+			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
+			setPreferredLanguage(i18n.language)
+			setSaveSuccess(true)
 		} catch (e) {
-			console.warn('[ProfileCard] failed to save state', e)
+			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
+		} finally {
+			setIsSaving(false)
 		}
-	}, [bgColor, stickers, titles, description, hydrated])
+	}
+
+	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (!user || !canEdit) return
+			const file = e.target.files?.[0]
+		if (!file) return
+			setAvatarError('')
+			setAvatarSuccess(false)
+		if (file.size > 2 * 1024 * 1024) {
+			setAvatarError(t('profile_avatar_error_size'))
+			e.target.value = ''
+			return
+		}
+		if (!['image/png', 'image/jpeg'].includes(file.type)) {
+			setAvatarError(t('profile_avatar_error_type'))
+			e.target.value = ''
+			return
+		}
+		setAvatarUploading(true)
+		try {
+			const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('profile_avatar_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+			const formData = new FormData()
+			formData.append('file', file)
+			const uploadResponse = await fetch(`${API_BASE}/user/${id}/avatar`, {
+				method: 'PATCH',
+				body: formData,
+			})
+			if (!uploadResponse.ok) {
+				const text = await uploadResponse.text()
+				throw new Error(t('profile_avatar_error_api', { status: uploadResponse.status, detail: text || '-' }))
+			}
+			const data = await uploadResponse.json()
+			if (data?.avatarUrl) setAvatarUrl(data.avatarUrl)
+			setAvatarSuccess(true)
+			e.target.value = ''
+		} catch (err) {
+			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
+		} finally {
+			setAvatarUploading(false)
+		}
+	}
+
+	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
+		if (!user) return { ok: false, error: t('save_error_not_authenticated') }
+		const langToSave = i18n.language
+		const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
+		if (!userResponse.ok) {
+			const text = await userResponse.text()
+			return {
+				ok: false,
+				error: t('save_error_user_id', { status: userResponse.status, detail: text || '-' }),
+			}
+		}
+		const { id } = await userResponse.json()
+
+		const response = await fetch(`${API_BASE}/user/${id}`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				profileCardBgColor: bgColor,
+				profileCardStickers: JSON.stringify(stickers),
+				profileCardTitles: JSON.stringify(titles),
+				profileCardDescription: description,
+				preferredLanguage: langToSave,
+				theme: localStorage.getItem('theme') || 'default',
+				font: localStorage.getItem('font') || 'default',
+			})
+		})
+
+		if (!response.ok) {
+			const text = await response.text()
+			return {
+				ok: false,
+				error: t('save_error_api', { status: response.status, detail: text || '-' }),
+			}
+		}
+
+		return { ok: true }
+	}
 
 	type StickerPayload = { symbol: string; url?: string }
 
 	const addSticker = (payload: StickerPayload, x = 50, y = 50) => {
+		if (!canEdit) return
 		setStickers((prev) => {
 			if (prev.length >= MAX_STICKERS) return prev
 			return [...prev, { id: `${Date.now()}-${prev.length}`, symbol: payload.symbol, url: payload.url, x, y }]
@@ -151,11 +445,13 @@ function ProfilUser() {
 	}
 
 	const handleDragStart = (e: React.DragEvent<HTMLButtonElement>, payload: StickerPayload) => {
+		if (!canEdit) return
 		e.dataTransfer.setData('application/json', JSON.stringify(payload))
 		e.dataTransfer.effectAllowed = 'copy'
 	}
 
 	const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+		if (!canEdit) return
 		e.preventDefault()
 		if (stickers.length >= MAX_STICKERS) return
 		let payload: StickerPayload | null = null
@@ -173,18 +469,20 @@ function ProfilUser() {
 	}
 
 	const handleReset = () => {
+		if (!canEdit) return
 		setStickers([])
 		setBgColor('#0f0f10')
 		setTitles([titleOptions[0].id, titleOptions[1].id])
 		setDescription('')
-		try {
-			localStorage.removeItem(STORAGE_KEY)
-		} catch (e) {
-			console.warn('[ProfileCard] failed to clear storage', e)
-		}
+		localStorage.setItem('theme', 'default')
+		localStorage.setItem('font', 'default')
+		applyTheme('default')
+		applyFont('default')
+		window.dispatchEvent(new CustomEvent('theme-font-reset'))
 	}
 
 	const toggleTitle = (id: string) => {
+		if (!canEdit) return
 		setTitles((prev) => {
 			if (prev.includes(id)) return prev.filter((t) => t !== id)
 			if (prev.length >= MAX_TITLES) return prev
@@ -193,10 +491,12 @@ function ProfilUser() {
 	}
 
 	const handleRemove = (id: string) => {
+		if (!canEdit) return
 		setStickers((prev) => prev.filter((s) => s.id !== id))
 	}
 
 	const handleAcceptRequest = (id: string) => {
+		if (!canEdit) return
 		const request = friendRequests.find((r) => r.id === id)
 		if (!request) return
 		setFriends((prev) => [...prev, { id: request.id, username: request.username, status: 'online' }])
@@ -204,24 +504,31 @@ function ProfilUser() {
 	}
 
 	const handleDeclineRequest = (id: string) => {
+		if (!canEdit) return
 		setFriendRequests((prev) => prev.filter((r) => r.id !== id))
 	}
 
 	const handleRemoveFriend = (id: string) => {
+		if (!canEdit) return
 		setFriends((prev) => prev.filter((f) => f.id !== id))
 	}
 
 	const handleSendFriendRequest = () => {
+		if (!canEdit) return
 		if (!friendSearchInput.trim()) return
-		// TODO: Envoyer la requête au backend
 		console.log('Demande envoyée à:', friendSearchInput)
 		setFriendSearchInput('')
 	}
 
-	const changeLanguage = (lang: string) => {
-		i18n.changeLanguage(lang)
-		localStorage.setItem('language', lang)
-		document.body.dir = i18n.dir()
+	const changeLanguage = async (lang: string) => {
+		try {
+			await i18n.changeLanguage(lang)
+			if (canEdit) setPreferredLanguage(lang)
+			document.body.dir = i18n.dir(lang)
+			document.documentElement.lang = lang
+		} catch (e) {
+			console.warn('[Profile] failed to change language', e)
+		}
 	}
 
 	return (
@@ -238,15 +545,25 @@ function ProfilUser() {
 							<div
 								ref={dropZoneRef}
 								className="profile-card-canvas"
-								onDragOver={(e) => {
-									e.preventDefault()
-									if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-								}}
-								onDrop={handleDrop}
+								onDragOver={
+									canEdit
+										? (e) => {
+											e.preventDefault()
+											if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+										}
+										: undefined
+								}
+								onDrop={canEdit ? handleDrop : undefined}
 								style={{ background: bgColor }}
 							>
-							<div className="profile-card-avatar" aria-hidden>
-								{userProfile.username.slice(0, 1)}
+							<div className="profile-card-avatar">
+								<img
+									src={resolveAvatarUrl(avatarUrl || DEFAULT_AVATAR)}
+									alt={t('profile_avatar_alt', { name: userProfile.username })}
+									onError={() => {
+										if (avatarUrl) setAvatarUrl('')
+									}}
+								/>
 							</div>
 							<h2 className="profile-card-name">{userProfile.username}</h2>
 							{description && <p className="profile-card-tagline">{description}</p>}
@@ -263,7 +580,7 @@ function ProfilUser() {
 									key={sticker.id}
 									type="button"
 									className="sticker-node"
-									onDoubleClick={() => handleRemove(sticker.id)}
+									onDoubleClick={canEdit ? () => handleRemove(sticker.id) : undefined}
 									style={{ left: `${sticker.x}%`, top: `${sticker.y}%` }}
 								>
 									{sticker.url ? <img src={sticker.url} alt={sticker.symbol} /> : sticker.symbol}
@@ -283,17 +600,40 @@ function ProfilUser() {
 											onClick={() => changeLanguage(lng.code)}
 											className={`chip ${active ? 'chip-active' : ''}`}
 										>
-											{lng.lang}
-										</button>
+										{lng.lang}
+									</button>
 									)
 								})}
 							</div>
+							{!canEdit && (
+								<p className="pref-desc">{t('profile_share_notice')}</p>
+							)}
 						</div>
 
 					</section>
 
-					<section className="profile-card-controls">
+					{canEdit && (
+						<section className="profile-card-controls">
 						<div className="panel-title">{t('profile_customize')}</div>
+						<div className="control-group">
+							<label className="control-label" htmlFor="avatar-upload">
+								{t('profile_avatar_label')}
+							</label>
+							<div className="control-row">
+								<input
+									id="avatar-upload"
+									type="file"
+									accept="image/png,image/jpeg"
+									onChange={handleAvatarChange}
+									disabled={avatarUploading}
+								/>
+							</div>
+							<p className="pref-desc">
+								{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}
+							</p>
+							{avatarError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{avatarError}</p>}
+							{avatarSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('profile_avatar_success')}</p>}
+						</div>
 						<div className="control-group">
 							<label className="control-label" htmlFor="bg-picker">
 								{t('profile_bg_label')}
@@ -378,19 +718,33 @@ function ProfilUser() {
 								</div>
 							</div>
 
+							<div className="control-group">
+								<div className="control-row theme-font-row">
+									<ThemeSelector />
+									<FontSelector />
+								</div>
+							</div>
+
 						<div className="actions">
 							<button className="btn ghost" type="button" onClick={handleReset}>
 								{t('profile_reset')}
+							</button>
+							<button className="btn" type="button" onClick={handleSaveNow} disabled={isSaving}>
+								{isSaving ? t('saving') : t('save')}
 							</button>
 							<button className="btn primary" type="button" onClick={() => navigate('/quiz')}>
 								{t('back')}
 							</button>
 						</div>
+						{saveError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{saveError}</p>}
+						{saveSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('save_success')}</p>}
 
-						<p className="pref-desc profile-share-note">{t('profile_share_notice')}</p>
-					</section>
+						<p className="pref-desc profile-share-notice">{t('profile_share_notice')}</p>
+						</section>
+					)}
 
-					<section className="profile-friends-section">
+					{canEdit && (
+						<section className="profile-friends-section">
 					<div className="panel-title">{t('profile_friends_section')}</div>
 
 						<div className="control-group">
@@ -431,8 +785,6 @@ function ProfilUser() {
 										.map((request) => (
 											<div key={request.id} className="friend-item friend-request-item">
 												<div className="friend-info">
-													{/*TODO : gere les avatars*/}
-													<div className="friend-avatar">{request.username.slice(0, 1)}</div>
 													<span className="friend-name">{request.username}</span>
 												</div>
 												<div className="friend-actions">
@@ -468,7 +820,6 @@ function ProfilUser() {
 									friends.map((friend) => (
 										<div key={friend.id} className="friend-item">
 											<div className="friend-info">
-												<div className="friend-avatar">{friend.username.slice(0, 1)}</div>
 												<div>
 													<span className="friend-name">{friend.username}</span>
 													<span className={`friend-status ${friend.status}`}>
@@ -489,8 +840,10 @@ function ProfilUser() {
 								)}
 							</div>
 						</div>
-					</section>
+						</section>
+					)}
 				</div>
+				<DataRequester />
 			</div>
 		</main>
 	)

@@ -1,0 +1,17 @@
+{
+  "name": "cinéma",
+  "variables": {
+    "--background-img":"url('/custom-assets/cinema-bg.png')",
+    "--background-size":"cover",
+    "--shell-shadow":"rgba(255, 255, 255, 0.45) 0px 45px 125px 20px",
+    "--secondary":"white",
+    "--accent":"none",
+    "--shadow-btn":"4px 4px 0px red",
+    "--background-eyebrow":"none",
+    "--border-eyebrow":"solid 2px red",
+    "--border-thick":"solid 4px red",
+    "--border-thin":"solid 2px red",
+    "--border-shell":"solid 50px red",
+    "--border-image":"url('/custom-assets/movie-border.png') 50 round"
+  }
+}    
