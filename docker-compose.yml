@@ -16,7 +16,7 @@ services:
     volumes:
       - ./infrastructure/nginx/data/logs:/var/log/nginx
       - ./infrastructure/nginx/data/certs:/etc/nginx/certs
-      - vault-secrets:/secrets:ro
+      - vault-secrets:/secrets:rw
       - ./shared:/scripts:ro
       - modsec-data:/var/cache/modsecurity
 
