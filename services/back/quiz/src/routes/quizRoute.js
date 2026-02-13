@@ -212,8 +212,20 @@ async function quizRoutes(fastify, options) {
 
 	// Input : game_session_id
 	// Output : final leaderboard sort by score
-	// fastify.get('/game-sessions/:id/leaderboard', async (request, reply) => {
-	// });
+	fastify.get('/game-sessions/:id/leaderboard', async (request, reply) => {
+		const sessionId = Number(request.params.id);
+		try {
+			const leaderboard = await quizController.getLeaderboard(sessionId);
+			return reply.code(200).send({ status: 'Leaderboard retrieved', leaderboard });
+		}
+		catch (err)
+		{
+			console.error("Error retrieving leaderboard for game sesson:", err);
+			if (err.message.includes("not found"))
+				return reply.code(404).send({ error: err.message });
+			return reply.code(500).send({ error: 'Error retrieving leaderboard', error: err.message });
+		}
+	});
 
 	fastify.get('/health', async (request, reply) => {
 		return reply.code(200).send({ status: 'Quiz service is healthy' });

@@ -463,6 +463,17 @@ function transferHost(sessionId, newHostId) {
 	`).run(newHostId, sessionId);
 }
 
+function getLeaderboardForSession(sessionId) {
+	const leaderboard = db.prepare(`
+		SELECT u.id, u.username, gp.score, gp.correct_answers, gp.answered_count, gp.is_active, gp.joined_at
+		FROM game_players gp
+		JOIN users u ON gp.user_id = u.id
+		WHERE gp.game_session_id = ?
+		ORDER BY gp.score DESC, gp.correct_answers DESC, gp.joined_at ASC, gp.user_id ASC
+	`).all(sessionId);
+	return leaderboard;
+}
+
 
 module.exports = {
 	generateSessionCode,
@@ -491,5 +502,6 @@ module.exports = {
 	removePlayerFromSession,
 	setPlayerActive,
 	getNextActivePlayer,
-	transferHost
+	transferHost,
+	getLeaderboardForSession
 };

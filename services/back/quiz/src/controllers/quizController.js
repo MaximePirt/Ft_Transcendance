@@ -257,6 +257,16 @@ async function leaveGameSession(sessionId, userId)
 	}
 }
 
+async function getLeaderboard(sessionId)
+{
+	const session = quizModel.getSessionById(sessionId);
+	if (!session)
+		throw new Error("Game session not found");
+	const leaderboard = quizModel.getLeaderboardForSession(sessionId);
+	return leaderboard;
+	
+}
+
 
 module.exports = {
 	createGameSession,
@@ -265,5 +275,6 @@ module.exports = {
 	startGameSession,
 	getCurrentQuestion,
 	submitAnswer,
-	leaveGameSession
+	leaveGameSession,
+	getLeaderboard
 };
