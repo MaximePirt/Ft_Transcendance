@@ -74,6 +74,33 @@ async function quizRoutes(fastify, options) {
 		}
 	});
 
+	// This route is for testing purposes only, to bypass authentication and use a hardcoded user ID
+	// TODO: Remove this route before deploying to production
+	fastify.post('/game-sessions/joinbis', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
+	async (request, reply) => {
+		// const userId = request.user.id;
+		const userId = 1;
+		const { code } = request.body;
+		try {
+			const res = await quizController.joinGameSession(userId, code);
+			return reply.code(200).send({ status: 'joined', gameSessionId: res.session_id });
+		}
+		catch (err)
+		{
+			if (err.message.includes("not found"))
+				return reply.code(404).send({ status: 'Game session not found' });
+			else if (err.message.includes("already started")
+				|| err.message.includes("full"))
+				return reply.code(400).send({ status: 'Cannot join game session', error: err.message });
+			else if (err.message.includes("already joined"))
+				return reply.code(409).send({ status: 'User has already joined this game session' });
+			else {
+				console.error("Error joining game session:", err);
+				return reply.code(500).send({ status: 'Error joining game session', error: err.message });
+			}
+		}
+	});
+
 
 	/**
 	 * @brief Start a game session

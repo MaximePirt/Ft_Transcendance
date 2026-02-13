@@ -65,13 +65,17 @@ async function joinGameSession(userId, sessionCode)
 	if (players.length >= session.max_players)
 		throw new Error("Game session is full");
 
-	const alreadyJoined = players.some(player => player.id === userId);
-	if (alreadyJoined) {
+	const alreadyJoined = quizModel.findUserInSession(session.id, userId);
+	if (alreadyJoined && alreadyJoined.is_active) {
 		console.log("User ID", userId, "has already joined game session with code:", sessionCode);
 		throw new Error("User has already joined this game session");
 	}
-
-	quizModel.insertPlayerInGame(userId, session.id);
+	else if (alreadyJoined && !alreadyJoined.is_active) {
+		console.log("User ID", userId, "had previously joined game session with code:", sessionCode, "but was marked inactive. Re-activating player.");
+		quizModel.setPlayerActive(session.id, userId, true);
+	}
+	else
+		quizModel.insertPlayerInGame(userId, session.id);
 	const player_name = quizModel.getPlayerName(userId);
 	wsHub.broadcast(session.id, { type: 'player_joined', payload: { userId, player_name } });
 	console.log("User ID", userId, "successfully joined game session with code:", sessionCode);
