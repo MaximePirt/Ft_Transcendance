@@ -11,7 +11,12 @@ It listen on porte 3001
 */
 
 const fastify = require("fastify")({ logger: true });
+const path = require("path");
 fastify.register(require("@fastify/multipart"));
+fastify.register(require("@fastify/static"), {
+  root: path.join(__dirname, "..", "uploads"),
+  prefix: "/uploads/",
+});
 fastify.register(require("./routes/userRoute"));
 fastify.register(require("./routes/friendRoute"));
 

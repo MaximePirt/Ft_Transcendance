@@ -73,6 +73,8 @@ services:
       - db:/db
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
+      - ./services/back/user:/app
+      - user_node_modules:/app/node_modules
     depends_on:
       sqlite_db:
           condition: service_completed_successfully 
@@ -93,6 +95,7 @@ services:
     - db:/db
     - vault-secrets:/secrets:ro
     - ./shared:/scripts:ro
+    - auth_node_modules:/app/node_modules
     depends_on:
       sqlite_db:
           condition: service_completed_successfully
@@ -114,6 +117,7 @@ services:
         - db:/db
         - vault-secrets:/secrets:ro
         - ./shared:/scripts:ro
+        - quiz_node_modules:/app/node_modules
       depends_on:
         sqlite_db:
           condition: service_completed_successfully 
@@ -206,3 +210,7 @@ volumes:
   db:
     driver: local
   front_node_modules:
+  api_node_modules:
+  auth_node_modules:
+  quiz_node_modules:
+  user_node_modules:

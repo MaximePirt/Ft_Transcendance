@@ -73,7 +73,6 @@ async function userRoutes(fastify, options) {
 		return await userController.getUserById(userId);
 	});
 
-	// Update informations
 	fastify.patch("/:id", async (request, reply) => {
 		const userId = request.params.id;
 		const updateData = request.body;
@@ -89,16 +88,22 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
-	// Avatar upload
 	fastify.patch("/:id/avatar", async (request, reply) => {
 		const userId = request.params.id;
 		const data = await request.file();
 		if (!data)
 			return reply.code(400).send({ error: "No file uploaded" });
-		return await userController.updateAvatar(userId, data);
+		try {
+			return await userController.updateAvatar(userId, data);
+		} catch (error) {
+			request.log.error(error);
+			if (String(error?.message).includes("Invalid file type")) {
+				return reply.code(400).send({ error: "Invalid file type, only PNG and JPEG are allowed" });
+			}
+			return reply.code(500).send({ error: "Internal Server Error" });
+		}
 	});
 
-	// settings
 	fastify.get("/:id/settings", async (request, reply) => {
 		const userId = request.params.id;
 		const data = await request.file();
@@ -107,7 +112,6 @@ async function userRoutes(fastify, options) {
 		return await userController.addAvatar(userId, data);
 	});
 
-	// Get online status
 	fastify.get("/:username/online", async (request, reply) => {
 		const username = request.params.username;
 		const user = await userController.getUserByUsername(username);
@@ -117,7 +121,6 @@ async function userRoutes(fastify, options) {
 		return { onlineStatus: user.onlineStatus };
 	});
 
-	// Route to update user information
 	fastify.put("/users/:id", async (request, reply) => {
 		const userId = request.params.id;
 		const userData = request.body;

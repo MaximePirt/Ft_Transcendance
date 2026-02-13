@@ -2,8 +2,44 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import ThemeSelector from '../content/ThemeSelector'
+import FontSelector from '../content/FontSelector'
 import '../App.css'
 import DataRequester from '../content/DataRequester'
+
+async function applyTheme(themeName: string) {
+	console.log(`${themeName}.json`)
+	try {
+		const res = await fetch(`/themes/styles/${themeName}.json`)
+		const themeToApply = await res.json()
+
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
+		if (themeName !== 'default') return applyTheme('default')
+		return
+	}
+}
+
+async function applyFont(fontName: string) {
+	console.log(`${fontName}.json`)
+	try {
+		const res = await fetch(`/themes/fonts/${fontName}.json`)
+		const themeToApply = await res.json()
+
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
+		if (fontName !== 'default') return applyFont('default')
+		return
+	}
+}
 
 const languages = [
 	{ code: 'fr', lang: 'Français' },
@@ -65,8 +101,8 @@ const stickerPalette = [
 	{ id: 'fire', symbol: '🔥' },
 	{ id: 'heart', symbol: '❤️' },
 	{ id: 'star', symbol: '⭐' },
-	{ id: 'jeux_video', symbol: '🎮', url: '/theme-icons/Jeux%20vid%C3%A9o.png' },
-    { id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/Jeux%20vid%C3%A9o.gif' },
+	{ id: 'jeux_video', symbol: '🎮', url: '/theme-icons/JeuxVidéo.png' },
+    { id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/JeuxVidéo.gif' },
 ]
 
 const bgPresets = ['#0f0f10', '#111827', '#1f2937', '#0b5fff', '#8b5cf6', '#10b981', '#eab308']
@@ -80,6 +116,7 @@ const titleOptions: TitleOption[] = [
 ]
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
+const DEFAULT_AVATAR = '/avatar/Default.png'
 
 type CardState = {
 	bgColor: string
@@ -101,6 +138,8 @@ function ProfilUser() {
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
+	const previousThemeRef = useRef<string | null>(null)
+	const previousFontRef = useRef<string | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
@@ -110,10 +149,28 @@ function ProfilUser() {
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
 	const [saveSuccess, setSaveSuccess] = useState(false)
+	const [avatarUrl, setAvatarUrl] = useState('')
+	const [avatarUploading, setAvatarUploading] = useState(false)
+	const [avatarError, setAvatarError] = useState('')
+	const [avatarSuccess, setAvatarSuccess] = useState(false)
 	const [friends, setFriends] = useState<Friend[]>([])
 	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>(UserFriendRequests)
 	const [friendSearchInput, setFriendSearchInput] = useState('')
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+
+	const normalizeAvatarUrl = (url?: string) => {
+		if (!url) return ''
+		const trimmed = String(url).trim()
+		if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return ''
+		return trimmed
+	}
+	const resolveAvatarUrl = (url: string) => {
+		if (url.startsWith('https://') || url.startsWith('http://')) return url
+		if (url.startsWith('/avatar/')) return url
+		if (url.startsWith('/user/avatar/')) return url
+		if (url.startsWith('/uploads/')) return `${API_BASE}/user${url}`
+		return `${API_BASE}${url}`
+	}
 
 
 	// Rediriger si non authentifié
@@ -144,6 +201,18 @@ function ProfilUser() {
 	}, [user, isPublicView])
 
 	useEffect(() => {
+		if (!isPublicView) return
+		previousThemeRef.current = localStorage.getItem('theme') || 'default'
+		previousFontRef.current = localStorage.getItem('font') || 'default'
+		return () => {
+			const prevTheme = previousThemeRef.current || 'default'
+			const prevFont = previousFontRef.current || 'default'
+			applyTheme(prevTheme)
+			applyFont(prevFont)
+		}
+	}, [isPublicView])
+
+	useEffect(() => {
 		if (!profileUsername) return
 		
 		// Charger les données depuis le serveur en priorité
@@ -153,7 +222,7 @@ function ProfilUser() {
 				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 				const { id } = await userIdResponse.json()
 
-				const response = await fetch(`${API_BASE}/users/${id}`)
+				const response = await fetch(`${API_BASE}/user/users/${id}`)
 				if (response.ok) {
 					const userData = await response.json()
 					setUserProfile({
@@ -168,6 +237,7 @@ function ProfilUser() {
 						},
 						favorites: ['cinema', 'music', 'computer_science'],
 					})
+					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
 					let parsedStickers: Sticker[] = []
 					let parsedTitles: string[] = [titleOptions[0].id, titleOptions[1].id]
 					
@@ -205,6 +275,18 @@ function ProfilUser() {
 					if (userData.preferredLanguage) {
 						setPreferredLanguage(userData.preferredLanguage)
 					}
+
+					if (canEdit) {
+						if (userData.theme) localStorage.setItem('theme', userData.theme)
+						if (userData.font) localStorage.setItem('font', userData.font)
+					}
+
+					if (isPublicView) {
+						const themeToApply = userData.theme || 'default'
+						const fontToApply = userData.font || 'default'
+						applyTheme(themeToApply)
+						applyFont(fontToApply)
+					}
 					
 					setHydrated(true)
 					return
@@ -216,7 +298,7 @@ function ProfilUser() {
 		}
 		
 		loadProfileCard()
-	}, [profileUsername, canEdit, i18n, isPublicView])
+	}, [profileUsername, canEdit, isPublicView])
 
 		useEffect(() => {
 			if (!user || !canEdit) return
@@ -226,14 +308,14 @@ function ProfilUser() {
 					if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 					const { id } = await userIdResponse.json()
 
-					const response = await fetch(`${API_BASE}/users/${id}/friends`)
+					const response = await fetch(`${API_BASE}/user/${id}/friends`)
 					if (!response.ok) throw new Error('Failed to load friends')
 					const data = await response.json()
 					const list = data?.result?.friends || data?.friends || []
 					const normalized = list.map((friend) => ({
 						id: String(friend.id),
 						username: friend.username,
-						status: 'offline',
+						status: friend.onlineStatus ? 'online' : 'offline',
 					}))
 					setFriends(normalized)
 				} catch (e) {
@@ -257,27 +339,75 @@ function ProfilUser() {
 		setSaveSuccess(false)
 		try {
 			const res = await saveProfileToServer()
-			if (!res.ok) throw new Error(res.error || 'Save failed')
+			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
 			setPreferredLanguage(i18n.language)
 			setSaveSuccess(true)
 		} catch (e) {
-			setSaveError(e instanceof Error ? e.message : 'Erreur de sauvegarde')
+			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
 		} finally {
 			setIsSaving(false)
 		}
 	}
 
+	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (!user || !canEdit) return
+			const file = e.target.files?.[0]
+		if (!file) return
+			setAvatarError('')
+			setAvatarSuccess(false)
+		if (file.size > 2 * 1024 * 1024) {
+			setAvatarError(t('profile_avatar_error_size'))
+			e.target.value = ''
+			return
+		}
+		if (!['image/png', 'image/jpeg'].includes(file.type)) {
+			setAvatarError(t('profile_avatar_error_type'))
+			e.target.value = ''
+			return
+		}
+		setAvatarUploading(true)
+		try {
+			const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('profile_avatar_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+			const formData = new FormData()
+			formData.append('file', file)
+			const uploadResponse = await fetch(`${API_BASE}/user/${id}/avatar`, {
+				method: 'PATCH',
+				body: formData,
+			})
+			if (!uploadResponse.ok) {
+				const text = await uploadResponse.text()
+				throw new Error(t('profile_avatar_error_api', { status: uploadResponse.status, detail: text || '-' }))
+			}
+			const data = await uploadResponse.json()
+			if (data?.avatarUrl) setAvatarUrl(data.avatarUrl)
+			setAvatarSuccess(true)
+			e.target.value = ''
+		} catch (err) {
+			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
+		} finally {
+			setAvatarUploading(false)
+		}
+	}
+
 	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
-		if (!user) return { ok: false, error: 'Utilisateur non connecté' }
+		if (!user) return { ok: false, error: t('save_error_not_authenticated') }
 		const langToSave = i18n.language
 		const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
 		if (!userResponse.ok) {
 			const text = await userResponse.text()
-			return { ok: false, error: `User ID introuvable (${userResponse.status}) ${text}` }
+			return {
+				ok: false,
+				error: t('save_error_user_id', { status: userResponse.status, detail: text || '-' }),
+			}
 		}
 		const { id } = await userResponse.json()
 
-		const response = await fetch(`${API_BASE}/users/${id}`, {
+		const response = await fetch(`${API_BASE}/user/${id}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json',
@@ -288,12 +418,17 @@ function ProfilUser() {
 				profileCardTitles: JSON.stringify(titles),
 				profileCardDescription: description,
 				preferredLanguage: langToSave,
+				theme: localStorage.getItem('theme') || 'default',
+				font: localStorage.getItem('font') || 'default',
 			})
 		})
 
 		if (!response.ok) {
 			const text = await response.text()
-			return { ok: false, error: `Erreur API (${response.status}) ${text}` }
+			return {
+				ok: false,
+				error: t('save_error_api', { status: response.status, detail: text || '-' }),
+			}
 		}
 
 		return { ok: true }
@@ -339,6 +474,11 @@ function ProfilUser() {
 		setBgColor('#0f0f10')
 		setTitles([titleOptions[0].id, titleOptions[1].id])
 		setDescription('')
+		localStorage.setItem('theme', 'default')
+		localStorage.setItem('font', 'default')
+		applyTheme('default')
+		applyFont('default')
+		window.dispatchEvent(new CustomEvent('theme-font-reset'))
 	}
 
 	const toggleTitle = (id: string) => {
@@ -376,7 +516,6 @@ function ProfilUser() {
 	const handleSendFriendRequest = () => {
 		if (!canEdit) return
 		if (!friendSearchInput.trim()) return
-		// TODO: Envoyer la requête au backend
 		console.log('Demande envoyée à:', friendSearchInput)
 		setFriendSearchInput('')
 	}
@@ -417,8 +556,14 @@ function ProfilUser() {
 								onDrop={canEdit ? handleDrop : undefined}
 								style={{ background: bgColor }}
 							>
-							<div className="profile-card-avatar" aria-hidden>
-								{userProfile.username.slice(0, 1)}
+							<div className="profile-card-avatar">
+								<img
+									src={resolveAvatarUrl(avatarUrl || DEFAULT_AVATAR)}
+									alt={t('profile_avatar_alt', { name: userProfile.username })}
+									onError={() => {
+										if (avatarUrl) setAvatarUrl('')
+									}}
+								/>
 							</div>
 							<h2 className="profile-card-name">{userProfile.username}</h2>
 							{description && <p className="profile-card-tagline">{description}</p>}
@@ -470,6 +615,25 @@ function ProfilUser() {
 					{canEdit && (
 						<section className="profile-card-controls">
 						<div className="panel-title">{t('profile_customize')}</div>
+						<div className="control-group">
+							<label className="control-label" htmlFor="avatar-upload">
+								{t('profile_avatar_label')}
+							</label>
+							<div className="control-row">
+								<input
+									id="avatar-upload"
+									type="file"
+									accept="image/png,image/jpeg"
+									onChange={handleAvatarChange}
+									disabled={avatarUploading}
+								/>
+							</div>
+							<p className="pref-desc">
+								{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}
+							</p>
+							{avatarError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{avatarError}</p>}
+							{avatarSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('profile_avatar_success')}</p>}
+						</div>
 						<div className="control-group">
 							<label className="control-label" htmlFor="bg-picker">
 								{t('profile_bg_label')}
@@ -554,6 +718,13 @@ function ProfilUser() {
 								</div>
 							</div>
 
+							<div className="control-group">
+								<div className="control-row theme-font-row">
+									<ThemeSelector />
+									<FontSelector />
+								</div>
+							</div>
+
 						<div className="actions">
 							<button className="btn ghost" type="button" onClick={handleReset}>
 								{t('profile_reset')}
@@ -614,8 +785,6 @@ function ProfilUser() {
 										.map((request) => (
 											<div key={request.id} className="friend-item friend-request-item">
 												<div className="friend-info">
-													{/*TODO : gere les avatars*/}
-													<div className="friend-avatar">{request.username.slice(0, 1)}</div>
 													<span className="friend-name">{request.username}</span>
 												</div>
 												<div className="friend-actions">
@@ -651,7 +820,6 @@ function ProfilUser() {
 									friends.map((friend) => (
 										<div key={friend.id} className="friend-item">
 											<div className="friend-info">
-												<div className="friend-avatar">{friend.username.slice(0, 1)}</div>
 												<div>
 													<span className="friend-name">{friend.username}</span>
 													<span className={`friend-status ${friend.status}`}>

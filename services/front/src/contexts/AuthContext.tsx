@@ -19,6 +19,36 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
 
+async function applyTheme(themeName: string) {
+  try {
+    const res = await fetch(`/themes/styles/${themeName}.json`)
+    const themeToApply = await res.json()
+
+    const root = document.documentElement
+    Object.entries(themeToApply.variables).forEach(([key, value]) => {
+      root.style.setProperty(key, value as string)
+    })
+  } catch (err) {
+    console.error(`Erreur lors du chargement du theme "${themeName}"`, err)
+    if (themeName !== 'default') return applyTheme('default')
+  }
+}
+
+async function applyFont(fontName: string) {
+  try {
+    const res = await fetch(`/themes/fonts/${fontName}.json`)
+    const themeToApply = await res.json()
+
+    const root = document.documentElement
+    Object.entries(themeToApply.variables).forEach(([key, value]) => {
+      root.style.setProperty(key, value as string)
+    })
+  } catch (err) {
+    console.error(`Erreur lors du chargement de la police "${fontName}"`, err)
+    if (fontName !== 'default') return applyFont('default')
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthReady, setIsAuthReady] = useState(false)
@@ -29,13 +59,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!userIdResponse.ok) return
       const { id } = await userIdResponse.json()
 
-      const response = await fetch(`${API_BASE}/users/${id}`)
+      const response = await fetch(`${API_BASE}/user/users/${id}`)
       if (!response.ok) return
       const userData = await response.json()
 
       if (userData?.preferredLanguage && userData.preferredLanguage !== i18n.language) {
         i18n.changeLanguage(userData.preferredLanguage)
         localStorage.setItem('language', userData.preferredLanguage)
+      }
+
+      if (userData?.theme) {
+        localStorage.setItem('theme', userData.theme)
+        await applyTheme(userData.theme)
+      }
+
+      if (userData?.font) {
+        localStorage.setItem('font', userData.font)
+        await applyFont(userData.font)
       }
     } catch (error) {
       console.warn('[Auth] failed to apply preferred language', error)

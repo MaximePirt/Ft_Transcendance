@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/Home'
 import QuizPage from './pages/Quiz'
 import SoloGameSetup from './pages/SoloGameSetup'
@@ -7,10 +7,12 @@ import MultiPlayerCodeRoom from './pages/MultiPlayerCodeRoom'
 import JoinGame from './pages/JoinGame'
 import ProfilUser from './pages/ProfilUser'
 import { AuthProvider } from './contexts/AuthContext'
+import ThemeRetriever from './content/ThemeRetriever'
 
 function App() {
   return (
     <AuthProvider>
+      <ThemeRetriever />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/quiz" element={<QuizPage />} />
@@ -23,6 +25,8 @@ function App() {
         
         <Route path="/profile" element={<ProfilUser />} />
         <Route path="/profile/:username" element={<ProfilUser />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
     </AuthProvider>
