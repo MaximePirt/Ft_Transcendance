@@ -115,7 +115,7 @@ const titleOptions: TitleOption[] = [
 	{ id: 'music', text: 'profile_title_music' },
 ]
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 const DEFAULT_AVATAR = '/avatar/Default.png'
 
 type CardState = {

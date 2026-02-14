@@ -17,7 +17,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
 async function applyTheme(themeName: string) {
   try {
