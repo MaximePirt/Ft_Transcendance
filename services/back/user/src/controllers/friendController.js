@@ -35,6 +35,7 @@ async function listFriendsHandler(userId)
 }
 
 
+
 async function getFriendshipStatus(userId, friendId)
 {
 	const res = await friendModel.getFriendshipStatus(userId, friendId);

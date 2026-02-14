@@ -1,0 +1,7 @@
+{
+  "name": "default",
+  "variables": {
+    "--primary-custom-font":"'Lexend', 'Inter', sans-serif",
+    "--secondary-custom-font":"'Lexend', 'Inter', sans-serif"
+  }
+}

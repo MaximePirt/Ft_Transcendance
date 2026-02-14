@@ -21,12 +21,13 @@ const deleteFriend = db.prepare(`
 	WHERE user_id = ? AND friend_id = ?`);
 
 const listFriend = db.prepare(`
-  SELECT u.id, u.username
+  SELECT u.id, u.username, u.onlineStatus
   FROM friends f
   JOIN users u ON (f.friend_id = u.id OR f.user_id = u.id)
   WHERE (f.user_id = ? OR f.friend_id = ?)
   AND u.id != ?
 `);
+
 
 //	Functions
 
@@ -105,6 +106,7 @@ function listFriends(userId) {
 
   return listFriend.all(userId, userId, userId);
 }
+
 
 function getFriendshipStatus(userId, friendId) {
   var min = userId < friendId ? userId : friendId;

@@ -8,6 +8,7 @@ npm-debug.log
 
 
 # nginx
+sec/
 infrastructure/nginx/data
 
 # Vault 

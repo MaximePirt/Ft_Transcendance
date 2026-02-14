@@ -15,24 +15,23 @@ async function userRoutes(fastify, options) {
 	});
 
 	fastify.post("/signin", async (request, reply) => {
-		console.log("Signin route called");
 		const data = await request.body;
 		const username = data.username;
 		const password = data.password;
 		const user = await userController.getUser(username, password)
-
 		if (user == 'unknown user') {
+			console.log("Unknown user attempted to sign in with username:", username);
 			return reply.status(401).send({ message: "unknown user" });
 		} else if (user == 'bad password') {
+			console.log("User found but bad password for username:", username);
 			return reply.status(401).send({ message: "bad password" });
 		}
-
 		const user_id = await userController.getUserByUsername(username);
-
 		const online = await userController.updateUser(user_id.id, { onlineStatus: 1 });
 		if (!online) {
 			return reply.status(500).send({ message: "could not update online status" });
 		}
+		console.log("User signed in successfully");
 		return reply.status(200).send({ message: "ok" });
 	})
 
@@ -69,8 +68,11 @@ async function userRoutes(fastify, options) {
 		return res;
 	});
 
+	fastify.get("/users/:id", async (request, reply) => {
+		const userId = request.params.id;
+		return await userController.getUserById(userId);
+	});
 
-	// Update informations
 	fastify.patch("/:id", async (request, reply) => {
 		const userId = request.params.id;
 		const updateData = request.body;
@@ -86,16 +88,22 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
-	// Avatar upload
 	fastify.patch("/:id/avatar", async (request, reply) => {
 		const userId = request.params.id;
 		const data = await request.file();
 		if (!data)
 			return reply.code(400).send({ error: "No file uploaded" });
-		return await userController.updateAvatar(userId, data);
+		try {
+			return await userController.updateAvatar(userId, data);
+		} catch (error) {
+			request.log.error(error);
+			if (String(error?.message).includes("Invalid file type")) {
+				return reply.code(400).send({ error: "Invalid file type, only PNG and JPEG are allowed" });
+			}
+			return reply.code(500).send({ error: "Internal Server Error" });
+		}
 	});
 
-	// settings
 	fastify.get("/:id/settings", async (request, reply) => {
 		const userId = request.params.id;
 		const data = await request.file();
@@ -104,7 +112,6 @@ async function userRoutes(fastify, options) {
 		return await userController.addAvatar(userId, data);
 	});
 
-	// Get online status
 	fastify.get("/:username/online", async (request, reply) => {
 		const username = request.params.username;
 		const user = await userController.getUserByUsername(username);
@@ -114,7 +121,11 @@ async function userRoutes(fastify, options) {
 		return { onlineStatus: user.onlineStatus };
 	});
 
-
+	fastify.put("/users/:id", async (request, reply) => {
+		const userId = request.params.id;
+		const userData = request.body;
+		return await userController.updateUser(userId, userData);
+	});
 
 }
 

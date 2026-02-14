@@ -21,11 +21,18 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT NOT NULL UNIQUE,
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
-  avatarUrl TEXT,
+  avatarUrl TEXT DEFAULT '/avatar/Default.png',
   lang TEXT DEFAULT 'fr',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   lastConnexion DATETIME DEFAULT CURRENT_TIMESTAMP,
-  onlineStatus BOOLEAN NOT NULL DEFAULT 0
+  onlineStatus BOOLEAN NOT NULL DEFAULT 0,
+  profileCardBgColor TEXT DEFAULT '#0f0f10',
+  profileCardStickers TEXT DEFAULT '[]',
+  profileCardTitles TEXT DEFAULT '["cinema","quiz_master"]',
+  profileCardDescription TEXT DEFAULT '',
+  preferredLanguage TEXT DEFAULT 'en',
+  theme TEXT DEFAULT 'default',
+  font TEXT DEFAULT 'default'
 );`;
 
 const createFriendsTable = `
@@ -54,6 +61,27 @@ try {
   process.exit(1);
 }
 
+const ensureUserColumn = (name, definition, defaultValue) => {
+  const columns = db.prepare("PRAGMA table_info(users)").all();
+  const exists = columns.some((col) => col.name === name);
+  if (!exists) {
+    db.exec(`ALTER TABLE users ADD COLUMN ${name} ${definition}`);
+    if (defaultValue !== undefined) {
+      db.prepare(`UPDATE users SET ${name} = ? WHERE ${name} IS NULL`).run(defaultValue);
+    }
+    console.log(`Added missing column users.${name}`);
+  }
+};
+
+ensureUserColumn('avatarUrl', "TEXT DEFAULT '/avatar/Default.png'", '/avatar/Default.png');
+ensureUserColumn('profileCardBgColor', "TEXT DEFAULT '#0f0f10'", '#0f0f10');
+ensureUserColumn('profileCardStickers', "TEXT DEFAULT '[]'", '[]');
+ensureUserColumn('profileCardTitles', "TEXT DEFAULT '[\"cinema\",\"quiz_master\"]'", '["cinema","quiz_master"]');
+ensureUserColumn('profileCardDescription', "TEXT DEFAULT ''", '');
+ensureUserColumn('preferredLanguage', "TEXT DEFAULT 'en'", 'en');
+ensureUserColumn('theme', "TEXT DEFAULT 'default'", 'default');
+ensureUserColumn('font', "TEXT DEFAULT 'default'", 'default');
+
 const tables = db
   .prepare("SELECT name FROM sqlite_master WHERE type='table'")
   .all();
@@ -74,19 +102,19 @@ if (userCount === 0) {
       "alice",
       "alice@example.com",
       "password123",
-      "https://example.com/avatars/alice.png",
+      "/avatar/Default.png",
     ],
     [
       "bob",
       "bob@example.com",
       "password456",
-      "https://example.com/avatars/bob.png",
+      "/avatar/Default.png",
     ],
     [
       "charlie",
       "charlie@example.com",
       "password789",
-      "https://example.com/avatars/charlie.png",
+      "/avatar/Default.png",
     ],
   ];
   for (const user of users) {

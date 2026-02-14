@@ -152,7 +152,7 @@
                     "difficulté": "hard"
                 }
             ],
-            "Jeux vidéo": [
+            "JeuxVidéo": [
                 {
                     "id": "games.esport.first_game",
                     "question": "Quel est le premier jeu sur lequel l'esport est apparu ?",
@@ -192,7 +192,7 @@
                 },
                 {
                     "id": "games.quantic_dream.first_international_game",
-                    "question": "Quel est le premier jeu Francais creer par Quantic Dream a avoir ete reconnu a l'international ?",
+                    "question": "Quel est le premier jeu Français créé par Quantic Dream à avoir été reconnu à l'international ?",
                     "type": "qcm",
                     "réponse": "Omikron: The Nomad Soul",
                     "options": [
@@ -230,7 +230,7 @@
                 },
                 {
                     "id": "games.minecraft.creeper_inspiration",
-                    "question": "Quel annimal a servi a l'invention du creeper dans Minecraft ?",
+                    "question": "Quel animal a servi a l'invention du creeper dans Minecraft ?",
                     "type": "texte",
                     "réponse": "Cochon",
                     "variantes": [

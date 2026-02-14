@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import HomePage from './pages/Home'
 import QuizPage from './pages/Quiz'
 import SoloGameSetup from './pages/SoloGameSetup'
@@ -6,13 +6,13 @@ import SoloGamePage from './pages/SoloGame'
 import MultiPlayerCodeRoom from './pages/MultiPlayerCodeRoom'
 import JoinGame from './pages/JoinGame'
 import ProfilUser from './pages/ProfilUser'
+import { AuthProvider } from './contexts/AuthContext'
+import ThemeRetriever from './content/ThemeRetriever'
 
 function App() {
-  console.debug('[App] render')
-
-  // Lien de la page, sert pour le SPA et pour les room code du multi/ du site en entier, faut voir dans Quizz.tsx la plupart sont utiliser de la bas pour l'instant
   return (
-    <div data-test="app-root">
+    <AuthProvider>
+      <ThemeRetriever />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/quiz" element={<QuizPage />} />
@@ -23,11 +23,13 @@ function App() {
         <Route path="/quiz/multi/:roomCode" element={<MultiPlayerCodeRoom />} />
         <Route path="/quiz/join" element={<JoinGame />} />
         
-        <Route path="/user" element={<ProfilUser />} />
-        {/* <Route path="/quiz/user=:username" element={<ProfilUser />} /> */}
+        <Route path="/profile" element={<ProfilUser />} />
+        <Route path="/profile/:username" element={<ProfilUser />} />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
 
       </Routes>
-    </div>
+    </AuthProvider>
   )
 }
 

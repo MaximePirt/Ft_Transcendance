@@ -4,6 +4,7 @@ import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './../content/LanguageSelector.tsx'
+import { useAuth } from '../contexts/AuthContext'
 
 const topics = (t: any) => [
   { title: t('histoire'), detail: t('histoire_desc') },
@@ -20,20 +21,78 @@ const SpaceZone = [
 function HomePage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { user, login, signup, logout, isAuthenticated } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
   const [showSignup, setShowSignup] = useState(false)
   const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
+  const [loginError, setLoginError] = useState('')
+  const [signupError, setSignupError] = useState('')
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLoginError('')
+    const form = e.currentTarget
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
+    
+    const success = await login(email, password)
+    if (success) {
+      setShowLogin(false)
+    } else {
+      setLoginError(t('login_error') || 'Erreur de connexion')
+    }
+  }
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setSignupError('')
+    const form = e.currentTarget
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value
+    const username = (form.elements.namedItem('username') as HTMLInputElement).value
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value
+    const confirmPassword = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value
+    
+    if (password !== confirmPassword) {
+      setSignupError(t('password_mismatch') || 'Les mots de passe ne correspondent pas')
+      return
+    }
+    
+    const success = await signup(email, username, password)
+    if (success) {
+      setShowSignup(false)
+    } else {
+      setSignupError(t('signup_error') || 'Erreur lors de l\'inscription')
+    }
+  }
 
   return (
     <main className="page">
       <LanguageSelector />
       <div className="login-bar">
-        <button className="btn login" onClick={() => setShowLogin(true)}>
-          {t("connect")}
-        </button>
-        <button className="btn primary" onClick={() => setShowSignup(true)}>
-          {t("signup")}
-        </button>
+        {isAuthenticated ? (
+          <>
+            <div className="login-welcome">
+              <span className="login-welcome__text">
+                {t('welcome')}, {user?.username}!
+              </span>
+              <a className="login-welcome__logout" onClick={logout}>
+                {t("logout")}
+              </a>
+            </div>
+            <button className="btn login" onClick={() => navigate('/profile')}>
+              {t("profile")}
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="btn login" onClick={() => setShowLogin(true)}>
+              {t("connect")}
+            </button>
+            <button className="btn primary" onClick={() => setShowSignup(true)}>
+              {t("signup")}
+            </button>
+          </>
+        )}
       </div>
       <div className="shell">
         <p className="eyebrow">Quiz Sprint</p>
@@ -47,11 +106,10 @@ function HomePage() {
               <button className="btn primary" onClick={() => navigate('/quiz')}>
                 {t("start_quiz")}
               </button>
-              <button className="btn ghost">{t("daily_challenge")}</button>
             </div>
             <div className="SpaceZone">
-              {SpaceZone.map((item) => (
-                <div key={item.label} className="highlight">
+              {SpaceZone.map((item, index) => (
+                <div key={`${item.label}-${index}`} className="highlight">
                   <span className="label">{item.label}</span>
                   <span className="value">{item.value}</span>
                 </div>
@@ -137,20 +195,15 @@ function HomePage() {
                 ×
               </button>
             </div>
-            <form
-              className="login-form"
-              onSubmit={(e) => {
-                e.preventDefault()
-                setShowLogin(false)
-              }}
-            >
+            <form className="login-form" onSubmit={handleLogin}>
+              {loginError && <div style={{ color: 'red', marginBottom: '1rem' }}>{loginError}</div>}
               <label className="field">
                 <span>{t("email")}</span>
-                <input type="email" placeholder={t("email_placeholder")} required />
+                <input type="email" name="email" placeholder={t("email_placeholder")} required />
               </label>
               <label className="field">
                 <span>{t("password")}</span>
-                <input type="password" placeholder={t("password_placeholder")} required />
+                <input type="password" name="password" placeholder={t("password_placeholder")} required />
               </label>
               <button type="submit" className="btn primary full">
                 {t("login_button")}
@@ -172,28 +225,23 @@ function HomePage() {
                 ×
               </button>
             </div>
-            <form
-              className="login-form"
-              onSubmit={(e) => {
-                e.preventDefault()
-                setShowSignup(false)
-              }}
-            >
+            <form className="login-form" onSubmit={handleSignup}>
+              {signupError && <div style={{ color: 'red', marginBottom: '1rem' }}>{signupError}</div>}
               <label className="field">
                 <span>{t("email")}</span>
-                <input type="email" placeholder={t("email_placeholder")} required />
+                <input type="email" name="email" placeholder={t("email_placeholder")} required />
               </label>
               <label className="field">
                 <span>{t("username")}</span>
-                <input type="text" placeholder={t("username_placeholder")} required />
+                <input type="text" name="username" placeholder={t("username_placeholder")} required />
               </label>
               <label className="field">
                 <span>{t("password")}</span>
-                <input type="password" placeholder={t("password_placeholder")} required />
+                <input type="password" name="password" placeholder={t("password_placeholder")} required />
               </label>
               <label className="field">
                 <span>{t("confirm_password")}</span>
-                <input type="password" placeholder={t("password_placeholder")} required />
+                <input type="password" name="confirmPassword" placeholder={t("password_placeholder")} required />
               </label>
               <button type="submit" className="btn primary full">
                 {t("signup_button")}

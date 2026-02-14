@@ -1,0 +1,17 @@
+{
+  "name": "musique",
+  "variables": {
+    "--background-img":"url('/custom-assets/music-bg.png')",
+    "--background-size":"cover",
+    "--shell-shadow":"12px 12px 0px #f23a78",
+    "--secondary":"#91f0ff",
+    "--accent":"none",
+    "--shadow-btn":"4px 4px 0px #4ddb92",
+    "--background-eyebrow":"url('/custom-assets/music-eyebrow-bg.png')",
+    "--border-eyebrow":"none",
+    "--border-thick":"4px solid #000000",
+    "--border-thin":"2px solid #000000",
+    "--border-shell":"4px solid #000000",
+    "--border-image":"none"
+  }
+}
