@@ -17,7 +17,7 @@ COPY . .
 
 RUN mkdir -p /db
 
-EXPOSE 3001
+EXPOSE 3002
 
 ENTRYPOINT ["/scripts/vault-run.sh", "/secrets/quiz_api/app.env"]
 
