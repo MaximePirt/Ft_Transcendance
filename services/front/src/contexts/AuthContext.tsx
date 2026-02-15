@@ -2,17 +2,17 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import i18n from '../i18n'
 
 interface User {
-  email: string
-  username: string
+	email: string
+	username: string
 }
 
 interface AuthContextType {
-  user: User | null
-  login: (email: string, password: string) => Promise<boolean>
-  signup: (email: string, username: string, password: string) => Promise<boolean>
-  logout: () => void
-  isAuthenticated: boolean
-  isAuthReady: boolean
+	user: User | null
+	login: (email: string, password: string) => Promise<boolean>
+	signup: (email: string, username: string, password: string) => Promise<boolean>
+	logout: () => void
+	isAuthenticated: boolean
+	isAuthReady: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -20,124 +20,124 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
 
 async function applyTheme(themeName: string) {
-  try {
-    const res = await fetch(`/themes/styles/${themeName}.json`)
-    const themeToApply = await res.json()
+	try {
+		const res = await fetch(`/themes/styles/${themeName}.json`)
+		const themeToApply = await res.json()
 
-    const root = document.documentElement
-    Object.entries(themeToApply.variables).forEach(([key, value]) => {
-      root.style.setProperty(key, value as string)
-    })
-  } catch (err) {
-    console.error(`Erreur lors du chargement du theme "${themeName}"`, err)
-    if (themeName !== 'default') return applyTheme('default')
-  }
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement du theme "${themeName}"`, err)
+		if (themeName !== 'default') return applyTheme('default')
+	}
 }
 
 async function applyFont(fontName: string) {
-  try {
-    const res = await fetch(`/themes/fonts/${fontName}.json`)
-    const themeToApply = await res.json()
+	try {
+		const res = await fetch(`/themes/fonts/${fontName}.json`)
+		const themeToApply = await res.json()
 
-    const root = document.documentElement
-    Object.entries(themeToApply.variables).forEach(([key, value]) => {
-      root.style.setProperty(key, value as string)
-    })
-  } catch (err) {
-    console.error(`Erreur lors du chargement de la police "${fontName}"`, err)
-    if (fontName !== 'default') return applyFont('default')
-  }
+		const root = document.documentElement
+		Object.entries(themeToApply.variables).forEach(([key, value]) => {
+			root.style.setProperty(key, value as string)
+		})
+	} catch (err) {
+		console.error(`Erreur lors du chargement de la police "${fontName}"`, err)
+		if (fontName !== 'default') return applyFont('default')
+	}
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isAuthReady, setIsAuthReady] = useState(false)
+	const [user, setUser] = useState<User | null>(null)
+	const [isAuthReady, setIsAuthReady] = useState(false)
 
-  const applyPreferredLanguage = async (username: string) => {
-    try {
-      const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`)
-      if (!userIdResponse.ok) return
-      const { id } = await userIdResponse.json()
+	const applyPreferredLanguage = async (username: string) => {
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`)
+			if (!userIdResponse.ok) return
+			const { id } = await userIdResponse.json()
 
-      const response = await fetch(`${API_BASE}/user/users/${id}`)
-      if (!response.ok) return
-      const userData = await response.json()
+			const response = await fetch(`${API_BASE}/user/users/${id}`)
+			if (!response.ok) return
+			const userData = await response.json()
 
-      if (userData?.preferredLanguage && userData.preferredLanguage !== i18n.language) {
-        i18n.changeLanguage(userData.preferredLanguage)
-        localStorage.setItem('language', userData.preferredLanguage)
-      }
+			if (userData?.preferredLanguage && userData.preferredLanguage !== i18n.language) {
+				i18n.changeLanguage(userData.preferredLanguage)
+				localStorage.setItem('language', userData.preferredLanguage)
+			}
 
-      if (userData?.theme) {
-        localStorage.setItem('theme', userData.theme)
-        await applyTheme(userData.theme)
-      }
+			if (userData?.theme) {
+				localStorage.setItem('theme', userData.theme)
+				await applyTheme(userData.theme)
+			}
 
-      if (userData?.font) {
-        localStorage.setItem('font', userData.font)
-        await applyFont(userData.font)
-      }
-    } catch (error) {
-      console.warn('[Auth] failed to apply preferred language', error)
-    }
-  }
+			if (userData?.font) {
+				localStorage.setItem('font', userData.font)
+				await applyFont(userData.font)
+			}
+		} catch (error) {
+			console.warn('[Auth] failed to apply preferred language', error)
+		}
+	}
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser)
-      setUser(parsed)
-      if (parsed?.username) {
-        applyPreferredLanguage(parsed.username)
-      }
-    }
-    setIsAuthReady(true)
-  }, [])
+	useEffect(() => {
+		const storedUser = localStorage.getItem('user')
+		if (storedUser) {
+			const parsed = JSON.parse(storedUser)
+			setUser(parsed)
+			if (parsed?.username) {
+				applyPreferredLanguage(parsed.username)
+			}
+		}
+		setIsAuthReady(true)
+	}, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const userData = { email, username: email.split('@')[0] }
-      setUser(userData)
-      localStorage.setItem('user', JSON.stringify(userData))
-      setIsAuthReady(true)
-      await applyPreferredLanguage(userData.username)
-      return true
-    } catch (error) {
-      console.error('Login error:', error)
-      return false
-    }
-  }
+	const login = async (email: string, password: string): Promise<boolean> => {
+		try {
+			const userData = { email, username: email.split('@')[0] }
+			setUser(userData)
+			localStorage.setItem('user', JSON.stringify(userData))
+			setIsAuthReady(true)
+			await applyPreferredLanguage(userData.username)
+			return true
+		} catch (error) {
+			console.error('Login error:', error)
+			return false
+		}
+	}
 
-  const signup = async (email: string, username: string, password: string): Promise<boolean> => {
-    try {
-      const userData = { email, username }
-      setUser(userData)
-      localStorage.setItem('user', JSON.stringify(userData))
-      setIsAuthReady(true)
-      await applyPreferredLanguage(userData.username)
-      return true
-    } catch (error) {
-      console.error('Signup error:', error)
-      return false
-    }
-  }
+	const signup = async (email: string, username: string, password: string): Promise<boolean> => {
+		try {
+			const userData = { email, username }
+			setUser(userData)
+			localStorage.setItem('user', JSON.stringify(userData))
+			setIsAuthReady(true)
+			await applyPreferredLanguage(userData.username)
+			return true
+		} catch (error) {
+			console.error('Signup error:', error)
+			return false
+		}
+	}
 
-  const logout = () => {
-    setUser(null)
-    localStorage.removeItem('user')
-  }
+	const logout = () => {
+		setUser(null)
+		localStorage.removeItem('user')
+	}
 
-  return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, isAuthReady }}>
-      {children}
-    </AuthContext.Provider>
-  )
+	return (
+		<AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, isAuthReady }}>
+			{children}
+		</AuthContext.Provider>
+	)
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
+	const context = useContext(AuthContext)
+	if (context === undefined) {
+		throw new Error('useAuth must be used within an AuthProvider')
+	}
+	return context
 }
