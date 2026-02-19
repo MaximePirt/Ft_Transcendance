@@ -96,7 +96,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const userData = { email, username: email.split('@')[0] }
+      const rawIdentifier = email.trim()
+      const candidateUsernames = rawIdentifier.includes('@')
+        ? [rawIdentifier, rawIdentifier.split('@')[0]]
+        : [rawIdentifier]
+
+      let signedIn = false
+      for (const username of candidateUsernames) {
+        const signinResponse = await fetch(`${API_BASE}/auth/signin`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ username, password }),
+        })
+        if (signinResponse.ok) {
+          signedIn = true
+          break
+        }
+      }
+
+      if (!signedIn) {
+        return false
+      }
+
+      const meResponse = await fetch(`${API_BASE}/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+
+      if (!meResponse.ok) {
+        return false
+      }
+
+      const me = await meResponse.json()
+      const userData = {
+        email: me?.email || rawIdentifier,
+        username: me?.username || candidateUsernames[candidateUsernames.length - 1],
+      }
+
       setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))
       setIsAuthReady(true)
@@ -110,12 +149,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signup = async (email: string, username: string, password: string): Promise<boolean> => {
     try {
-      const userData = { email, username }
-      setUser(userData)
-      localStorage.setItem('user', JSON.stringify(userData))
-      setIsAuthReady(true)
-      await applyPreferredLanguage(userData.username)
-      return true
+      const signupResponse = await fetch(`${API_BASE}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, username, password }),
+      })
+
+      if (!signupResponse.ok) {
+        return false
+      }
+
+      return await login(username, password)
     } catch (error) {
       console.error('Signup error:', error)
       return false

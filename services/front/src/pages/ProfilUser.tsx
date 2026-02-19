@@ -71,13 +71,9 @@ type Friend = {
 type FriendRequest = {
 	id: string
 	username: string
+	status: 'online' | 'offline'
 	type: 'received' | 'sent'
 }
-
-const UserFriendRequests: FriendRequest[] = [
-	{ id: '4', username: '123', type: 'received' },
-	{ id: '5', username: 'ff', type: 'received' },
-]
 
 type Sticker = {
 	id: string
@@ -154,9 +150,60 @@ function ProfilUser() {
 	const [avatarError, setAvatarError] = useState('')
 	const [avatarSuccess, setAvatarSuccess] = useState(false)
 	const [friends, setFriends] = useState<Friend[]>([])
-	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>(UserFriendRequests)
+	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
 	const [friendSearchInput, setFriendSearchInput] = useState('')
+	const [friendActionError, setFriendActionError] = useState('')
+	const [friendActionSuccess, setFriendActionSuccess] = useState('')
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+
+	const mapFriendMessage = (message?: string) => {
+		const normalized = (message || '').toLowerCase()
+		if (normalized.includes('user not found')) return t('profile_friend_user_not_found')
+		if (normalized.includes('already friend')) return t('profile_friend_already_friend')
+		if (normalized.includes('already sent')) return t('profile_friend_request_already_sent')
+		if (normalized.includes('no auth cookie') || normalized.includes('unauthorized')) return t('save_error_not_authenticated')
+		return ''
+	}
+
+	const loadFriends = async (username: string) => {
+		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`)
+		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+		const { id } = await userIdResponse.json()
+
+		const response = await fetch(`${API_BASE}/user/${id}/friends`)
+		if (!response.ok) throw new Error('Failed to load friends')
+		const data = await response.json()
+		const list = data?.result?.friends || data?.friends || []
+		const normalized = list.map((friend: { id: number | string; username: string; onlineStatus: number | boolean }) => ({
+			id: String(friend.id),
+			username: friend.username,
+			status: friend.onlineStatus ? 'online' : 'offline',
+		}))
+		setFriends(normalized)
+	}
+
+	const loadFriendRequests = async () => {
+		const response = await fetch(`${API_BASE}/user/friends/requests`, {
+			credentials: 'include',
+		})
+		if (!response.ok) throw new Error('Failed to load friend requests')
+		const data = await response.json()
+		const received = Array.isArray(data?.received) ? data.received : []
+		const sent = Array.isArray(data?.sent) ? data.sent : []
+		const normalizedReceived: FriendRequest[] = received.map((request: { id: number | string; username: string; onlineStatus: number | boolean }) => ({
+			id: String(request.id),
+			username: request.username,
+			status: request.onlineStatus ? 'online' : 'offline',
+			type: 'received',
+		}))
+		const normalizedSent: FriendRequest[] = sent.map((request: { id: number | string; username: string; onlineStatus: number | boolean }) => ({
+			id: String(request.id),
+			username: request.username,
+			status: request.onlineStatus ? 'online' : 'offline',
+			type: 'sent',
+		}))
+		setFriendRequests([...normalizedReceived, ...normalizedSent])
+	}
 
 	const normalizeAvatarUrl = (url?: string) => {
 		if (!url) return ''
@@ -300,31 +347,18 @@ function ProfilUser() {
 		loadProfileCard()
 	}, [profileUsername, canEdit, isPublicView])
 
-		useEffect(() => {
-			if (!user || !canEdit) return
-			const loadFriends = async () => {
-				try {
-					const userIdResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
-					if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
-					const { id } = await userIdResponse.json()
-
-					const response = await fetch(`${API_BASE}/user/${id}/friends`)
-					if (!response.ok) throw new Error('Failed to load friends')
-					const data = await response.json()
-					const list = data?.result?.friends || data?.friends || []
-					const normalized = list.map((friend) => ({
-						id: String(friend.id),
-						username: friend.username,
-						status: friend.onlineStatus ? 'online' : 'offline',
-					}))
-					setFriends(normalized)
-				} catch (e) {
-					console.warn('[Profile] failed to load friends', e)
-				}
+	useEffect(() => {
+		if (!user || !canEdit) return
+		const hydrateFriends = async () => {
+			try {
+				await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			} catch (e) {
+				console.warn('[Profile] failed to load social data', e)
 			}
+		}
 
-			loadFriends()
-		}, [user, canEdit])
+		hydrateFriends()
+	}, [user, canEdit])
 
 	useEffect(() => {
 		document.body.dir = i18n.dir()
@@ -387,6 +421,38 @@ function ProfilUser() {
 			if (data?.avatarUrl) setAvatarUrl(data.avatarUrl)
 			setAvatarSuccess(true)
 			e.target.value = ''
+		} catch (err) {
+			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
+		} finally {
+			setAvatarUploading(false)
+		}
+	}
+
+	const handleAvatarReset = async () => {
+		if (!user || !canEdit) return
+		setAvatarError('')
+		setAvatarSuccess(false)
+		setAvatarUploading(true)
+		try {
+			const userResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(user.username)}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('profile_avatar_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+			const resetResponse = await fetch(`${API_BASE}/user/${id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ avatarUrl: DEFAULT_AVATAR }),
+			})
+			if (!resetResponse.ok) {
+				const text = await resetResponse.text()
+				throw new Error(t('profile_avatar_error_api', { status: resetResponse.status, detail: text || '-' }))
+			}
+			setAvatarUrl(DEFAULT_AVATAR)
+			setAvatarSuccess(true)
 		} catch (err) {
 			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
 		} finally {
@@ -495,29 +561,111 @@ function ProfilUser() {
 		setStickers((prev) => prev.filter((s) => s.id !== id))
 	}
 
-	const handleAcceptRequest = (id: string) => {
+	const handleRemoveFriend = async (id: string) => {
 		if (!canEdit) return
-		const request = friendRequests.find((r) => r.id === id)
-		if (!request) return
-		setFriends((prev) => [...prev, { id: request.id, username: request.username, status: 'online' }])
-		setFriendRequests((prev) => prev.filter((r) => r.id !== id))
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		try {
+			const response = await fetch(`${API_BASE}/user/${id}/friends`, {
+				method: 'DELETE',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (!response.ok || !data?.ok) {
+				throw new Error(data?.message || 'Unable to remove friend')
+			}
+			if (user) {
+				await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			}
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
-	const handleDeclineRequest = (id: string) => {
-		if (!canEdit) return
-		setFriendRequests((prev) => prev.filter((r) => r.id !== id))
+	const handleAcceptRequest = async (id: string) => {
+		if (!canEdit || !user) return
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		try {
+			const response = await fetch(`${API_BASE}/user/${id}/friends`, {
+				method: 'POST',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (!response.ok || !data?.ok) {
+				throw new Error(data?.message || 'Unable to accept friend request')
+			}
+			await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
-	const handleRemoveFriend = (id: string) => {
-		if (!canEdit) return
-		setFriends((prev) => prev.filter((f) => f.id !== id))
+	const handleDeclineRequest = async (id: string) => {
+		if (!canEdit || !user) return
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		try {
+			const response = await fetch(`${API_BASE}/user/${id}/friends`, {
+				method: 'DELETE',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (!response.ok || !data?.ok) {
+				throw new Error(data?.message || 'Unable to decline friend request')
+			}
+			await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
-	const handleSendFriendRequest = () => {
-		if (!canEdit) return
-		if (!friendSearchInput.trim()) return
-		console.log('Demande envoyée à:', friendSearchInput)
-		setFriendSearchInput('')
+	const handleSendFriendRequest = async () => {
+		if (!canEdit || !user) return
+		const friendUsername = friendSearchInput.trim()
+		if (!friendUsername) return
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		if (friendUsername === user.username) {
+			setFriendActionError(t('save_error_generic'))
+			return
+		}
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(friendUsername)}`)
+			if (!userIdResponse.ok) {
+				let backendMessage = ''
+				const payload = await userIdResponse.json().catch(() => null)
+				if (payload?.error) backendMessage = String(payload.error)
+				if (payload?.message) backendMessage = String(payload.message)
+				const friendly = mapFriendMessage(backendMessage)
+				setFriendActionError(friendly || t('profile_friend_user_not_found'))
+				return
+			}
+			const { id: friendId } = await userIdResponse.json()
+			const response = await fetch(`${API_BASE}/user/${friendId}/friends`, {
+				method: 'POST',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (response.status === 409 && data?.message) {
+				setFriendSearchInput('')
+				await Promise.all([loadFriends(user.username), loadFriendRequests()])
+				setFriendActionSuccess(mapFriendMessage(data.message) || data.message)
+				return
+			}
+			if (!response.ok || !data?.ok) {
+				const friendly = mapFriendMessage(data?.message)
+				throw new Error(friendly || t('save_error_generic'))
+			}
+			setFriendSearchInput('')
+			await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
 	const changeLanguage = async (lang: string) => {
@@ -628,6 +776,23 @@ function ProfilUser() {
 									disabled={avatarUploading}
 								/>
 							</div>
+							<div className="control-row" style={{ marginTop: '0.5rem', alignItems: 'center', gap: '0.75rem' }}>
+								<button
+									type="button"
+									className="btn ghost"
+									onClick={() => void handleAvatarReset()}
+									disabled={avatarUploading}
+									title={t('profile_avatar_reset')}
+									aria-label={t('profile_avatar_reset')}
+								>
+									<img
+										src={DEFAULT_AVATAR}
+										alt={t('profile_avatar_default_preview')}
+										style={{ width: '24px', height: '24px', borderRadius: '9999px', marginRight: '0.5rem' }}
+									/>
+									{t('profile_avatar_reset')}
+								</button>
+							</div>
 							<p className="pref-desc">
 								{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}
 							</p>
@@ -732,7 +897,7 @@ function ProfilUser() {
 							<button className="btn" type="button" onClick={handleSaveNow} disabled={isSaving}>
 								{isSaving ? t('saving') : t('save')}
 							</button>
-							<button className="btn primary" type="button" onClick={() => navigate('/quiz')}>
+							<button className="btn primary" type="button" onClick={() => navigate('/')}>
 								{t('back')}
 							</button>
 						</div>
@@ -760,24 +925,26 @@ function ProfilUser() {
 								placeholder={t('profile_username_placeholder')}
 								className="profile-desc-input"
 								onKeyDown={(e) => {
-									if (e.key === 'Enter') handleSendFriendRequest()
+									if (e.key === 'Enter') void handleSendFriendRequest()
 								}}
 							/>
 							<button
 								className="btn primary"
 								type="button"
-								onClick={handleSendFriendRequest}
+								onClick={() => void handleSendFriendRequest()}
 								disabled={!friendSearchInput.trim()}
 							>
 								{t('profile_send')}
 								</button>
 							</div>
+							{friendActionError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{friendActionError}</p>}
+							{friendActionSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{friendActionSuccess}</p>}
 						</div>
 
 						{friendRequests.filter((r) => r.type === 'received').length > 0 && (
 							<div className="control-group">
 								<p className="control-label">
-								{t('profile_friend_requests', { count: friendRequests.filter((r) => r.type === 'received').length })}
+									{t('profile_friend_requests', { count: friendRequests.filter((r) => r.type === 'received').length })}
 								</p>
 								<div className="friends-list">
 									{friendRequests
@@ -785,13 +952,18 @@ function ProfilUser() {
 										.map((request) => (
 											<div key={request.id} className="friend-item friend-request-item">
 												<div className="friend-info">
-													<span className="friend-name">{request.username}</span>
+													<div>
+														<span className="friend-name">{request.username}</span>
+														<span className={`friend-status ${request.status}`}>
+															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
+														</span>
+													</div>
 												</div>
 												<div className="friend-actions">
 													<button
 														className="btn-icon btn-accept"
 														type="button"
-														onClick={() => handleAcceptRequest(request.id)}
+														onClick={() => void handleAcceptRequest(request.id)}
 														title={t('profile_accept')}
 													>
 														✓
@@ -799,11 +971,35 @@ function ProfilUser() {
 													<button
 														className="btn-icon btn-decline"
 														type="button"
-														onClick={() => handleDeclineRequest(request.id)}
-														title="Refuser"
+														onClick={() => void handleDeclineRequest(request.id)}
+														title={t('profile_decline')}
 													>
 														✕
 													</button>
+												</div>
+											</div>
+										))}
+								</div>
+							</div>
+						)}
+
+						{friendRequests.filter((r) => r.type === 'sent').length > 0 && (
+							<div className="control-group">
+								<p className="control-label">
+									{t('profile_sent_requests', { count: friendRequests.filter((r) => r.type === 'sent').length })}
+								</p>
+								<div className="friends-list">
+									{friendRequests
+										.filter((r) => r.type === 'sent')
+										.map((request) => (
+											<div key={request.id} className="friend-item">
+												<div className="friend-info">
+													<div>
+														<span className="friend-name">{request.username}</span>
+														<span className={`friend-status ${request.status}`}>
+															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
+														</span>
+													</div>
 												</div>
 											</div>
 										))}
@@ -830,7 +1026,7 @@ function ProfilUser() {
 											<button
 												className="btn-icon btn-remove"
 												type="button"
-												onClick={() => handleRemoveFriend(friend.id)}
+												onClick={() => void handleRemoveFriend(friend.id)}
 												title="Retirer"
 											>
 												✕

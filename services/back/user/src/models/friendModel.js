@@ -25,7 +25,26 @@ const listFriend = db.prepare(`
   FROM friends f
   JOIN users u ON (f.friend_id = u.id OR f.user_id = u.id)
   WHERE (f.user_id = ? OR f.friend_id = ?)
+  AND f.status = 'accepted'
   AND u.id != ?
+`);
+
+const listPendingReceived = db.prepare(`
+  SELECT u.id, u.username, u.onlineStatus
+  FROM friends f
+  JOIN users u ON u.id = CASE WHEN f.user_id = ? THEN f.friend_id ELSE f.user_id END
+  WHERE (f.user_id = ? OR f.friend_id = ?)
+  AND f.status = 'pending'
+  AND f.initiator_id != ?
+`);
+
+const listPendingSent = db.prepare(`
+  SELECT u.id, u.username, u.onlineStatus
+  FROM friends f
+  JOIN users u ON u.id = CASE WHEN f.user_id = ? THEN f.friend_id ELSE f.user_id END
+  WHERE (f.user_id = ? OR f.friend_id = ?)
+  AND f.status = 'pending'
+  AND f.initiator_id = ?
 `);
 
 
@@ -53,7 +72,12 @@ function addFriend(userId, friendId) {
         message: "Insert conflicted, unknown error.",
       };
     if (init_user.status === "accepted")
-      return { ok: false, created: false, message: "Already friends" };
+      return {
+        ok: false,
+        created: false,
+        statusCode: 409,
+        message: "already friend",
+      };
   }
 
   switch (init_user.initiator_id) {
@@ -107,6 +131,14 @@ function listFriends(userId) {
   return listFriend.all(userId, userId, userId);
 }
 
+function listFriendRequestsReceived(userId) {
+  return listPendingReceived.all(userId, userId, userId, userId);
+}
+
+function listFriendRequestsSent(userId) {
+  return listPendingSent.all(userId, userId, userId, userId);
+}
+
 
 function getFriendshipStatus(userId, friendId) {
   var min = userId < friendId ? userId : friendId;
@@ -118,4 +150,11 @@ function getFriendshipStatus(userId, friendId) {
   return { ok: true, status: status.status, initiator_id: status.initiator_id };
 }
 
-module.exports = { addFriend, removeFriend, listFriends, getFriendshipStatus };
+module.exports = {
+  addFriend,
+  removeFriend,
+  listFriends,
+  listFriendRequestsReceived,
+  listFriendRequestsSent,
+  getFriendshipStatus,
+};
