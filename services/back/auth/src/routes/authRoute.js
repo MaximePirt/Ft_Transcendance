@@ -54,6 +54,43 @@ async function authRoute(fastify, options) {
 	}
 	);
 
+	fastify.post("/signout",
+	{ onRequest: [fastify.authenticate] },
+	async (req, reply) => {
+		try {
+			const userId = req.user.payload.id;
+			const offlineRes = await fetch(`${user_api_url}/${userId}`, {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ onlineStatus: 0 }),
+			});
+
+			reply.clearCookie("token", {
+				path: "/",
+				httpOnly: true,
+				signed: false,
+				secure: true,
+			});
+
+			if (!offlineRes.ok) {
+				return reply.code(200).send({ ok: true, message: "Signed out, offline update failed" });
+			}
+
+			return reply.code(200).send({ ok: true, message: "Signed out" });
+		} catch (e) {
+			reply.clearCookie("token", {
+				path: "/",
+				httpOnly: true,
+				signed: false,
+				secure: true,
+			});
+			return reply.code(200).send({ ok: true, message: "Signed out" });
+		}
+	}
+	);
+
 
 	fastify.post('/signup', async function (request, reply) {
 		const res = await authController.signupUser(request, reply);

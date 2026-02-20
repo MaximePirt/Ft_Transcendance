@@ -113,14 +113,7 @@ const titleOptions: TitleOption[] = [
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 const DEFAULT_AVATAR = '/avatar/Default.png'
-
-type CardState = {
-	bgColor: string
-	stickers: Sticker[]
-	titles: string[]
-	description: string
-	preferredLanguage?: string
-}
+const DEFAULT_AVATAR_CHOICES = ['/avatar/Default.png', '/avatar/Default2.png', '/avatar/Default3.png']
 
 const MAX_STICKERS = 3
 const MAX_TITLES = 2
@@ -134,18 +127,18 @@ function ProfilUser() {
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
+	const avatarInputRef = useRef<HTMLInputElement | null>(null)
 	const previousThemeRef = useRef<string | null>(null)
 	const previousFontRef = useRef<string | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
 	const [description, setDescription] = useState('')
-	const [preferredLanguage, setPreferredLanguage] = useState(i18n.language)
-	const [hydrated, setHydrated] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
 	const [saveSuccess, setSaveSuccess] = useState(false)
 	const [avatarUrl, setAvatarUrl] = useState('')
+	const [selectedAvatarFileName, setSelectedAvatarFileName] = useState('')
 	const [avatarUploading, setAvatarUploading] = useState(false)
 	const [avatarError, setAvatarError] = useState('')
 	const [avatarSuccess, setAvatarSuccess] = useState(false)
@@ -285,8 +278,6 @@ function ProfilUser() {
 						favorites: ['cinema', 'music', 'computer_science'],
 					})
 					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
-					let parsedStickers: Sticker[] = []
-					let parsedTitles: string[] = [titleOptions[0].id, titleOptions[1].id]
 					
 					// Charger les données de personnalisation depuis le serveur
 					if (userData.profileCardBgColor) setBgColor(userData.profileCardBgColor)
@@ -295,7 +286,6 @@ function ProfilUser() {
 						try {
 							const parsed = JSON.parse(userData.profileCardStickers)
 							if (Array.isArray(parsed)) {
-								parsedStickers = parsed
 								setStickers(parsed)
 							}
 						} catch (e) {
@@ -307,7 +297,6 @@ function ProfilUser() {
 						try {
 							const parsed = JSON.parse(userData.profileCardTitles)
 							if (Array.isArray(parsed) && parsed.length) {
-								parsedTitles = parsed
 								setTitles(parsed.slice(0, MAX_TITLES))
 							}
 						} catch (e) {
@@ -319,10 +308,6 @@ function ProfilUser() {
 						setDescription(userData.profileCardDescription.slice(0, 40))
 					}
 					
-					if (userData.preferredLanguage) {
-						setPreferredLanguage(userData.preferredLanguage)
-					}
-
 					if (canEdit) {
 						if (userData.theme) localStorage.setItem('theme', userData.theme)
 						if (userData.font) localStorage.setItem('font', userData.font)
@@ -335,13 +320,11 @@ function ProfilUser() {
 						applyFont(fontToApply)
 					}
 					
-					setHydrated(true)
 					return
 				}
 			} catch (e) {
 				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
 			}
-			setHydrated(true)
 		}
 		
 		loadProfileCard()
@@ -349,7 +332,7 @@ function ProfilUser() {
 
 	useEffect(() => {
 		if (!user || !canEdit) return
-		const hydrateFriends = async () => {
+		const refreshFriends = async () => {
 			try {
 				await Promise.all([loadFriends(user.username), loadFriendRequests()])
 			} catch (e) {
@@ -357,7 +340,26 @@ function ProfilUser() {
 			}
 		}
 
-		hydrateFriends()
+		void refreshFriends()
+
+		const refreshInterval = window.setInterval(() => {
+			if (document.visibilityState === 'visible') {
+				void refreshFriends()
+			}
+		}, 10000)
+
+		const onVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				void refreshFriends()
+			}
+		}
+
+		document.addEventListener('visibilitychange', onVisibilityChange)
+
+		return () => {
+			window.clearInterval(refreshInterval)
+			document.removeEventListener('visibilitychange', onVisibilityChange)
+		}
 	}, [user, canEdit])
 
 	useEffect(() => {
@@ -374,7 +376,6 @@ function ProfilUser() {
 		try {
 			const res = await saveProfileToServer()
 			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
-			setPreferredLanguage(i18n.language)
 			setSaveSuccess(true)
 		} catch (e) {
 			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
@@ -385,18 +386,21 @@ function ProfilUser() {
 
 	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!user || !canEdit) return
-			const file = e.target.files?.[0]
+		const file = e.target.files?.[0]
 		if (!file) return
-			setAvatarError('')
-			setAvatarSuccess(false)
+		setSelectedAvatarFileName(file.name)
+		setAvatarError('')
+		setAvatarSuccess(false)
 		if (file.size > 2 * 1024 * 1024) {
 			setAvatarError(t('profile_avatar_error_size'))
 			e.target.value = ''
+			setSelectedAvatarFileName('')
 			return
 		}
 		if (!['image/png', 'image/jpeg'].includes(file.type)) {
 			setAvatarError(t('profile_avatar_error_type'))
 			e.target.value = ''
+			setSelectedAvatarFileName('')
 			return
 		}
 		setAvatarUploading(true)
@@ -421,6 +425,7 @@ function ProfilUser() {
 			if (data?.avatarUrl) setAvatarUrl(data.avatarUrl)
 			setAvatarSuccess(true)
 			e.target.value = ''
+			setSelectedAvatarFileName('')
 		} catch (err) {
 			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
 		} finally {
@@ -428,7 +433,12 @@ function ProfilUser() {
 		}
 	}
 
-	const handleAvatarReset = async () => {
+	const handleBrowseAvatar = () => {
+		if (avatarUploading) return
+		avatarInputRef.current?.click()
+	}
+
+	const handleSelectDefaultAvatar = async (defaultAvatarPath: string) => {
 		if (!user || !canEdit) return
 		setAvatarError('')
 		setAvatarSuccess(false)
@@ -440,18 +450,20 @@ function ProfilUser() {
 				throw new Error(t('profile_avatar_error_user_id', { status: userResponse.status, detail: text || '-' }))
 			}
 			const { id } = await userResponse.json()
-			const resetResponse = await fetch(`${API_BASE}/user/${id}`, {
+			const updateResponse = await fetch(`${API_BASE}/user/${id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
 				},
-				body: JSON.stringify({ avatarUrl: DEFAULT_AVATAR }),
+				body: JSON.stringify({ avatarUrl: defaultAvatarPath }),
 			})
-			if (!resetResponse.ok) {
-				const text = await resetResponse.text()
-				throw new Error(t('profile_avatar_error_api', { status: resetResponse.status, detail: text || '-' }))
+			if (!updateResponse.ok) {
+				const text = await updateResponse.text()
+				throw new Error(t('profile_avatar_error_api', { status: updateResponse.status, detail: text || '-' }))
 			}
-			setAvatarUrl(DEFAULT_AVATAR)
+			setAvatarUrl(defaultAvatarPath)
+			if (avatarInputRef.current) avatarInputRef.current.value = ''
+			setSelectedAvatarFileName('')
 			setAvatarSuccess(true)
 		} catch (err) {
 			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
@@ -671,7 +683,6 @@ function ProfilUser() {
 	const changeLanguage = async (lang: string) => {
 		try {
 			await i18n.changeLanguage(lang)
-			if (canEdit) setPreferredLanguage(lang)
 			document.body.dir = i18n.dir(lang)
 			document.documentElement.lang = lang
 		} catch (e) {
@@ -769,29 +780,57 @@ function ProfilUser() {
 							</label>
 							<div className="control-row">
 								<input
+									ref={avatarInputRef}
 									id="avatar-upload"
 									type="file"
 									accept="image/png,image/jpeg"
 									onChange={handleAvatarChange}
 									disabled={avatarUploading}
+									style={{ display: 'none' }}
 								/>
-							</div>
-							<div className="control-row" style={{ marginTop: '0.5rem', alignItems: 'center', gap: '0.75rem' }}>
 								<button
 									type="button"
 									className="btn ghost"
-									onClick={() => void handleAvatarReset()}
+									onClick={handleBrowseAvatar}
 									disabled={avatarUploading}
-									title={t('profile_avatar_reset')}
-									aria-label={t('profile_avatar_reset')}
 								>
-									<img
-										src={DEFAULT_AVATAR}
-										alt={t('profile_avatar_default_preview')}
-										style={{ width: '24px', height: '24px', borderRadius: '9999px', marginRight: '0.5rem' }}
-									/>
-									{t('profile_avatar_reset')}
+									{t('profile_avatar_browse')}
 								</button>
+								<span className="pref-desc" style={{ margin: 0 }}>
+									{selectedAvatarFileName || t('profile_avatar_no_file')}
+								</span>
+							</div>
+							<p className="control-label" style={{ marginTop: '0.5rem' }}>{t('profile_avatar_defaults')}</p>
+							<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+								{DEFAULT_AVATAR_CHOICES.map((avatarPath) => {
+									const activeAvatar = avatarUrl || DEFAULT_AVATAR
+									const isActive = activeAvatar === avatarPath
+									return (
+										<button
+											key={avatarPath}
+											type="button"
+											onClick={() => void handleSelectDefaultAvatar(avatarPath)}
+											disabled={avatarUploading}
+											aria-label={avatarPath}
+											style={{
+												width: '44px',
+												height: '44px',
+												borderRadius: '8px',
+												padding: 0,
+												overflow: 'hidden',
+												border: isActive ? '2px solid #2563eb' : '1px solid #d1d5db',
+												background: 'transparent',
+												cursor: avatarUploading ? 'not-allowed' : 'pointer',
+											}}
+										>
+											<img
+												src={avatarPath}
+												alt={avatarPath}
+												style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+											/>
+										</button>
+									)
+								})}
 							</div>
 							<p className="pref-desc">
 								{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}

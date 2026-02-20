@@ -170,6 +170,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    fetch(`${API_BASE}/auth/signout`, {
+      method: 'POST',
+      credentials: 'include',
+    }).catch((error) => {
+      console.warn('[Auth] signout request failed', error)
+    })
     setUser(null)
     localStorage.removeItem('user')
   }
