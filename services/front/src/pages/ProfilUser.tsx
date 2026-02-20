@@ -254,16 +254,23 @@ function ProfilUser() {
 
 	useEffect(() => {
 		if (!profileUsername) return
+		const abortController = new AbortController()
+		let isActive = true
 		
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
-				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`)
+				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`, {
+					signal: abortController.signal,
+				})
 				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 				const { id } = await userIdResponse.json()
 
-				const response = await fetch(`${API_BASE}/user/users/${id}`)
+				const response = await fetch(`${API_BASE}/user/users/${id}`, {
+					signal: abortController.signal,
+				})
 				if (response.ok) {
+					if (!isActive) return
 					const userData = await response.json()
 					setUserProfile({
 						username: userData.username || profileUsername,
@@ -278,10 +285,12 @@ function ProfilUser() {
 						favorites: ['cinema', 'music', 'computer_science'],
 					})
 					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
+					setBgColor(userData.profileCardBgColor || '#0f0f10')
+					setStickers([])
+					setTitles([titleOptions[0].id, titleOptions[1].id])
+					setDescription(String(userData.profileCardDescription || '').slice(0, 40))
 					
 					// Charger les données de personnalisation depuis le serveur
-					if (userData.profileCardBgColor) setBgColor(userData.profileCardBgColor)
-					
 					if (userData.profileCardStickers) {
 						try {
 							const parsed = JSON.parse(userData.profileCardStickers)
@@ -304,10 +313,6 @@ function ProfilUser() {
 						}
 					}
 					
-					if (userData.profileCardDescription) {
-						setDescription(userData.profileCardDescription.slice(0, 40))
-					}
-					
 					if (canEdit) {
 						if (userData.theme) localStorage.setItem('theme', userData.theme)
 						if (userData.font) localStorage.setItem('font', userData.font)
@@ -323,11 +328,17 @@ function ProfilUser() {
 					return
 				}
 			} catch (e) {
+				if (abortController.signal.aborted) return
 				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
 			}
 		}
 		
-		loadProfileCard()
+		void loadProfileCard()
+
+		return () => {
+			isActive = false
+			abortController.abort()
+		}
 	}, [profileUsername, canEdit, isPublicView])
 
 	useEffect(() => {
@@ -690,6 +701,10 @@ function ProfilUser() {
 		}
 	}
 
+	const openUserProfile = (username: string) => {
+		navigate(`/profile/${encodeURIComponent(username)}`)
+	}
+
 	return (
 		<main className="page">
 			<div className="shell profile-shell">
@@ -765,7 +780,18 @@ function ProfilUser() {
 								})}
 							</div>
 							{!canEdit && (
-								<p className="pref-desc">{t('profile_share_notice')}</p>
+								<>
+									<div className="actions" style={{ marginTop: '0.5rem' }}>
+										<button
+											className="btn ghost"
+											type="button"
+											onClick={() => navigate('/profile')}
+										>
+											{t('profile_back')}
+										</button>
+									</div>
+									<p className="pref-desc">{t('profile_share_notice')}</p>
+								</>
 							)}
 						</div>
 
@@ -992,7 +1018,18 @@ function ProfilUser() {
 											<div key={request.id} className="friend-item friend-request-item">
 												<div className="friend-info">
 													<div>
-														<span className="friend-name">{request.username}</span>
+															<span
+																className="friend-name"
+																onClick={() => openUserProfile(request.username)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																}}
+																role="button"
+																tabIndex={0}
+																style={{ cursor: 'pointer' }}
+															>
+																{request.username}
+															</span>
 														<span className={`friend-status ${request.status}`}>
 															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
 														</span>
@@ -1034,7 +1071,18 @@ function ProfilUser() {
 											<div key={request.id} className="friend-item">
 												<div className="friend-info">
 													<div>
-														<span className="friend-name">{request.username}</span>
+															<span
+																className="friend-name"
+																onClick={() => openUserProfile(request.username)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																}}
+																role="button"
+																tabIndex={0}
+																style={{ cursor: 'pointer' }}
+															>
+																{request.username}
+															</span>
 														<span className={`friend-status ${request.status}`}>
 															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
 														</span>
@@ -1056,7 +1104,18 @@ function ProfilUser() {
 										<div key={friend.id} className="friend-item">
 											<div className="friend-info">
 												<div>
-													<span className="friend-name">{friend.username}</span>
+														<span
+															className="friend-name"
+															onClick={() => openUserProfile(friend.username)}
+															onKeyDown={(e) => {
+																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.username)
+															}}
+															role="button"
+															tabIndex={0}
+															style={{ cursor: 'pointer' }}
+														>
+															{friend.username}
+														</span>
 													<span className={`friend-status ${friend.status}`}>
 													{friend.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
 													</span>

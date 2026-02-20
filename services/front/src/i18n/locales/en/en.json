@@ -136,6 +136,7 @@
   "profile_language_label": "Language",
   "profile_titles_label": "Titles (max {{max}})",
   "profile_friends_section": "Friends",
+  "profile_back": "Back",
   "profile_add_friend": "Add a friend",
   "profile_username_placeholder": "Username",
   "profile_send": "Send",

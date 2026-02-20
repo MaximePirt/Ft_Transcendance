@@ -142,6 +142,7 @@
   "profile_language_label": "Langue",
   "profile_titles_label": "Titres (max {{max}})",
   "profile_friends_section": "Amis",
+  "profile_back": "Retour",
   "profile_add_friend": "Ajouter un ami",
   "profile_username_placeholder": "Nom d'utilisateur",
   "profile_send": "Envoyer",

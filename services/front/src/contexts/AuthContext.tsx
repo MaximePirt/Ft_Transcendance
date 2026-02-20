@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import i18n from '../i18n'
 
 interface User {
@@ -53,6 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthReady, setIsAuthReady] = useState(false)
 
+  const isViewingAnotherPublicProfile = (username: string) => {
+    const path = window.location.pathname
+    if (!path.startsWith('/profile/')) return false
+    const routeUsername = decodeURIComponent(path.replace('/profile/', '').trim())
+    if (!routeUsername) return false
+    return routeUsername !== username
+  }
+
   const applyPreferredLanguage = async (username: string) => {
     try {
       const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`)
@@ -87,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedUser) {
       const parsed = JSON.parse(storedUser)
       setUser(parsed)
-      if (parsed?.username) {
+      if (parsed?.username && !isViewingAnotherPublicProfile(parsed.username)) {
         applyPreferredLanguage(parsed.username)
       }
     }
