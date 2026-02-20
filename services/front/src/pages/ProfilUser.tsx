@@ -1030,7 +1030,7 @@ function ProfilUser() {
 															>
 																{request.username}
 															</span>
-														<span className={`friend-status ${request.status}`}>
+														<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
 															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
 														</span>
 													</div>
@@ -1041,6 +1041,7 @@ function ProfilUser() {
 														type="button"
 														onClick={() => void handleAcceptRequest(request.id)}
 														title={t('profile_accept')}
+														style={{ color: '#059669' }}
 													>
 														✓
 													</button>
@@ -1049,6 +1050,7 @@ function ProfilUser() {
 														type="button"
 														onClick={() => void handleDeclineRequest(request.id)}
 														title={t('profile_decline')}
+														style={{ color: '#b91c1c' }}
 													>
 														✕
 													</button>
@@ -1083,7 +1085,7 @@ function ProfilUser() {
 															>
 																{request.username}
 															</span>
-														<span className={`friend-status ${request.status}`}>
+														<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
 															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
 														</span>
 													</div>
@@ -1116,7 +1118,7 @@ function ProfilUser() {
 														>
 															{friend.username}
 														</span>
-													<span className={`friend-status ${friend.status}`}>
+													<span className={`friend-status ${friend.status}`} style={{ color: friend.status === 'online' ? '#059669' : '#b91c1c' }}>
 													{friend.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
 													</span>
 												</div>
@@ -1124,8 +1126,9 @@ function ProfilUser() {
 											<button
 												className="btn-icon btn-remove"
 												type="button"
+												style={{ color: '#b91c1c' }}
 												onClick={() => void handleRemoveFriend(friend.id)}
-												title="Retirer"
+												title={t('profile_remove')}
 											>
 												✕
 											</button>

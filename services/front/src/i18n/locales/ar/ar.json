@@ -147,6 +147,7 @@
   "profile_friend_request_already_sent": "يوجد طلب صداقة قيد الانتظار بالفعل",
   "profile_accept": "قبول",
   "profile_decline": "رفض",
+  "profile_remove": "إزالة",
   "profile_my_friends": "أصدقائي ({{count}})",
   "profile_no_friends": "لا يوجد أصدقاء بعد",
   "profile_online": "متصل",

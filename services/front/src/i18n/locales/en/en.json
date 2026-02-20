@@ -147,6 +147,7 @@
   "profile_friend_request_already_sent": "A friend request is already pending",
   "profile_accept": "Accept",
   "profile_decline": "Decline",
+  "profile_remove": "Remove",
   "profile_my_friends": "My friends ({{count}})",
   "profile_no_friends": "No friends yet",
   "profile_online": "Online",

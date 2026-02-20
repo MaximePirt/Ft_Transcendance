@@ -153,6 +153,7 @@
   "profile_friend_request_already_sent": "Une demande est déjà en attente",
   "profile_accept": "Accepter",
   "profile_decline": "Refuser",
+  "profile_remove": "Retirer",
   "profile_my_friends": "Mes amis ({{count}})",
   "profile_no_friends": "Aucun ami pour le moment",
   "profile_online": "En ligne",
