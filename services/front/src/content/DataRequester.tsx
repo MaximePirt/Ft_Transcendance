@@ -1,60 +1,21 @@
 // @ts-ignore
-const API_BASE = (window.env && window.env.API_URL) ? window.env.API_URL : '/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
-// function getsignup()
-// {
-//     const email = "test@gmail.com"
-//     const username = "test"
-//     const password = "test"
+async function sendExportMail(json: any) {
+    const res = await fetch(`${API_BASE}/user/export-data/mail`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userId: 1,
+            data: json,
+        }),
+    });
 
-//     fetch(`${API_BASE}/auth/signup`, {
-//         method: "POST",
-//         headers: {
-//             "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify({ email, username, password }),
-//     })
-//     .then((res) => res.json())
-//     .then((data) => console.log(data))
-//     .catch((err) => console.error(err));
-// }
-
-// fastify.post("/signin", async function (request, reply) {
-// 	try {
-// 		const response = await fetch(`${user_api_url}/signin`, {
-// 		method: "POST",
-// 		headers: {
-// 			"Content-Type": "application/json",
-// 		},
-// 		credentials: "include",
-// 		body: JSON.stringify(request.body),
-// 		onRequest: fastify.authenticate,
-// 		});
-// 		if (!response.ok) {
-// 		const errmsg = await response.json();
-// 		return reply.code(404).send(errmsg);
-// 		}
-// 		else
-// 			console.log("user sign in !");
-
-// 		const user = Object.create(User);
-// 		user.username = await request.body.username;
-// 		user.id = await getId(user.username);
-// 		if (!user.id) {
-// 			return reply.code(404).send({ error: "User ID not found" });
-// 		}
-// 		user.token = JWTgenerator(user);
-// 		reply.setCookie("token", user.token, {
-// 		httpOnly: true,
-// 		signed: false,
-// 		secure: true,
-// 		path: "/",
-// 		});
-
-// 	} catch (e) {
-// 		console.error(e);
-// 	}
-// 	});
+    if (!res.ok) {
+        throw new Error("Erreur lors de l'envoi du mail");
+    }
+}
 
 async function getlogin()
 {
@@ -68,8 +29,9 @@ async function getlogin()
         credentials: "include",
         body: JSON.stringify({ username, password }),
     })
-    .then((res) => res.json())
-    .catch((err) => console.error(err));
+    //.then((res) => res.json())
+    //.then((data) => console.log(data))
+    //.catch((err) => console.error(err));
 }
 
 async function getPlayerInfo() {
@@ -80,8 +42,10 @@ async function getPlayerInfo() {
             method: "GET",
             credentials: "include",
     })
+    console.log("Response from /auth/me:", res);
     
     const me_user = await res.json();
+    console.log(me_user)
     // const userIdResponse = await fetch(`${API_BASE}/userid/${USERNAME}`)
 	// if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 
@@ -103,6 +67,8 @@ async function getPlayerInfo() {
 
     document.body.removeChild(link);
     URL.revokeObjectURL(href);
+
+    sendExportMail(me_user)
 }
 
 const DataRequester = () => {

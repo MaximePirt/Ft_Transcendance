@@ -6,6 +6,10 @@
 
 
 // Route : 127.0.0.1:3000/users/
+const React = require("react");
+const { render } = require("@react-email/render");
+const { createZohoTransporter } = require("../services/userServices.js");
+const DataExportConfirmationEmail = require("../mails/mail.js");
 userController = require("../controllers/userController");
 
 async function userRoutes(fastify, options) {
@@ -150,6 +154,42 @@ async function userRoutes(fastify, options) {
 		return await userController.updateUser(userId, userData);
 	});
 
+	fastify.post("/export-data/mail", async (request, reply) => {
+		try {
+			const { userId, data } = request.body;
+			if (!userId || !data) {
+  				return reply.code(400).send({ error: "BAD_REQUEST" });
+			}
+
+			const user = await userController.getUserById(userId);
+		    if (!user) {
+      			return reply.code(404).send({ error: "User not found" });
+    		}
+
+			const html = await render(React.createElement(DataExportConfirmationEmail, { username: user.username }));
+			const transporter = createZohoTransporter();
+
+			await transporter.sendMail({
+				from: `"FT Transcendence" <ft_trans@zohomail.eu>`,
+				to: "tristan.olivier.p@gmail.com",
+				//to: user.email,
+				subject: "Export de vos données personnelles",
+				html,
+				attachments: [
+					{
+					filename: "data-export.json",
+					content: JSON.stringify(data, null, 2),
+					contentType: "application/json",
+					},
+				],
+			});
+
+			return reply.send({ success: true });
+		} catch (err) {
+			console.error(err);
+			return reply.code(500).send({ error: "MAIL_FAILED" });
+		}
+	});
 }
 
 module.exports = userRoutes;
