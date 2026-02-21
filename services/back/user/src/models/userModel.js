@@ -57,10 +57,32 @@ function updateUserById(id, data) {
 	return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
 }
 
+function findRecentMatchesByUserId(userId, limit = 3) {
+	const safeLimit = Math.max(1, Math.min(Number(limit) || 3, 10));
+	return db.prepare(`
+		SELECT
+			gs.id AS sessionId,
+			gs.mode,
+			gs.status,
+			gs.started_at AS startedAt,
+			gs.ended_at AS endedAt,
+			gs.question_count AS totalQuestions,
+			gp.score,
+			gp.correct_answers AS correctAnswers,
+			gp.answered_count AS answeredCount
+		FROM game_players gp
+		JOIN game_sessions gs ON gs.id = gp.game_session_id
+		WHERE gp.user_id = ?
+		ORDER BY COALESCE(gs.ended_at, gs.started_at, gp.joined_at) DESC
+		LIMIT ?
+	`).all(userId, safeLimit);
+}
+
 module.exports = {
 	findAllUsers,
 	findUserById,
 	findUserByUsername,
 	updateUserById,
-	findUser
+	findUser,
+	findRecentMatchesByUserId
 };

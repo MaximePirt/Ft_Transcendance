@@ -18,11 +18,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+// @ts-ignore
+const API_BASE = (window.env && window.env.API_URL) ? window.env.API_URL : '/api'
 
-async function applyTheme(themeName: string) {
+async function applyTheme(themeName: string, signal?: AbortSignal) {
   try {
-    const res = await fetch(`/themes/styles/${themeName}.json`)
+    const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
     const themeToApply = await res.json()
 
     const root = document.documentElement
@@ -30,14 +31,15 @@ async function applyTheme(themeName: string) {
       root.style.setProperty(key, value as string)
     })
   } catch (err) {
-    console.error(`Erreur lors du chargement du theme "${themeName}"`, err)
-    if (themeName !== 'default') return applyTheme('default')
+    if (err instanceof Error && err.name === 'AbortError') return
+    // console.error(`Erreur lors du chargement du theme "${themeName}"`, err)
+    if (themeName !== 'default') return applyTheme('default', signal)
   }
 }
 
-async function applyFont(fontName: string) {
+async function applyFont(fontName: string, signal?: AbortSignal) {
   try {
-    const res = await fetch(`/themes/fonts/${fontName}.json`)
+    const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
     const themeToApply = await res.json()
 
     const root = document.documentElement
@@ -45,8 +47,9 @@ async function applyFont(fontName: string) {
       root.style.setProperty(key, value as string)
     })
   } catch (err) {
-    console.error(`Erreur lors du chargement de la police "${fontName}"`, err)
-    if (fontName !== 'default') return applyFont('default')
+    if (err instanceof Error && err.name === 'AbortError') return
+    // console.error(`Erreur lors du chargement de la police "${fontName}"`, err)
+    if (fontName !== 'default') return applyFont('default', signal)
   }
 }
 
@@ -54,21 +57,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthReady, setIsAuthReady] = useState(false)
 
-  const isViewingAnotherPublicProfile = (username: string) => {
-    const path = window.location.pathname
-    if (!path.startsWith('/profile/')) return false
-    const routeUsername = decodeURIComponent(path.replace('/profile/', '').trim())
-    if (!routeUsername) return false
-    return routeUsername !== username
-  }
-
-  const applyPreferredLanguage = async (username: string) => {
+  const applyPreferredLanguage = async (username: string, signal?: AbortSignal) => {
     try {
-      const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`)
+      const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`, { signal })
       if (!userIdResponse.ok) return
       const { id } = await userIdResponse.json()
 
-      const response = await fetch(`${API_BASE}/user/users/${id}`)
+      const response = await fetch(`${API_BASE}/user/users/${id}`, { signal })
       if (!response.ok) return
       const userData = await response.json()
 
@@ -79,28 +74,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (userData?.theme) {
         localStorage.setItem('theme', userData.theme)
-        await applyTheme(userData.theme)
+        await applyTheme(userData.theme, signal)
       }
 
       if (userData?.font) {
         localStorage.setItem('font', userData.font)
-        await applyFont(userData.font)
+        await applyFont(userData.font, signal)
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return
       console.warn('[Auth] failed to apply preferred language', error)
     }
   }
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser)
-      setUser(parsed)
-      if (parsed?.username && !isViewingAnotherPublicProfile(parsed.username)) {
-        applyPreferredLanguage(parsed.username)
+    const abortController = new AbortController()
+    const bootstrapAuth = async () => {
+      try {
+        const meResponse = await fetch(`${API_BASE}/auth/me`, {
+          method: 'GET',
+          credentials: 'include',
+          signal: abortController.signal,
+        })
+
+        if (meResponse.ok) {
+          const me = await meResponse.json()
+          const userData = {
+            email: me?.email || '',
+            username: me?.username || '',
+          }
+          if (userData.username) {
+            setUser(userData)
+            localStorage.setItem('user', JSON.stringify(userData))
+            await applyPreferredLanguage(userData.username, abortController.signal)
+          }
+        } else {
+          setUser(null)
+          localStorage.removeItem('user')
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        setUser(null)
+        localStorage.removeItem('user')
+      } finally {
+        setIsAuthReady(true)
       }
     }
-    setIsAuthReady(true)
+
+    void bootstrapAuth()
+    return () => abortController.abort()
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -151,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await applyPreferredLanguage(userData.username)
       return true
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return false
       console.error('Login error:', error)
       return false
     }
@@ -173,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return await login(username, password)
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return false
       console.error('Signup error:', error)
       return false
     }
@@ -187,6 +211,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     setUser(null)
     localStorage.removeItem('user')
+    localStorage.setItem('theme', 'default')
+    localStorage.setItem('font', 'default')
+    applyTheme('default')
+    applyFont('default')
   }
 
   return (

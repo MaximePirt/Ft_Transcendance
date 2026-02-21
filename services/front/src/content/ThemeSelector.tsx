@@ -11,10 +11,9 @@ const THEMES = [
   'sports',
 ] as const
 
-async function applyTheme(themeName: string) {
-  console.log(`${themeName}.json`)
+async function applyTheme(themeName: string, signal?: AbortSignal) {
   try {
-    const res = await fetch(`/themes/styles/${themeName}.json`)
+    const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
     const themeToApply = await res.json()
 
     const root = document.documentElement
@@ -23,9 +22,10 @@ async function applyTheme(themeName: string) {
     })
 
   } catch (err) {
-    console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
+    if (err instanceof Error && err.name === 'AbortError') return
+    // console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
     if (themeName !== 'default')
-      return applyTheme('default')
+      return applyTheme('default', signal)
     return
   }
 }
@@ -33,11 +33,15 @@ async function applyTheme(themeName: string) {
 const ThemeSelector = () => {
   const [theme, setTheme] = useState<string>('default')
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'default'
-    setTheme(savedTheme)
-    applyTheme(savedTheme)
-  }, [])
+useEffect(() => {
+  const controller = new AbortController();
+  const savedTheme = localStorage.getItem('theme') || 'default';
+  
+  setTheme(savedTheme);
+  applyTheme(savedTheme, controller.signal);
+
+  return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const handleThemeSync = () => {

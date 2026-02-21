@@ -5,12 +5,13 @@ import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
 import '../App.css'
-import DataRequester from '../content/DataRequester'
 
-async function applyTheme(themeName: string) {
-	console.log(`${themeName}.json`)
+// @ts-ignore
+const API_BASE = (window.env && window.env.API_URL) ? window.env.API_URL : '/api'
+
+async function applyTheme(themeName: string, signal?: AbortSignal) {
 	try {
-		const res = await fetch(`/themes/styles/${themeName}.json`)
+		const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -18,16 +19,16 @@ async function applyTheme(themeName: string) {
 			root.style.setProperty(key, value as string)
 		})
 	} catch (err) {
-		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
-		if (themeName !== 'default') return applyTheme('default')
+		if (err instanceof Error && err.name === 'AbortError') return
+		// console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
+		if (themeName !== 'default') return applyTheme('default', signal)
 		return
 	}
 }
 
-async function applyFont(fontName: string) {
-	console.log(`${fontName}.json`)
+async function applyFont(fontName: string, signal?: AbortSignal) {
 	try {
-		const res = await fetch(`/themes/fonts/${fontName}.json`)
+		const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -35,8 +36,9 @@ async function applyFont(fontName: string) {
 			root.style.setProperty(key, value as string)
 		})
 	} catch (err) {
-		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
-		if (fontName !== 'default') return applyFont('default')
+		if (err instanceof Error && err.name === 'AbortError') return
+		// console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
+		if (fontName !== 'default') return applyFont('default', signal)
 		return
 	}
 }
@@ -88,6 +90,18 @@ type TitleOption = {
 	text: string
 }
 
+type RecentMatch = {
+	sessionId: string
+	mode: string
+	status: string
+	startedAt: string
+	endedAt: string
+	totalQuestions: number
+	score: number
+	correctAnswers: number
+	answeredCount: number
+}
+
 
 // truc a la con avec les stickers a tout moment ca degage
 const stickerPalette = [
@@ -111,7 +125,6 @@ const titleOptions: TitleOption[] = [
 	{ id: 'music', text: 'profile_title_music' },
 ]
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 const DEFAULT_AVATAR = '/avatar/Default.png'
 const DEFAULT_AVATAR_CHOICES = ['/avatar/Default.png', '/avatar/Default2.png', '/avatar/Default3.png']
 
@@ -128,8 +141,6 @@ function ProfilUser() {
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
 	const avatarInputRef = useRef<HTMLInputElement | null>(null)
-	const previousThemeRef = useRef<string | null>(null)
-	const previousFontRef = useRef<string | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
@@ -148,6 +159,27 @@ function ProfilUser() {
 	const [friendActionError, setFriendActionError] = useState('')
 	const [friendActionSuccess, setFriendActionSuccess] = useState('')
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
+	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
+	
+	// fausse game data pour les stats de jeu, à remplacer par des vraies données quand l'API sera ok
+	const totalQuestions = userProfile.stats.gamesPlayed * 10
+	const correctAnswers = Math.round((totalQuestions * userProfile.stats.winRate) / 100)
+	const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
+
+	const formatMatchDate = (dateValue?: string) => {
+		if (!dateValue) return '-'
+		const date = new Date(dateValue)
+		if (Number.isNaN(date.getTime())) return dateValue
+		return date.toLocaleString(i18n.language)
+	}
+
+	const getMatchStatusLabel = (status: string) => {
+		if (status === 'completed') return t('profile_match_status_completed')
+		if (status === 'abandoned') return t('profile_match_status_abandoned')
+		if (status === 'in_progress') return t('profile_match_status_in_progress')
+		return status
+	}
 
 	const mapFriendMessage = (message?: string) => {
 		const normalized = (message || '').toLowerCase()
@@ -158,12 +190,12 @@ function ProfilUser() {
 		return ''
 	}
 
-	const loadFriends = async (username: string) => {
-		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`)
+	const loadFriends = async (username: string, signal?: AbortSignal) => {
+		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
 		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 		const { id } = await userIdResponse.json()
 
-		const response = await fetch(`${API_BASE}/user/${id}/friends`)
+		const response = await fetch(`${API_BASE}/user/${id}/friends`, { signal })
 		if (!response.ok) throw new Error('Failed to load friends')
 		const data = await response.json()
 		const list = data?.result?.friends || data?.friends || []
@@ -175,9 +207,10 @@ function ProfilUser() {
 		setFriends(normalized)
 	}
 
-	const loadFriendRequests = async () => {
+	const loadFriendRequests = async (signal?: AbortSignal) => {
 		const response = await fetch(`${API_BASE}/user/friends/requests`, {
 			credentials: 'include',
+			signal,
 		})
 		if (!response.ok) throw new Error('Failed to load friend requests')
 		const data = await response.json()
@@ -196,6 +229,48 @@ function ProfilUser() {
 			type: 'sent',
 		}))
 		setFriendRequests([...normalizedReceived, ...normalizedSent])
+	}
+
+	const loadRecentMatches = async (username: string, signal?: AbortSignal) => {
+		setRecentMatchesLoading(true)
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
+			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for match history')
+			const { id } = await userIdResponse.json()
+
+			const historyResponse = await fetch(`${API_BASE}/user/${id}/matches?limit=3`, { signal })
+			if (!historyResponse.ok) throw new Error('Failed to load match history')
+			const data = await historyResponse.json()
+			const list = Array.isArray(data?.result) ? data.result : []
+			const normalized: RecentMatch[] = list.slice(0, 3).map((match: {
+				sessionId: number | string
+				mode?: string
+				status?: string
+				startedAt?: string
+				endedAt?: string
+				totalQuestions?: number
+				score?: number
+				correctAnswers?: number
+				answeredCount?: number
+			}) => ({
+				sessionId: String(match.sessionId),
+				mode: String(match.mode || 'random'),
+				status: String(match.status || 'completed'),
+				startedAt: String(match.startedAt || ''),
+				endedAt: String(match.endedAt || ''),
+				totalQuestions: Number(match.totalQuestions || 0),
+				score: Number(match.score || 0),
+				correctAnswers: Number(match.correctAnswers || 0),
+				answeredCount: Number(match.answeredCount || 0),
+			}))
+			setRecentMatches(normalized)
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') return
+			console.warn('[Profile] failed to load recent matches', error)
+			setRecentMatches([])
+		} finally {
+			setRecentMatchesLoading(false)
+		}
 	}
 
 	const normalizeAvatarUrl = (url?: string) => {
@@ -240,17 +315,8 @@ function ProfilUser() {
 		}
 	}, [user, isPublicView])
 
-	useEffect(() => {
-		if (!isPublicView) return
-		previousThemeRef.current = localStorage.getItem('theme') || 'default'
-		previousFontRef.current = localStorage.getItem('font') || 'default'
-		return () => {
-			const prevTheme = previousThemeRef.current || 'default'
-			const prevFont = previousFontRef.current || 'default'
-			applyTheme(prevTheme)
-			applyFont(prevFont)
-		}
-	}, [isPublicView])
+	// Supprimé: la logique d'application automatique du thème/font d'un autre utilisateur
+	// causait des conflits et bugs de timing
 
 	useEffect(() => {
 		if (!profileUsername) return
@@ -318,60 +384,80 @@ function ProfilUser() {
 						if (userData.font) localStorage.setItem('font', userData.font)
 					}
 
-					if (isPublicView) {
-						const themeToApply = userData.theme || 'default'
-						const fontToApply = userData.font || 'default'
-						applyTheme(themeToApply)
-						applyFont(fontToApply)
-					}
+					// Note: On n'applique plus le thème/font d'un utilisateur visité pour éviter les conflits
 					
 					return
 				}
 			} catch (e) {
-				if (abortController.signal.aborted) return
-				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
+			if (e instanceof DOMException && e.name === 'AbortError') return
+			console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
+			try {
+				const stored = localStorage.getItem('profileCard')
+				if (stored && canEdit) {
+					const data = JSON.parse(stored)
+					if (data.stickers) setStickers(data.stickers)
+					if (data.titles) setTitles(data.titles)
+					if (data.bgColor) setBgColor(data.bgColor)
+					if (data.description) setDescription(data.description)
+				}
+			} catch (e) {
+				console.warn('[ProfileCard] failed to load from localStorage', e)
 			}
 		}
-		
-		void loadProfileCard()
+	}
+	
+	void loadProfileCard()
 
-		return () => {
-			isActive = false
-			abortController.abort()
+	return () => {
+		isActive = false
+		abortController.abort()
+	}
+}, [profileUsername, canEdit, isPublicView])
+
+useEffect(() => {
+	if (!user || !canEdit) return
+	const abortController = new AbortController()
+	const refreshFriends = async () => {
+		try {
+			await Promise.all([loadFriends(user.username, abortController.signal), loadFriendRequests(abortController.signal)])
+		} catch (e) {
+			if (e instanceof Error && e.name === 'AbortError') return
+			console.warn('[Profile] failed to load social data', e)
 		}
-	}, [profileUsername, canEdit, isPublicView])
+	}
+
+	void refreshFriends()
+
+	const refreshInterval = window.setInterval(() => {
+		if (document.visibilityState === 'visible') {
+			void refreshFriends()
+		}
+	}, 10000)
+
+	const onVisibilityChange = () => {
+		if (document.visibilityState === 'visible') {
+			void refreshFriends()
+		}
+	}
+
+	document.addEventListener('visibilitychange', onVisibilityChange)
+
+	return () => {
+		abortController.abort()
+		window.clearInterval(refreshInterval)
+		document.removeEventListener('visibilitychange', onVisibilityChange)
+	}
+}, [user, canEdit])
 
 	useEffect(() => {
-		if (!user || !canEdit) return
-		const refreshFriends = async () => {
-			try {
-				await Promise.all([loadFriends(user.username), loadFriendRequests()])
-			} catch (e) {
-				console.warn('[Profile] failed to load social data', e)
-			}
+		if (!profileUsername) {
+			setRecentMatches([])
+			return
 		}
-
-		void refreshFriends()
-
-		const refreshInterval = window.setInterval(() => {
-			if (document.visibilityState === 'visible') {
-				void refreshFriends()
-			}
-		}, 10000)
-
-		const onVisibilityChange = () => {
-			if (document.visibilityState === 'visible') {
-				void refreshFriends()
-			}
-		}
-
-		document.addEventListener('visibilitychange', onVisibilityChange)
-
-		return () => {
-			window.clearInterval(refreshInterval)
-			document.removeEventListener('visibilitychange', onVisibilityChange)
-		}
-	}, [user, canEdit])
+		const abortController = new AbortController()
+		void loadRecentMatches(profileUsername, abortController.signal)
+		return () => abortController.abort()
+	}, [profileUsername])
 
 	useEffect(() => {
 		document.body.dir = i18n.dir()
@@ -795,6 +881,40 @@ function ProfilUser() {
 							)}
 						</div>
 
+						<div className="control-group">
+							<p className="control-label">{t('profile_game_stats_title')}</p>
+							<p className="pref-desc">{t('profile_game_stats_ratio', { correct: correctAnswers, total: totalQuestions })}</p>
+							<p className="pref-desc">{t('profile_game_stats_accuracy', { percent: accuracy })}</p>
+						</div>
+
+						<div className="control-group">
+							<p className="control-label">{t('profile_recent_matches_title')}</p>
+							{recentMatchesLoading ? (
+								<p className="pref-desc">{t('profile_recent_matches_loading')}</p>
+							) : recentMatches.length === 0 ? (
+								<p className="pref-desc">{t('profile_recent_matches_empty')}</p>
+							) : (
+								recentMatches.map((match) => (
+									<div key={match.sessionId}>
+										<p className="pref-desc">
+											{t('profile_recent_match_summary', {
+												score: match.score,
+												correct: match.correctAnswers,
+												total: match.totalQuestions,
+											})}
+										</p>
+										<p className="pref-desc">
+											{t('profile_recent_match_meta', {
+												mode: match.mode,
+												status: getMatchStatusLabel(match.status),
+												date: formatMatchDate(match.endedAt || match.startedAt),
+											})}
+										</p>
+									</div>
+								))
+							)}
+						</div>
+
 					</section>
 
 					{canEdit && (
@@ -1140,7 +1260,6 @@ function ProfilUser() {
 						</section>
 					)}
 				</div>
-				<DataRequester />
 			</div>
 		</main>
 	)
