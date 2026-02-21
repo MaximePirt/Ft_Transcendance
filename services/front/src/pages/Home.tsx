@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
@@ -30,9 +30,12 @@ function HomePage() {
 	const { user, login, signup, logout, isAuthenticated } = useAuth()
 	const [showLogin, setShowLogin] = useState(false)
 	const [showSignup, setShowSignup] = useState(false)
+	const [show2fa, setShow2fa] = useState(false)
 	const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
 	const [loginError, setLoginError] = useState('')
 	const [signupError, setSignupError] = useState('')
+	const message = useRef<HTMLDivElement>(null);
+	const qrCode = useRef<HTMLDivElement>(null);
 
 	const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
@@ -40,6 +43,7 @@ function HomePage() {
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
 		const password = (form.elements.namedItem('password') as HTMLInputElement).value
+
 		try {
 			const response = await fetch("https://localhost/auth/signin", {
 				method: "POST",
@@ -86,10 +90,10 @@ function HomePage() {
 		}
 	}
 
-
 	const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setSignupError('')
+		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
 		const username = (form.elements.namedItem('username') as HTMLInputElement).value
@@ -102,7 +106,10 @@ function HomePage() {
 		}
 
 		if (password !== confirmPassword) {
-			setSignupError(t('password_mismatch') || 'Les mots de passe ne correspondent pas')
+			setSignupError(t('passwords do not match') || 'Les mots de passe ne correspondent pas')
+			return
+		} else if (!password_regex.test(password)) {
+			setSignupError(t('Password must be 12+ chars, include an uppercase, a number, and a special character.'))
 			return
 		}
 
@@ -119,18 +126,31 @@ function HomePage() {
 				})
 			})
 			if (!response.ok) {
-				throw new Error('Sign Up went wrong');
+				const err = await response.json();
+				setSignupError(err.error)
+				throw new Error(err.body.error);
+			} else {
+				const data = await response.json();
+				if (qrCode.current) {
+					qrCode.current.innerHTML = `
+						<img src="${data.imageUrl}" alt="QR code">
+						<p>Secret: ${data.secret}</p>
+					`;
+				}
+				if (message.current) {
+					message.current.innerHTML = `
+						<p>Registration successful</p>
+					`;
+				}
+				const success = await signup(email, username, password)
+				if (success) {
+					setShowSignup(false)
+				} else {
+					setSignupError(t('signup_error') || 'Erreur lors de l\'inscription')
+				}
 			}
-			else
-				console.log("user signed up");
 		} catch (e) {
 			console.error('Error: ', e)
-		}
-		const success = await signup(email, username, password)
-		if (success) {
-			setShowSignup(false)
-		} else {
-			setSignupError(t('signup_error') || 'Erreur lors de l\'inscription')
 		}
 	}
 
@@ -282,6 +302,18 @@ function HomePage() {
 				</div>
 			)}
 
+			{show2fa && (
+				<div className='login-overlay' role='dialog' aria-modal='true'>
+					<h1>{t("2FA authentication")}</h1>
+					<div className="message" ref={message}></div>
+					<input type="text" id="verify-username" placeholder="username" required />
+					<input type="text" id="verify-token" placeholder="2FA token" required />
+					<button type="submit" className="btn primary full">
+						{t("signup_button")}
+					</button>
+				</div>
+			)}
+
 			{showSignup && (
 				<div className="login-overlay" role="dialog" aria-modal="true">
 					<div className="login-card">
@@ -316,6 +348,8 @@ function HomePage() {
 								{t("signup_button")}
 							</button>
 						</form>
+						<div className="message" ref={message}></div>
+						<div className="qr-code" ref={qrCode}></div>
 					</div>
 				</div>
 			)}

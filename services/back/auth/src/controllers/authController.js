@@ -1,7 +1,4 @@
-const authModel = require('../models/authModel');
-const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
-
+import { addNewUser, getUserName, getUserId } from '../models/authModel.js'
 
 function User(username, email, password, token) {
 	this.username = username;
@@ -11,19 +8,17 @@ function User(username, email, password, token) {
 	this.id = 0;
 }
 
-const saltWorkFactor = 12;
 let facode = 0;
 
 async function signupUser(request, reply) {
 	const user = Object.create(User);
 	user.username = await request.body.username;
 	user.email = await request.body.email;
-	const pass = await request.body.password;
-	user.password = await bcrypt.hash(pass, saltWorkFactor);
+	user.password = await request.body.password;
 	try {
-		const response = authModel.addNewUser(user);
+		const response = addNewUser(user);
 		if (!response) {
-			return reply.code(404);
+			return reply.code(404).send({ error: response.error })
 		}
 		console.log("response: ", response)
 		return response;
@@ -32,19 +27,20 @@ async function signupUser(request, reply) {
 	}
 }
 
-async function loginUser(req, rep) {
+async function loginUser(hashPass, req, rep) {
 	const pass = await req.body.password;
 	const email = await req.body.email;
-	const hashPass = await bcrypt.hash(pass, saltWorkFactor);
-	const resp = authModel.getUserId(rep, email, hashPass);
+	const resp = getUserId(rep, email, pass);
+
 	if (!resp)
-		return rep.code(401).send({ error: 'Invalid credentials' })
-	else
+		return rep.code(401).send({ error: resp.error })
+	else {
 		return resp;
+	}
 }
 
 async function getUsername(req, rep) {
-	const username = authModel.getUserName(req, rep)
+	const username = getUserName(req, rep)
 	if (!username)
 		return rep.code(401).send({ error: "Invalid credentials" })
 	return username;
@@ -58,7 +54,7 @@ async function codeVerification(frontAuth) {
 }
 
 
-module.exports = {
+export {
 	signupUser,
 	loginUser,
 	getUsername,

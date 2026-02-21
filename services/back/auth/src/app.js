@@ -1,7 +1,12 @@
 "use strict";
-const fastify = require("fastify")({ logger: true });
-fastify.register(require("@fastify/multipart"));
-fastify.register(require("./routes/authRoute"));
+// const fastify = require("fastify")({ logger: true });
+import Fastify from "fastify"
+import multipart from "@fastify/multipart"
+import authRoute from './routes/authRoute.js';
+
+const fastify = Fastify();
+fastify.register(multipart);
+fastify.register(authRoute);
 
 const jwt_secret = process.env.JWT_SECRET || false;
 if (!jwt_secret) {

@@ -2,6 +2,7 @@
 	"name": "back-auth",
 	"version": "1.0.0",
 	"description": "",
+	"type": "module",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -26,6 +27,9 @@
 		"nodejs": "^0.0.0",
 		"nodemailer": "^7.0.12",
 		"nunjucks": "^3.2.4",
+		"otplib": "^13.3.0",
+		"qrcode": "^1.5.4",
+		"speakeasy": "^2.0.0",
 		"tsx": "^4.21.0"
 	}
 }

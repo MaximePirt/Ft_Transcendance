@@ -1,5 +1,5 @@
-const db = require('./db');
-const bcrypt = require('bcryptjs')
+import db from './db.js'
+import bcrypt from 'bcryptjs';
 
 function addNewUser(data) {
 	try {
@@ -12,7 +12,10 @@ function addNewUser(data) {
 		return info.lastInsertRowid;
 	} catch (err) {
 		console.error(err);
-		return { error: "User already exist", ok: false };
+		if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+			return { ok: false, error: "Username or Email already exists" };
+		}
+		return { ok: false, error: "Database error occurred" };
 	}
 }
 
@@ -31,22 +34,20 @@ function getUserName(req, rep) {
 	}
 }
 
-function getUserId(rep, email, hashPass) {
+function getUserId(rep, email, password) {
 	try {
-		console.log("email: ", email, "hasPass: ", hashPass)
 		const stmt = db.prepare(
 			`SELECT * FROM users
 					WHERE email = ?`
 		).get(email);
 		if (!stmt) {
 			console.log("authModels: user not found")
-			return rep.code(401).send({ error: 'Invalid credentials' })
+			return { ok: false, error: "user not found" }
 		}
-		console.log("user found from models !")
-		const matchPass = bcrypt.compare(hashPass, stmt.password);
+		const matchPass = bcrypt.compare(password, stmt.password);
 		if (!matchPass) {
 			console.error("err: mismatch password")
-			return rep.code(401).send({ error: 'Invalid credentials' })
+			return { ok: false, error: "bad password" }
 		} else
 			return stmt.id;
 	} catch (e) {
@@ -55,7 +56,7 @@ function getUserId(rep, email, hashPass) {
 	}
 }
 
-module.exports = {
+export {
 	addNewUser,
 	getUserName,
 	getUserId,
