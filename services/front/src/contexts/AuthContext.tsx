@@ -83,12 +83,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return
+      if (error instanceof TypeError) return
       console.warn('[Auth] failed to apply preferred language', error)
     }
   }
 
   useEffect(() => {
     const abortController = new AbortController()
+    const storedUserRaw = localStorage.getItem('user')
+    let storedUser: User | null = null
+
+    if (storedUserRaw) {
+      try {
+        storedUser = JSON.parse(storedUserRaw)
+      } catch {
+        storedUser = null
+      }
+    }
+
     const bootstrapAuth = async () => {
       try {
         const meResponse = await fetch(`${API_BASE}/auth/me`, {
@@ -108,14 +120,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem('user', JSON.stringify(userData))
             await applyPreferredLanguage(userData.username, abortController.signal)
           }
+        } else if (meResponse.status === 401 || meResponse.status === 403) {
+          setUser(null)
+          localStorage.removeItem('user')
+        } else if (storedUser?.username) {
+          setUser(storedUser)
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        if (storedUser?.username) {
+          setUser(storedUser)
         } else {
           setUser(null)
           localStorage.removeItem('user')
         }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return
-        setUser(null)
-        localStorage.removeItem('user')
       } finally {
         setIsAuthReady(true)
       }

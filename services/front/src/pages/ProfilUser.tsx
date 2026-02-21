@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
+import DataRequester from '../content/DataRequester'
 import '../App.css'
 
 // @ts-ignore
@@ -266,6 +267,7 @@ function ProfilUser() {
 			setRecentMatches(normalized)
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
+			if (error instanceof TypeError) return
 			console.warn('[Profile] failed to load recent matches', error)
 			setRecentMatches([])
 		} finally {
@@ -390,6 +392,7 @@ function ProfilUser() {
 				}
 			} catch (e) {
 			if (e instanceof DOMException && e.name === 'AbortError') return
+			if (e instanceof TypeError) return
 			console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
 			try {
 				const stored = localStorage.getItem('profileCard')
@@ -422,6 +425,7 @@ useEffect(() => {
 			await Promise.all([loadFriends(user.username, abortController.signal), loadFriendRequests(abortController.signal)])
 		} catch (e) {
 			if (e instanceof Error && e.name === 'AbortError') return
+			if (e instanceof TypeError) return
 			console.warn('[Profile] failed to load social data', e)
 		}
 	}
@@ -1260,6 +1264,7 @@ useEffect(() => {
 						</section>
 					)}
 				</div>
+				<DataRequester />
 			</div>
 		</main>
 	)
