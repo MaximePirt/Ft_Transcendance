@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+// @ts-ignore
+const API_BASE = (window.env && window.env.API_URL) ? window.env.API_URL : '/api'
 
 // function getsignup()
 // {
@@ -68,7 +69,6 @@ async function getlogin()
         body: JSON.stringify({ username, password }),
     })
     .then((res) => res.json())
-    .then((data) => console.log(data))
     .catch((err) => console.error(err));
 }
 
@@ -80,10 +80,8 @@ async function getPlayerInfo() {
             method: "GET",
             credentials: "include",
     })
-    console.log("Response from /auth/me:", res);
     
     const me_user = await res.json();
-    console.log(me_user)
     // const userIdResponse = await fetch(`${API_BASE}/userid/${USERNAME}`)
 	// if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 

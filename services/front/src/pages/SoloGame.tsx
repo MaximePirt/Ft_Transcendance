@@ -97,6 +97,8 @@ function SoloGamePage() {
   const [isCorrect, setIsCorrect] = useState(false)
 
   useEffect(() => {
+    const abortController = new AbortController()
+    
     // Si un état est sauvegardé, le restaurer immédiatement pour éviter un reset au refresh
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
@@ -121,7 +123,9 @@ function SoloGamePage() {
     // Charger les questions depuis le backend si aucun état sauvegardé
     const fetchQuestions = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/questions/?lang=fr')
+        const response = await fetch('http://localhost:8000/api/questions/?lang=fr', {
+          signal: abortController.signal,
+        })
         if (!response.ok) {
           throw new Error('Failed to fetch questions')
         }
@@ -148,12 +152,15 @@ function SoloGamePage() {
         setQuestions(shuffleQuestions(allQuestions))
         setLoading(false)
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
         setError(err instanceof Error ? err.message : t('error_occurred'))
         setLoading(false)
       }
     }
 
     fetchQuestions()
+    
+    return () => abortController.abort()
   }, [])
 
   useEffect(() => {
