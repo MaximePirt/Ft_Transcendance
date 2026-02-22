@@ -32,7 +32,7 @@ async function applyTheme(themeName: string, signal?: AbortSignal) {
     })
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return
-    // console.error(`Erreur lors du chargement du theme "${themeName}"`, err)
+    console.error(`Erreur lors du chargement du theme "${themeName}"`, err)
     if (themeName !== 'default') return applyTheme('default', signal)
   }
 }
@@ -48,7 +48,7 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
     })
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return
-    // console.error(`Erreur lors du chargement de la police "${fontName}"`, err)
+    console.error(`Erreur lors du chargement de la police "${fontName}"`, err)
     if (fontName !== 'default') return applyFont('default', signal)
   }
 }
