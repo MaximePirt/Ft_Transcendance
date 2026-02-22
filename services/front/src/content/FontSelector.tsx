@@ -19,7 +19,7 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
 
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return
-    // console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
+    console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
     if (fontName !== 'default')
       return applyFont('default', signal)
     return
