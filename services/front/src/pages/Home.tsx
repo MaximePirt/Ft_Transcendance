@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
-import { useTranslation } from 'react-i18next';
-import LanguageSelector from './../content/LanguageSelector.tsx'
+import { useTranslation } from 'react-i18next'
+import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
 
 const topics = (t: any) => [

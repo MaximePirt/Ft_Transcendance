@@ -53,11 +53,34 @@ async function userRoutes(fastify, options) {
 		if (!username) {
 			return reply.code(400).send({ error: "Username parameter is required" });
 		}
-		const user = await userController.getUserByUsername(username);
-		if (!user) {
-			return reply.code(401).send({ error: "User not found" });
+		try {
+			const user = await userController.getUserByUsername(username);
+			if (!user) {
+				return reply.code(404).send({ error: "User not found" });
+			}
+			return { id: user.id };
+		} catch (error) {
+			if (String(error?.message).includes("User not found")) {
+				return reply.code(404).send({ error: "User not found" });
+			}
+			request.log.error(error);
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
-		return { id: user.id };
+	});
+
+	fastify.get("/:id/matches", async (request, reply) => {
+		const userId = Number(request.params.id);
+		if (!Number.isInteger(userId) || userId <= 0) {
+			return reply.code(400).send({ error: "Invalid user id" });
+		}
+		const limit = Number(request.query?.limit || 3);
+		try {
+			const matches = await userController.getRecentMatchesByUserId(userId, limit);
+			return reply.code(200).send({ result: matches });
+		} catch (error) {
+			request.log.error(error);
+			return reply.code(500).send({ error: "Internal Server Error" });
+		}
 	});
 
 	
