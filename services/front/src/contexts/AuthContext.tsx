@@ -19,7 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // @ts-ignore
-const API_BASE = (window.env && window.env.API_URL) ? window.env.API_URL : '/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
 async function applyTheme(themeName: string, signal?: AbortSignal) {
   try {
