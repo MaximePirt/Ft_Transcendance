@@ -9,7 +9,8 @@
 const React = require("react");
 const { render } = require("@react-email/render");
 const { createZohoTransporter } = require("../services/userServices.js");
-const DataExportConfirmationEmail = require("../mails/mail.js");
+const DataExportConfirmationEmail = require("../mails/dataExportConfirmationEmail.js");
+const SignupEmail = require("../mails/signupEmail.js");
 userController = require("../controllers/userController");
 
 async function userRoutes(fastify, options) {
@@ -163,25 +164,55 @@ async function userRoutes(fastify, options) {
 
 			const user = await userController.getUserById(userId);
 		    if (!user) {
-      			return reply.code(404).send({ error: "User not found" });
+      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
     		}
 
 			const html = await render(React.createElement(DataExportConfirmationEmail, { username: user.username }));
 			const transporter = createZohoTransporter();
 
 			await transporter.sendMail({
-				from: `"FT Transcendence" <ft_trans@zohomail.eu>`,
+				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: "tristan.olivier.p@gmail.com",
 				//to: user.email,
-				subject: "Export de vos données personnelles",
+				subject: "Export of your personal data",
 				html,
 				attachments: [
 					{
-					filename: "data-export.json",
+					filename: `${user.username}-data.json`,
 					content: JSON.stringify(data, null, 2),
 					contentType: "application/json",
 					},
 				],
+			});
+
+			return reply.send({ success: true });
+		} catch (err) {
+			console.error(err);
+			return reply.code(500).send({ error: "MAIL_FAILED" });
+		}
+	});
+
+	fastify.post("/signup/mail", async (request, reply) => {
+		try {
+			const { userId, codeValidation } = request.body;
+			if (!userId || !codeValidation) {
+  				return reply.code(400).send({ error: "BAD_REQUEST" });
+			}
+
+			const user = await userController.getUserById(userId);
+		    if (!user) {
+      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
+    		}
+
+			const html = await render(React.createElement(SignupEmail, { username: user.username, code: codeValidation}));
+			const transporter = createZohoTransporter();
+
+			await transporter.sendMail({
+				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
+				to: "tristan.olivier.p@gmail.com",
+				//to: user.email,
+				subject: `Welcome, ${user.username} !`,
+				html,
 			});
 
 			return reply.send({ success: true });

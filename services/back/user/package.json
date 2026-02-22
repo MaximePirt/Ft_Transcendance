@@ -6,7 +6,7 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"dev": "tsx watch src/app.js",
-		"email": "email dev --dir ./mails"
+		"email": "email dev --dir ./src/mails"
 	},
 	"keywords": [],
 	"author": "mpierrot",
