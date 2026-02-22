@@ -9,13 +9,14 @@ function generateSessionCode()
 	return res;
 }
 
-function insertGameSession(sessionCode, mode, topic, question_count, max_players, hostId)
+function insertGameSession(sessionCode, mode, topic, question_count, max_players, power_ups, hostId)
 {
+	console.log("Inserting powers_ups for new game session:", power_ups);
 	const insert = db.prepare(`
-		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, host_id)
-		VALUES (?, ?, ?, ?, ?, ?)
+		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, power_ups, host_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`);
-	const result = insert.run(sessionCode, mode, topic, question_count, max_players, hostId);
+	const result = insert.run(sessionCode, mode, topic, question_count, max_players, power_ups, hostId);
 	if (result.changes !== 1)
 		throw new Error("Failed to insert game session into database");
 	return result;
@@ -39,11 +40,10 @@ function getSessionById(sessionId)
 	console.log("Model : Fetching game session by ID:", sessionId);
 	const data = db.prepare(`
 		SELECT id, code, mode, topic, question_count, max_players, host_id, status, started_at, ended_at,
-			current_question_order, current_question_time
+			current_question_order, current_question_time, power_ups
 		FROM game_sessions
 		WHERE id = ?
 	`).get(sessionId);
-	console.log("Game session data retrieved:", data);
 	return data;
 }
 
@@ -474,6 +474,62 @@ function getLeaderboardForSession(sessionId) {
 	return leaderboard;
 }
 
+function countPowerups(sessionId, userId) {
+	console.log("Model: Counting powerups for user ID:", userId, "in game session ID:", sessionId);
+	const row = db.prepare(`
+		SELECT powerups_count
+		FROM game_players
+		WHERE game_session_id = ? AND user_id = ?
+	`).get(sessionId, userId);
+	return row?.powerups_count ?? 0;
+}
+
+function grantPowerup(sessionId, userId, questionOrder, powerupType) {
+	console.log("Model : Granting power up ", powerupType, " to userId :", userId);
+	
+	db.prepare(`
+		INSERT INTO game_powerups (game_session_id, user_id, question_order, powerup_type)
+		VALUES (?, ?, ?, ?)
+	`).run(sessionId, userId, questionOrder, powerupType);
+
+	const increment = db.prepare(`
+		UPDATE game_players
+		SET powerups_count = powerups_count + 1
+		WHERE game_session_id = ? AND user_id = ?
+	`).run(sessionId, userId);
+	return increment;
+}
+
+function getAvailablePowerupsForPlayer(sessionId, userId) {
+	const res = db.prepare(`
+		SELECT id, powerup_type, question_order, granted_at
+		FROM game_powerups
+		WHERE game_session_id = ?
+			AND user_id = ?
+			AND used = 0
+		ORDER BY granted_at ASC
+	`).all(sessionId, userId);
+	return res;
+}
+
+function usePowerup(powerupId, userId) {
+	const result = db.prepare(`
+		UPDATE game_powerups
+		SET used = 1, used_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND user_id = ? AND used = 0
+	`).run(powerupId, userId);
+
+	if (result.changes > 0) {
+		const powerup = db.prepare(`SELECT game_session_id FROM game_powerups WHERE id = ?`).get(powerupId);
+		db.prepare(`
+			UPDATE game_players
+			SET powerups_count = powerups_count - 1
+			WHERE game_session_id = ? AND user_id = ? AND powerups_count > 0
+		`).run(powerup.game_session_id, userId);
+	}
+	return result.changes > 0;
+}
+
 
 module.exports = {
 	generateSessionCode,
@@ -503,5 +559,9 @@ module.exports = {
 	setPlayerActive,
 	getNextActivePlayer,
 	transferHost,
-	getLeaderboardForSession
+	getLeaderboardForSession,
+	grantPowerup,
+	getAvailablePowerupsForPlayer,
+	usePowerup,
+	countPowerups
 };

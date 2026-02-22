@@ -4,13 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
-import '../App.css'
 import DataRequester from '../content/DataRequester'
+import '../App.css'
 
-async function applyTheme(themeName: string) {
-	console.log(`${themeName}.json`)
+// @ts-ignore
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+
+async function applyTheme(themeName: string, signal?: AbortSignal) {
 	try {
-		const res = await fetch(`/themes/styles/${themeName}.json`)
+		const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -18,16 +20,16 @@ async function applyTheme(themeName: string) {
 			root.style.setProperty(key, value as string)
 		})
 	} catch (err) {
+		if (err instanceof Error && err.name === 'AbortError') return
 		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
-		if (themeName !== 'default') return applyTheme('default')
+		if (themeName !== 'default') return applyTheme('default', signal)
 		return
 	}
 }
 
-async function applyFont(fontName: string) {
-	console.log(`${fontName}.json`)
+async function applyFont(fontName: string, signal?: AbortSignal) {
 	try {
-		const res = await fetch(`/themes/fonts/${fontName}.json`)
+		const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -35,8 +37,9 @@ async function applyFont(fontName: string) {
 			root.style.setProperty(key, value as string)
 		})
 	} catch (err) {
+		if (err instanceof Error && err.name === 'AbortError') return
 		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
-		if (fontName !== 'default') return applyFont('default')
+		if (fontName !== 'default') return applyFont('default', signal)
 		return
 	}
 }
@@ -71,13 +74,9 @@ type Friend = {
 type FriendRequest = {
 	id: string
 	username: string
+	status: 'online' | 'offline'
 	type: 'received' | 'sent'
 }
-
-const UserFriendRequests: FriendRequest[] = [
-	{ id: '4', username: '123', type: 'received' },
-	{ id: '5', username: 'ff', type: 'received' },
-]
 
 type Sticker = {
 	id: string
@@ -90,6 +89,18 @@ type Sticker = {
 type TitleOption = {
 	id: string
 	text: string
+}
+
+type RecentMatch = {
+	sessionId: string
+	mode: string
+	status: string
+	startedAt: string
+	endedAt: string
+	totalQuestions: number
+	score: number
+	correctAnswers: number
+	answeredCount: number
 }
 
 
@@ -115,16 +126,8 @@ const titleOptions: TitleOption[] = [
 	{ id: 'music', text: 'profile_title_music' },
 ]
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost'
 const DEFAULT_AVATAR = '/avatar/Default.png'
-
-type CardState = {
-	bgColor: string
-	stickers: Sticker[]
-	titles: string[]
-	description: string
-	preferredLanguage?: string
-}
+const DEFAULT_AVATAR_CHOICES = ['/avatar/Default.png', '/avatar/Default2.png', '/avatar/Default3.png']
 
 const MAX_STICKERS = 3
 const MAX_TITLES = 2
@@ -138,25 +141,139 @@ function ProfilUser() {
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
-	const previousThemeRef = useRef<string | null>(null)
-	const previousFontRef = useRef<string | null>(null)
+	const avatarInputRef = useRef<HTMLInputElement | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
 	const [description, setDescription] = useState('')
-	const [preferredLanguage, setPreferredLanguage] = useState(i18n.language)
-	const [hydrated, setHydrated] = useState(false)
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
 	const [saveSuccess, setSaveSuccess] = useState(false)
 	const [avatarUrl, setAvatarUrl] = useState('')
+	const [selectedAvatarFileName, setSelectedAvatarFileName] = useState('')
 	const [avatarUploading, setAvatarUploading] = useState(false)
 	const [avatarError, setAvatarError] = useState('')
 	const [avatarSuccess, setAvatarSuccess] = useState(false)
 	const [friends, setFriends] = useState<Friend[]>([])
-	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>(UserFriendRequests)
+	const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
 	const [friendSearchInput, setFriendSearchInput] = useState('')
+	const [friendActionError, setFriendActionError] = useState('')
+	const [friendActionSuccess, setFriendActionSuccess] = useState('')
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
+	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
+	
+	// fausse game data pour les stats de jeu, à remplacer par des vraies données quand l'API sera ok
+	const totalQuestions = userProfile.stats.gamesPlayed * 10
+	const correctAnswers = Math.round((totalQuestions * userProfile.stats.winRate) / 100)
+	const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
+
+	const formatMatchDate = (dateValue?: string) => {
+		if (!dateValue) return '-'
+		const date = new Date(dateValue)
+		if (Number.isNaN(date.getTime())) return dateValue
+		return date.toLocaleString(i18n.language)
+	}
+
+	const getMatchStatusLabel = (status: string) => {
+		if (status === 'completed') return t('profile_match_status_completed')
+		if (status === 'abandoned') return t('profile_match_status_abandoned')
+		if (status === 'in_progress') return t('profile_match_status_in_progress')
+		return status
+	}
+
+	const mapFriendMessage = (message?: string) => {
+		const normalized = (message || '').toLowerCase()
+		if (normalized.includes('user not found')) return t('profile_friend_user_not_found')
+		if (normalized.includes('already friend')) return t('profile_friend_already_friend')
+		if (normalized.includes('already sent')) return t('profile_friend_request_already_sent')
+		if (normalized.includes('no auth cookie') || normalized.includes('unauthorized')) return t('save_error_not_authenticated')
+		return ''
+	}
+
+	const loadFriends = async (username: string, signal?: AbortSignal) => {
+		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
+		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+		const { id } = await userIdResponse.json()
+
+		const response = await fetch(`${API_BASE}/user/${id}/friends`, { signal })
+		if (!response.ok) throw new Error('Failed to load friends')
+		const data = await response.json()
+		const list = data?.result?.friends || data?.friends || []
+		const normalized = list.map((friend: { id: number | string; username: string; onlineStatus: number | boolean }) => ({
+			id: String(friend.id),
+			username: friend.username,
+			status: friend.onlineStatus ? 'online' : 'offline',
+		}))
+		setFriends(normalized)
+	}
+
+	const loadFriendRequests = async (signal?: AbortSignal) => {
+		const response = await fetch(`${API_BASE}/user/friends/requests`, {
+			credentials: 'include',
+			signal,
+		})
+		if (!response.ok) throw new Error('Failed to load friend requests')
+		const data = await response.json()
+		const received = Array.isArray(data?.received) ? data.received : []
+		const sent = Array.isArray(data?.sent) ? data.sent : []
+		const normalizedReceived: FriendRequest[] = received.map((request: { id: number | string; username: string; onlineStatus: number | boolean }) => ({
+			id: String(request.id),
+			username: request.username,
+			status: request.onlineStatus ? 'online' : 'offline',
+			type: 'received',
+		}))
+		const normalizedSent: FriendRequest[] = sent.map((request: { id: number | string; username: string; onlineStatus: number | boolean }) => ({
+			id: String(request.id),
+			username: request.username,
+			status: request.onlineStatus ? 'online' : 'offline',
+			type: 'sent',
+		}))
+		setFriendRequests([...normalizedReceived, ...normalizedSent])
+	}
+
+	const loadRecentMatches = async (username: string, signal?: AbortSignal) => {
+		setRecentMatchesLoading(true)
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
+			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for match history')
+			const { id } = await userIdResponse.json()
+
+			const historyResponse = await fetch(`${API_BASE}/user/${id}/matches?limit=3`, { signal })
+			if (!historyResponse.ok) throw new Error('Failed to load match history')
+			const data = await historyResponse.json()
+			const list = Array.isArray(data?.result) ? data.result : []
+			const normalized: RecentMatch[] = list.slice(0, 3).map((match: {
+				sessionId: number | string
+				mode?: string
+				status?: string
+				startedAt?: string
+				endedAt?: string
+				totalQuestions?: number
+				score?: number
+				correctAnswers?: number
+				answeredCount?: number
+			}) => ({
+				sessionId: String(match.sessionId),
+				mode: String(match.mode || 'random'),
+				status: String(match.status || 'completed'),
+				startedAt: String(match.startedAt || ''),
+				endedAt: String(match.endedAt || ''),
+				totalQuestions: Number(match.totalQuestions || 0),
+				score: Number(match.score || 0),
+				correctAnswers: Number(match.correctAnswers || 0),
+				answeredCount: Number(match.answeredCount || 0),
+			}))
+			setRecentMatches(normalized)
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') return
+			if (error instanceof TypeError) return
+			console.warn('[Profile] failed to load recent matches', error)
+			setRecentMatches([])
+		} finally {
+			setRecentMatchesLoading(false)
+		}
+	}
 
 	const normalizeAvatarUrl = (url?: string) => {
 		if (!url) return ''
@@ -200,30 +317,28 @@ function ProfilUser() {
 		}
 	}, [user, isPublicView])
 
-	useEffect(() => {
-		if (!isPublicView) return
-		previousThemeRef.current = localStorage.getItem('theme') || 'default'
-		previousFontRef.current = localStorage.getItem('font') || 'default'
-		return () => {
-			const prevTheme = previousThemeRef.current || 'default'
-			const prevFont = previousFontRef.current || 'default'
-			applyTheme(prevTheme)
-			applyFont(prevFont)
-		}
-	}, [isPublicView])
+	// Supprimé: la logique d'application automatique du thème/font d'un autre utilisateur
+	// causait des conflits et bugs de timing
 
 	useEffect(() => {
 		if (!profileUsername) return
+		const abortController = new AbortController()
+		let isActive = true
 		
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
-				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`)
+				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`, {
+					signal: abortController.signal,
+				})
 				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 				const { id } = await userIdResponse.json()
 
-				const response = await fetch(`${API_BASE}/user/users/${id}`)
+				const response = await fetch(`${API_BASE}/user/users/${id}`, {
+					signal: abortController.signal,
+				})
 				if (response.ok) {
+					if (!isActive) return
 					const userData = await response.json()
 					setUserProfile({
 						username: userData.username || profileUsername,
@@ -238,17 +353,16 @@ function ProfilUser() {
 						favorites: ['cinema', 'music', 'computer_science'],
 					})
 					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
-					let parsedStickers: Sticker[] = []
-					let parsedTitles: string[] = [titleOptions[0].id, titleOptions[1].id]
+					setBgColor(userData.profileCardBgColor || '#0f0f10')
+					setStickers([])
+					setTitles([titleOptions[0].id, titleOptions[1].id])
+					setDescription(String(userData.profileCardDescription || '').slice(0, 40))
 					
 					// Charger les données de personnalisation depuis le serveur
-					if (userData.profileCardBgColor) setBgColor(userData.profileCardBgColor)
-					
 					if (userData.profileCardStickers) {
 						try {
 							const parsed = JSON.parse(userData.profileCardStickers)
 							if (Array.isArray(parsed)) {
-								parsedStickers = parsed
 								setStickers(parsed)
 							}
 						} catch (e) {
@@ -260,7 +374,6 @@ function ProfilUser() {
 						try {
 							const parsed = JSON.parse(userData.profileCardTitles)
 							if (Array.isArray(parsed) && parsed.length) {
-								parsedTitles = parsed
 								setTitles(parsed.slice(0, MAX_TITLES))
 							}
 						} catch (e) {
@@ -268,63 +381,87 @@ function ProfilUser() {
 						}
 					}
 					
-					if (userData.profileCardDescription) {
-						setDescription(userData.profileCardDescription.slice(0, 40))
-					}
-					
-					if (userData.preferredLanguage) {
-						setPreferredLanguage(userData.preferredLanguage)
-					}
-
 					if (canEdit) {
 						if (userData.theme) localStorage.setItem('theme', userData.theme)
 						if (userData.font) localStorage.setItem('font', userData.font)
 					}
 
-					if (isPublicView) {
-						const themeToApply = userData.theme || 'default'
-						const fontToApply = userData.font || 'default'
-						applyTheme(themeToApply)
-						applyFont(fontToApply)
-					}
+					// Note: On n'applique plus le thème/font d'un utilisateur visité pour éviter les conflits
 					
-					setHydrated(true)
 					return
 				}
 			} catch (e) {
-				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
-			}
-			setHydrated(true)
-		}
-		
-		loadProfileCard()
-	}, [profileUsername, canEdit, isPublicView])
-
-		useEffect(() => {
-			if (!user || !canEdit) return
-			const loadFriends = async () => {
-				try {
-					const userIdResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
-					if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
-					const { id } = await userIdResponse.json()
-
-					const response = await fetch(`${API_BASE}/user/${id}/friends`)
-					if (!response.ok) throw new Error('Failed to load friends')
-					const data = await response.json()
-					const list = data?.result?.friends || data?.friends || []
-					const normalized = list.map((friend) => ({
-						id: String(friend.id),
-						username: friend.username,
-						status: friend.onlineStatus ? 'online' : 'offline',
-					}))
-					setFriends(normalized)
-				} catch (e) {
-					console.warn('[Profile] failed to load friends', e)
+			if (e instanceof DOMException && e.name === 'AbortError') return
+			if (e instanceof TypeError) return
+			console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
+			try {
+				const stored = localStorage.getItem('profileCard')
+				if (stored && canEdit) {
+					const data = JSON.parse(stored)
+					if (data.stickers) setStickers(data.stickers)
+					if (data.titles) setTitles(data.titles)
+					if (data.bgColor) setBgColor(data.bgColor)
+					if (data.description) setDescription(data.description)
 				}
+			} catch (e) {
+				console.warn('[ProfileCard] failed to load from localStorage', e)
 			}
+		}
+	}
+	
+	void loadProfileCard()
 
-			loadFriends()
-		}, [user, canEdit])
+	return () => {
+		isActive = false
+		abortController.abort()
+	}
+}, [profileUsername, canEdit, isPublicView])
+
+useEffect(() => {
+	if (!user || !canEdit) return
+	const abortController = new AbortController()
+	const refreshFriends = async () => {
+		try {
+			await Promise.all([loadFriends(user.username, abortController.signal), loadFriendRequests(abortController.signal)])
+		} catch (e) {
+			if (e instanceof Error && e.name === 'AbortError') return
+			if (e instanceof TypeError) return
+			console.warn('[Profile] failed to load social data', e)
+		}
+	}
+
+	void refreshFriends()
+
+	const refreshInterval = window.setInterval(() => {
+		if (document.visibilityState === 'visible') {
+			void refreshFriends()
+		}
+	}, 10000)
+
+	const onVisibilityChange = () => {
+		if (document.visibilityState === 'visible') {
+			void refreshFriends()
+		}
+	}
+
+	document.addEventListener('visibilitychange', onVisibilityChange)
+
+	return () => {
+		abortController.abort()
+		window.clearInterval(refreshInterval)
+		document.removeEventListener('visibilitychange', onVisibilityChange)
+	}
+}, [user, canEdit])
+
+	useEffect(() => {
+		if (!profileUsername) {
+			setRecentMatches([])
+			return
+		}
+		const abortController = new AbortController()
+		void loadRecentMatches(profileUsername, abortController.signal)
+		return () => abortController.abort()
+	}, [profileUsername])
 
 	useEffect(() => {
 		document.body.dir = i18n.dir()
@@ -340,7 +477,6 @@ function ProfilUser() {
 		try {
 			const res = await saveProfileToServer()
 			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
-			setPreferredLanguage(i18n.language)
 			setSaveSuccess(true)
 		} catch (e) {
 			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
@@ -351,18 +487,21 @@ function ProfilUser() {
 
 	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (!user || !canEdit) return
-			const file = e.target.files?.[0]
+		const file = e.target.files?.[0]
 		if (!file) return
-			setAvatarError('')
-			setAvatarSuccess(false)
+		setSelectedAvatarFileName(file.name)
+		setAvatarError('')
+		setAvatarSuccess(false)
 		if (file.size > 2 * 1024 * 1024) {
 			setAvatarError(t('profile_avatar_error_size'))
 			e.target.value = ''
+			setSelectedAvatarFileName('')
 			return
 		}
 		if (!['image/png', 'image/jpeg'].includes(file.type)) {
 			setAvatarError(t('profile_avatar_error_type'))
 			e.target.value = ''
+			setSelectedAvatarFileName('')
 			return
 		}
 		setAvatarUploading(true)
@@ -387,6 +526,46 @@ function ProfilUser() {
 			if (data?.avatarUrl) setAvatarUrl(data.avatarUrl)
 			setAvatarSuccess(true)
 			e.target.value = ''
+			setSelectedAvatarFileName('')
+		} catch (err) {
+			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
+		} finally {
+			setAvatarUploading(false)
+		}
+	}
+
+	const handleBrowseAvatar = () => {
+		if (avatarUploading) return
+		avatarInputRef.current?.click()
+	}
+
+	const handleSelectDefaultAvatar = async (defaultAvatarPath: string) => {
+		if (!user || !canEdit) return
+		setAvatarError('')
+		setAvatarSuccess(false)
+		setAvatarUploading(true)
+		try {
+			const userResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(user.username)}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('profile_avatar_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+			const updateResponse = await fetch(`${API_BASE}/user/${id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ avatarUrl: defaultAvatarPath }),
+			})
+			if (!updateResponse.ok) {
+				const text = await updateResponse.text()
+				throw new Error(t('profile_avatar_error_api', { status: updateResponse.status, detail: text || '-' }))
+			}
+			setAvatarUrl(defaultAvatarPath)
+			if (avatarInputRef.current) avatarInputRef.current.value = ''
+			setSelectedAvatarFileName('')
+			setAvatarSuccess(true)
 		} catch (err) {
 			setAvatarError(err instanceof Error ? err.message : t('profile_avatar_error_generic'))
 		} finally {
@@ -495,40 +674,125 @@ function ProfilUser() {
 		setStickers((prev) => prev.filter((s) => s.id !== id))
 	}
 
-	const handleAcceptRequest = (id: string) => {
+	const handleRemoveFriend = async (id: string) => {
 		if (!canEdit) return
-		const request = friendRequests.find((r) => r.id === id)
-		if (!request) return
-		setFriends((prev) => [...prev, { id: request.id, username: request.username, status: 'online' }])
-		setFriendRequests((prev) => prev.filter((r) => r.id !== id))
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		try {
+			const response = await fetch(`${API_BASE}/user/${id}/friends`, {
+				method: 'DELETE',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (!response.ok || !data?.ok) {
+				throw new Error(data?.message || 'Unable to remove friend')
+			}
+			if (user) {
+				await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			}
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
-	const handleDeclineRequest = (id: string) => {
-		if (!canEdit) return
-		setFriendRequests((prev) => prev.filter((r) => r.id !== id))
+	const handleAcceptRequest = async (id: string) => {
+		if (!canEdit || !user) return
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		try {
+			const response = await fetch(`${API_BASE}/user/${id}/friends`, {
+				method: 'POST',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (!response.ok || !data?.ok) {
+				throw new Error(data?.message || 'Unable to accept friend request')
+			}
+			await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
-	const handleRemoveFriend = (id: string) => {
-		if (!canEdit) return
-		setFriends((prev) => prev.filter((f) => f.id !== id))
+	const handleDeclineRequest = async (id: string) => {
+		if (!canEdit || !user) return
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		try {
+			const response = await fetch(`${API_BASE}/user/${id}/friends`, {
+				method: 'DELETE',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (!response.ok || !data?.ok) {
+				throw new Error(data?.message || 'Unable to decline friend request')
+			}
+			await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
-	const handleSendFriendRequest = () => {
-		if (!canEdit) return
-		if (!friendSearchInput.trim()) return
-		console.log('Demande envoyée à:', friendSearchInput)
-		setFriendSearchInput('')
+	const handleSendFriendRequest = async () => {
+		if (!canEdit || !user) return
+		const friendUsername = friendSearchInput.trim()
+		if (!friendUsername) return
+		setFriendActionError('')
+		setFriendActionSuccess('')
+		if (friendUsername === user.username) {
+			setFriendActionError(t('save_error_generic'))
+			return
+		}
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(friendUsername)}`)
+			if (!userIdResponse.ok) {
+				let backendMessage = ''
+				const payload = await userIdResponse.json().catch(() => null)
+				if (payload?.error) backendMessage = String(payload.error)
+				if (payload?.message) backendMessage = String(payload.message)
+				const friendly = mapFriendMessage(backendMessage)
+				setFriendActionError(friendly || t('profile_friend_user_not_found'))
+				return
+			}
+			const { id: friendId } = await userIdResponse.json()
+			const response = await fetch(`${API_BASE}/user/${friendId}/friends`, {
+				method: 'POST',
+				credentials: 'include',
+			})
+			const data = await response.json().catch(() => null)
+			if (response.status === 409 && data?.message) {
+				setFriendSearchInput('')
+				await Promise.all([loadFriends(user.username), loadFriendRequests()])
+				setFriendActionSuccess(mapFriendMessage(data.message) || data.message)
+				return
+			}
+			if (!response.ok || !data?.ok) {
+				const friendly = mapFriendMessage(data?.message)
+				throw new Error(friendly || t('save_error_generic'))
+			}
+			setFriendSearchInput('')
+			await Promise.all([loadFriends(user.username), loadFriendRequests()])
+			setFriendActionSuccess(t('save_success'))
+		} catch (e) {
+			setFriendActionError(e instanceof Error ? e.message : t('save_error_generic'))
+		}
 	}
 
 	const changeLanguage = async (lang: string) => {
 		try {
 			await i18n.changeLanguage(lang)
-			if (canEdit) setPreferredLanguage(lang)
 			document.body.dir = i18n.dir(lang)
 			document.documentElement.lang = lang
 		} catch (e) {
 			console.warn('[Profile] failed to change language', e)
 		}
+	}
+
+	const openUserProfile = (username: string) => {
+		navigate(`/profile/${encodeURIComponent(username)}`)
 	}
 
 	return (
@@ -606,7 +870,52 @@ function ProfilUser() {
 								})}
 							</div>
 							{!canEdit && (
-								<p className="pref-desc">{t('profile_share_notice')}</p>
+								<>
+									<div className="actions" style={{ marginTop: '0.5rem' }}>
+										<button
+											className="btn ghost"
+											type="button"
+											onClick={() => navigate('/profile')}
+										>
+											{t('profile_back')}
+										</button>
+									</div>
+									<p className="pref-desc">{t('profile_share_notice')}</p>
+								</>
+							)}
+						</div>
+
+						<div className="control-group">
+							<p className="control-label">{t('profile_game_stats_title')}</p>
+							<p className="pref-desc">{t('profile_game_stats_ratio', { correct: correctAnswers, total: totalQuestions })}</p>
+							<p className="pref-desc">{t('profile_game_stats_accuracy', { percent: accuracy })}</p>
+						</div>
+
+						<div className="control-group">
+							<p className="control-label">{t('profile_recent_matches_title')}</p>
+							{recentMatchesLoading ? (
+								<p className="pref-desc">{t('profile_recent_matches_loading')}</p>
+							) : recentMatches.length === 0 ? (
+								<p className="pref-desc">{t('profile_recent_matches_empty')}</p>
+							) : (
+								recentMatches.map((match) => (
+									<div key={match.sessionId}>
+										<p className="pref-desc">
+											{t('profile_recent_match_summary', {
+												score: match.score,
+												correct: match.correctAnswers,
+												total: match.totalQuestions,
+											})}
+										</p>
+										<p className="pref-desc">
+											{t('profile_recent_match_meta', {
+												mode: match.mode,
+												status: getMatchStatusLabel(match.status),
+												date: formatMatchDate(match.endedAt || match.startedAt),
+											})}
+										</p>
+									</div>
+								))
 							)}
 						</div>
 
@@ -621,12 +930,57 @@ function ProfilUser() {
 							</label>
 							<div className="control-row">
 								<input
+									ref={avatarInputRef}
 									id="avatar-upload"
 									type="file"
 									accept="image/png,image/jpeg"
 									onChange={handleAvatarChange}
 									disabled={avatarUploading}
+									style={{ display: 'none' }}
 								/>
+								<button
+									type="button"
+									className="btn ghost"
+									onClick={handleBrowseAvatar}
+									disabled={avatarUploading}
+								>
+									{t('profile_avatar_browse')}
+								</button>
+								<span className="pref-desc" style={{ margin: 0 }}>
+									{selectedAvatarFileName || t('profile_avatar_no_file')}
+								</span>
+							</div>
+							<p className="control-label" style={{ marginTop: '0.5rem' }}>{t('profile_avatar_defaults')}</p>
+							<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+								{DEFAULT_AVATAR_CHOICES.map((avatarPath) => {
+									const activeAvatar = avatarUrl || DEFAULT_AVATAR
+									const isActive = activeAvatar === avatarPath
+									return (
+										<button
+											key={avatarPath}
+											type="button"
+											onClick={() => void handleSelectDefaultAvatar(avatarPath)}
+											disabled={avatarUploading}
+											aria-label={avatarPath}
+											style={{
+												width: '44px',
+												height: '44px',
+												borderRadius: '8px',
+												padding: 0,
+												overflow: 'hidden',
+												border: isActive ? '2px solid #2563eb' : '1px solid #d1d5db',
+												background: 'transparent',
+												cursor: avatarUploading ? 'not-allowed' : 'pointer',
+											}}
+										>
+											<img
+												src={avatarPath}
+												alt={avatarPath}
+												style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+											/>
+										</button>
+									)
+								})}
 							</div>
 							<p className="pref-desc">
 								{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}
@@ -732,7 +1086,7 @@ function ProfilUser() {
 							<button className="btn" type="button" onClick={handleSaveNow} disabled={isSaving}>
 								{isSaving ? t('saving') : t('save')}
 							</button>
-							<button className="btn primary" type="button" onClick={() => navigate('/quiz')}>
+							<button className="btn primary" type="button" onClick={() => navigate('/')}>
 								{t('back')}
 							</button>
 						</div>
@@ -760,24 +1114,26 @@ function ProfilUser() {
 								placeholder={t('profile_username_placeholder')}
 								className="profile-desc-input"
 								onKeyDown={(e) => {
-									if (e.key === 'Enter') handleSendFriendRequest()
+									if (e.key === 'Enter') void handleSendFriendRequest()
 								}}
 							/>
 							<button
 								className="btn primary"
 								type="button"
-								onClick={handleSendFriendRequest}
+								onClick={() => void handleSendFriendRequest()}
 								disabled={!friendSearchInput.trim()}
 							>
 								{t('profile_send')}
 								</button>
 							</div>
+							{friendActionError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{friendActionError}</p>}
+							{friendActionSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{friendActionSuccess}</p>}
 						</div>
 
 						{friendRequests.filter((r) => r.type === 'received').length > 0 && (
 							<div className="control-group">
 								<p className="control-label">
-								{t('profile_friend_requests', { count: friendRequests.filter((r) => r.type === 'received').length })}
+									{t('profile_friend_requests', { count: friendRequests.filter((r) => r.type === 'received').length })}
 								</p>
 								<div className="friends-list">
 									{friendRequests
@@ -785,25 +1141,78 @@ function ProfilUser() {
 										.map((request) => (
 											<div key={request.id} className="friend-item friend-request-item">
 												<div className="friend-info">
-													<span className="friend-name">{request.username}</span>
+													<div>
+															<span
+																className="friend-name"
+																onClick={() => openUserProfile(request.username)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																}}
+																role="button"
+																tabIndex={0}
+																style={{ cursor: 'pointer' }}
+															>
+																{request.username}
+															</span>
+														<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
+															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
+														</span>
+													</div>
 												</div>
 												<div className="friend-actions">
 													<button
 														className="btn-icon btn-accept"
 														type="button"
-														onClick={() => handleAcceptRequest(request.id)}
+														onClick={() => void handleAcceptRequest(request.id)}
 														title={t('profile_accept')}
+														style={{ color: '#059669' }}
 													>
 														✓
 													</button>
 													<button
 														className="btn-icon btn-decline"
 														type="button"
-														onClick={() => handleDeclineRequest(request.id)}
-														title="Refuser"
+														onClick={() => void handleDeclineRequest(request.id)}
+														title={t('profile_decline')}
+														style={{ color: '#b91c1c' }}
 													>
 														✕
 													</button>
+												</div>
+											</div>
+										))}
+								</div>
+							</div>
+						)}
+
+						{friendRequests.filter((r) => r.type === 'sent').length > 0 && (
+							<div className="control-group">
+								<p className="control-label">
+									{t('profile_sent_requests', { count: friendRequests.filter((r) => r.type === 'sent').length })}
+								</p>
+								<div className="friends-list">
+									{friendRequests
+										.filter((r) => r.type === 'sent')
+										.map((request) => (
+											<div key={request.id} className="friend-item">
+												<div className="friend-info">
+													<div>
+															<span
+																className="friend-name"
+																onClick={() => openUserProfile(request.username)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																}}
+																role="button"
+																tabIndex={0}
+																style={{ cursor: 'pointer' }}
+															>
+																{request.username}
+															</span>
+														<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
+															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
+														</span>
+													</div>
 												</div>
 											</div>
 										))}
@@ -821,8 +1230,19 @@ function ProfilUser() {
 										<div key={friend.id} className="friend-item">
 											<div className="friend-info">
 												<div>
-													<span className="friend-name">{friend.username}</span>
-													<span className={`friend-status ${friend.status}`}>
+														<span
+															className="friend-name"
+															onClick={() => openUserProfile(friend.username)}
+															onKeyDown={(e) => {
+																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.username)
+															}}
+															role="button"
+															tabIndex={0}
+															style={{ cursor: 'pointer' }}
+														>
+															{friend.username}
+														</span>
+													<span className={`friend-status ${friend.status}`} style={{ color: friend.status === 'online' ? '#059669' : '#b91c1c' }}>
 													{friend.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
 													</span>
 												</div>
@@ -830,8 +1250,9 @@ function ProfilUser() {
 											<button
 												className="btn-icon btn-remove"
 												type="button"
-												onClick={() => handleRemoveFriend(friend.id)}
-												title="Retirer"
+												style={{ color: '#b91c1c' }}
+												onClick={() => void handleRemoveFriend(friend.id)}
+												title={t('profile_remove')}
 											>
 												✕
 											</button>

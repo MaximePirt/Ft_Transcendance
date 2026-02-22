@@ -30,9 +30,9 @@ services:
     container_name: front
     networks:
       - ft_transcendance
-    #TODO: This port exposure is only for development purposes
-    ports:
-      - "5173:5173"
+    # Port 5173 exposed for consistency with internal config, but not needed publicly
+    # ports:
+    #   - "5173:5173"
     environment:
       - FRONT_URL=https://localhost/
     volumes:

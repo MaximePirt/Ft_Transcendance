@@ -2,9 +2,9 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next"
 
 const languages = [
-    {code: "fr", lang: "FRENCH"},
-    {code: "en", lang: "ENGLISH"},
-    {code: "ar", lang: "ARABIC"},
+    {code: "fr", lang: "Français"},
+    {code: "en", lang: "English"},
+    {code: "ar", lang: "العربية"},
 ]
 
 const LanguageSelector = () => {

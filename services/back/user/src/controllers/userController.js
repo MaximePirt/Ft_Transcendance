@@ -56,11 +56,17 @@ async function updateAvatar(userId, data) {
 	return { message: "Avatar uploaded", avatarUrl: filePath };
 }
 
+async function getRecentMatchesByUserId(userId, limit) {
+	const matches = await userModel.findRecentMatchesByUserId(userId, limit);
+	return matches || [];
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
 	getUserByUsername,
 	updateUser,
 	updateAvatar,
-	getUser
+	getUser,
+	getRecentMatchesByUserId
 };

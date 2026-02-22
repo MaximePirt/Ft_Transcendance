@@ -34,6 +34,20 @@ async function listFriendsHandler(userId)
 	}
 }
 
+async function listFriendRequestsHandler(userId)
+{
+	try {
+		if (!userId)
+			return { statusCode:400, ok:false, message: "Invalid userId." };
+		const received = await friendModel.listFriendRequestsReceived(userId);
+		const sent = await friendModel.listFriendRequestsSent(userId);
+		return { statusCode: 200, ok: true, received, sent };
+	}
+	catch (error) {
+		return { statusCode:500, ok:false, message: "Internal Server Error." };
+	}
+}
+
 
 
 async function getFriendshipStatus(userId, friendId)
@@ -42,4 +56,10 @@ async function getFriendshipStatus(userId, friendId)
 	return res;
 }
 
-module.exports = { addFriendHandler, removeFriendHandler, listFriendsHandler, getFriendshipStatus };
+module.exports = {
+	addFriendHandler,
+	removeFriendHandler,
+	listFriendsHandler,
+	listFriendRequestsHandler,
+	getFriendshipStatus,
+};

@@ -1,35 +1,27 @@
 @font-face {
   font-family: 'Bespoke';
-  src: url('/fonts/Bespoke/BespokeStencil-Regular.woff2') format('woff2'),
-       url('/fonts/Bespoke/BespokeStencil-Regular.woff') format('woff'),
-       url('/fonts/Bespoke/BespokeStencil-Regular.ttf') format('truetype');
+  src: url('/fonts/Bespoke/BespokeStencil-Regular.woff') format('woff');
   font-weight: 400;
   font-display: swap;
   font-style: normal;
 }
 @font-face {
   font-family: 'Bespoke';
-  src: url('/fonts/Bespoke/BespokeStencil-Italic.woff2') format('woff2'),
-       url('/fonts/Bespoke/BespokeStencil-Italic.woff') format('woff'),
-       url('/fonts/Bespoke/BespokeStencil-Italic.ttf') format('truetype');
+  src: url('/fonts/Bespoke/BespokeStencil-Italic.woff') format('woff');
   font-weight: 400;
   font-display: swap;
   font-style: italic;
 }
 @font-face {
   font-family: 'Bespoke';
-  src: url('/fonts/Bespoke/BespokeStencil-Bold.woff2') format('woff2'),
-       url('/fonts/Bespoke/BespokeStencil-Bold.woff') format('woff'),
-       url('/fonts/Bespoke/BespokeStencil-Bold.ttf') format('truetype');
+  src: url('/fonts/Bespoke/BespokeStencil-Bold.woff') format('woff');
   font-weight: 700;
   font-display: swap;
   font-style: normal;
 }
 @font-face {
   font-family: 'Bespoke';
-  src: url('/fonts/Bespoke/BespokeStencil-BoldItalic.woff2') format('woff2'),
-       url('/fonts/Bespoke/BespokeStencil-BoldItalic.woff') format('woff'),
-       url('/fonts/Bespoke/BespokeStencil-BoldItalic.ttf') format('truetype');
+  src: url('/fonts/Bespoke/BespokeStencil-BoldItalic.woff') format('woff');
   font-weight: 700;
   font-display: swap;
   font-style: italic;

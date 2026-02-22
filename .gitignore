@@ -6,6 +6,8 @@ node_modules/
 npm-debug.log
 
 
+# uploads
+services/back/user/uploads/
 
 # nginx
 sec/
@@ -29,3 +31,4 @@ Trans_Architecture.drawio
 .$Trans_Architecture.drawio.bkp
 *-lock.json
 filtre_tree.md
+.gitignore

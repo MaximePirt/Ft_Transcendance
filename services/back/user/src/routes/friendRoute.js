@@ -11,6 +11,39 @@ if (!AUTH_URL) {
 async function friendRoutes(fastify, options) {
 	console.log("friendRoutes loaded");
 
+	fastify.get("/friends/requests", async (request, reply) => {
+		try {
+			const cookieHeader = request.headers.cookie;
+			if (!cookieHeader) {
+				return reply.code(401).send({ ok: false, message: "No auth cookie" });
+			}
+			const meRes = await fetch(`${AUTH_URL}/me`, {
+				method: "GET",
+				headers: { cookie: cookieHeader },
+			});
+			if (!meRes.ok) {
+				return reply.code(401).send({ ok: false, message: "Unauthorized" });
+			}
+
+			const me = await meRes.json();
+			const meId = Number(me.id);
+			if (Number.isNaN(meId)) {
+				return reply.code(400).send({ ok: false, message: "Invalid userId" });
+			}
+
+			const result = await friendController.listFriendRequestsHandler(meId);
+			return reply.code(result.statusCode || 200).send({
+				ok: result.ok,
+				received: result.received || [],
+				sent: result.sent || [],
+				message: result.message,
+			});
+		} catch (error) {
+			request.log.error(error);
+			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+		}
+	});
+
 	fastify.delete("/:friendId/friends", async (request, reply) => {
 		console.log("User try to delete friend");
 		try {
@@ -70,7 +103,7 @@ async function friendRoutes(fastify, options) {
 		const res = await friendController.addFriendHandler(meId, friendIdNum);
 
 		console.log("Add Friend Response:", res);
-		return res;
+		return reply.code(res.statusCode || 200).send(res);
 	});
 
 	fastify.get("/:userId/friends", async (request, reply) => {
