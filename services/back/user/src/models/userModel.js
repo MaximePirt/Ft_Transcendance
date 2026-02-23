@@ -78,11 +78,69 @@ function findRecentMatchesByUserId(userId, limit = 3) {
 	`).all(userId, safeLimit);
 }
 
+
+/** 
+* @brief : databases query from stats routes
+* @input : user_id
+* @rules : only if user exists
+* @return : a JSON object containing user statistics
+
+*/
+function findUserStatsById(userId)
+{
+	const total_matches = db.prepare(`
+		SELECT COUNT(*) as cnt
+		FROM game_players
+		WHERE user_id = ?
+	`).get(userId).cnt || 0;
+
+
+	const wins = db.prepare(`
+		SELECT COUNT(*) as cnt
+		FROM game_players gp
+		JOIN game_sessions gs ON gs.id = gp.game_session_id
+		WHERE gp.user_id = ? AND gp.is_winner = 1 AND gs.status = 'completed'
+	`).get(userId).cnt || 0;
+
+	const total_score = db.prepare(`
+		SELECT SUM(score) as total
+		FROM game_players
+		WHERE user_id = ?
+	`).get(userId).total || 0;
+
+	const win_rate = total_matches > 0 ? (wins / total_matches) * 100 : 0;
+
+	const answered = db.prepare(`
+		SELECT SUM(answered_count) as total
+		FROM game_players
+		WHERE user_id = ?
+	`).get(userId).total || 0;
+
+	const correct = db.prepare(`
+		SELECT SUM(correct_answers) as total
+		FROM game_players
+		WHERE user_id = ?
+	`).get(userId).total || 0;
+
+	const accuracy = answered > 0 ? (correct / answered) * 100 : 0;
+
+	return {
+		total_matches,
+		wins,
+		total_score,
+		answered,
+		correct,
+		win_rate: parseFloat(win_rate.toFixed(2)),
+		accuracy: parseFloat(accuracy.toFixed(2))
+	};
+}
+
 module.exports = {
 	findAllUsers,
 	findUserById,
 	findUserByUsername,
 	updateUserById,
 	findUser,
-	findRecentMatchesByUserId
+	findRecentMatchesByUserId,
+	findUserStatsById
 };
