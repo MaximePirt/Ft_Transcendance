@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
 	question_count INTEGER NOT NULL DEFAULT 10,
 	max_players INTEGER NOT NULL DEFAULT 4,
 	host_id INTEGER NULL,
+	is_solo INTEGER NOT NULL DEFAULT 0,
 	current_question_order INTEGER NOT NULL DEFAULT 0,
 	current_question_time DATETIME,
 	FOREIGN KEY (host_id) REFERENCES users(id) ON DELETE SET NULL

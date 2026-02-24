@@ -9,14 +9,14 @@ function generateSessionCode()
 	return res;
 }
 
-function insertGameSession(sessionCode, mode, topic, question_count, max_players, power_ups, hostId)
+function insertGameSession(sessionCode, mode, topic, question_count, max_players, power_ups, is_solo, hostId)
 {
 	console.log("Inserting powers_ups for new game session:", power_ups);
 	const insert = db.prepare(`
-		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, power_ups, host_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, power_ups, is_solo, host_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`);
-	const result = insert.run(sessionCode, mode, topic, question_count, max_players, power_ups, hostId);
+	const result = insert.run(sessionCode, mode, topic, question_count, max_players, power_ups, is_solo, hostId);
 	if (result.changes !== 1)
 		throw new Error("Failed to insert game session into database");
 	return result;
