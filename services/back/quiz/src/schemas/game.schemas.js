@@ -33,8 +33,12 @@ const createGameSessionSchema = {
 				type: 'string',
 				default: []
 			}
+		},
+		is_solo: {
+			type: 'integer',
+			default: 0
 		}
-    }
+	},
 	}
 };
 

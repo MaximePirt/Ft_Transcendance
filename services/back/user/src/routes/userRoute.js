@@ -88,6 +88,38 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
+
+	/**
+	 * @brief Get user statistics
+	 * @input : user_id
+	 * @rules : only if user exists
+	 * @return : a JSON object containing user statistics
+	 * 	Theses are the stats that we want to return :
+	 * 	- total_matches
+	 * 	- wins
+	 * 	- total_score
+	 * 	- answered
+	 * 	- correct
+	 * 	- win_rate
+	 * 	- accuracy
+	 */
+	fastify.get("/:id/stats", async (request, reply) => {
+		console.log("Received request for user stats with ID:", request.params.id);
+		const userId = Number(request.params.id);
+		try {
+			const stats = await userController.getUserStatsById(userId);
+			if (!stats) {
+				return reply.code(404).send({ error: "User not found" });
+			}
+			return reply.code(200).send({ result: stats });
+		}
+		catch (err)
+		{
+			request.log.error(err);
+			return reply.code(500).send({ error: "Internal Server Error" });
+		}
+	});
+
 	
 	fastify.get("/:id", async (request, reply) => {
 		const res = await userController.getUserById(request.params.id);

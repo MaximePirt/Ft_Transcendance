@@ -61,6 +61,19 @@ async function getRecentMatchesByUserId(userId, limit) {
 	return matches || [];
 }
 
+async function getUserStatsById(userId)
+{
+	if (!Number(userId) || userId <= 0)
+		throw new Error("Invalid user ID");
+	const user = await getUserById(userId);
+	if (!user)
+		throw new Error("User not found");
+	const stats = userModel.findUserStatsById(userId);
+	if (!stats)
+		throw new Error("User stats not found");
+	return stats;
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -68,5 +81,6 @@ module.exports = {
 	updateUser,
 	updateAvatar,
 	getUser,
-	getRecentMatchesByUserId
+	getRecentMatchesByUserId,
+	getUserStatsById
 };
