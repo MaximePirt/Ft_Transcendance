@@ -87,6 +87,28 @@ function updateSessionStatus(sessionId, newStatus)
 	return res;
 }
 
+function updateWinnerForSession(sessionId) {
+	console.log("Model: Updating winner for completed game session ID:", sessionId);
+	const winner = db.prepare(`
+		SELECT user_id
+		FROM game_players
+		WHERE game_session_id = ? AND is_active = 1
+		ORDER BY score DESC, correct_answers DESC, answered_count ASC, joined_at ASC
+		LIMIT 1
+	`).get(sessionId);
+	if (!winner)
+		throw new Error("No active players found for game session to set winner");
+	const res = db.prepare(`
+		UPDATE game_players
+		SET is_winner = 1
+		WHERE game_session_id = ? AND user_id = ?
+	`).run(sessionId, winner.user_id);
+	if (res.changes !== 1)
+		throw new Error("Failed to update winner for game session");
+	console.log("Winner updated for game session ID:", sessionId, "Winner user ID:", winner.user_id);
+	return res;
+}
+
 
 function generateQuestionPool(mode, questionCount, topicJson)
 {
@@ -401,6 +423,7 @@ function advanceSession(sessionId) {
 		return { status: 'abandoned' };
 
 	if (session.current_question_order >= session.question_count) {
+		updateWinnerForSession(sessionId);
 		updateSessionStatus(sessionId, 'completed');
 		return { status: 'completed' };
 	}
@@ -539,6 +562,7 @@ module.exports = {
 	getSessionByCode,
 	getPlayersBySession,
 	updateSessionStatus,
+	updateWinnerForSession,
 	generateQuestionPool,
 	insertPoolToSession,
 	findUserInSession,

@@ -148,6 +148,7 @@ async function getCurrentQuestion(userId, sessionId)
 	if (!question && session.current_question_order > quizModel.getTotalQuestionsForSession(sessionId))
 	{
 		quizModel.updateSessionStatus(sessionId, 'completed');
+		quizModel.updateWinnerForSession(sessionId);
 		return { game_status: 'completed', question: null, remaining_ms: 0 };
 	}
 	else if (!question)
