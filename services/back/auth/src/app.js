@@ -1,4 +1,9 @@
 "use strict";
+import fastifyCors from "@fastify/cors";
+import fastifyView from "@fastify/view";
+import fastifyCookie from "@fastify/cookie";
+import fastifyJwt from "@fastify/jwt";
+import ejs from "ejs";
 // const fastify = require("fastify")({ logger: true });
 import Fastify from "fastify"
 import multipart from "@fastify/multipart"
@@ -20,7 +25,7 @@ if (!cookie_secret) {
 	process.exit(1);
 }
 
-fastify.register(require("@fastify/cors"), {
+fastify.register(fastifyCors, {
 	origin: [
 		'http://localhost/',
 		'http://user_api:3001',
@@ -35,31 +40,28 @@ fastify.register(require("@fastify/cors"), {
 	allowedHeaders: ['Content-type', 'Authorization'],
 })
 
-fastify.register(require("@fastify/jwt"), {
+fastify.register(fastifyJwt, {
 	secret: jwt_secret,
 });
-fastify.register(require("@fastify/cookie"), {
+fastify.register(fastifyCookie, {
 	secret: cookie_secret,
 	parseOptions: {},
 	maxAge: '24h',
 });
 
-
-const ejs = require("ejs");
-
-fastify.register(require("@fastify/view"), {
+fastify.register(fastifyView, {
 	engine: { ejs },
 	root: '/app/src/template',
 });
 
 
 const start = async () => {
-
 	try {
 		await fastify.listen({ port: 3003, host: "auth_api" });
 		console.log("Auth server listening on port 3003");
 	} catch (err) {
 		fastify.log.error(err);
+		console.error(err);
 		process.exit(1);
 	}
 };

@@ -1,9 +1,8 @@
 import { signupUser, loginUser, getUsername, codeVerification } from '../controllers/authController.js'
 import qrcode from "qrcode"
 import bcrypt from 'bcryptjs';
-import speakeasy from "speakeasy"
+import speakeasy from "speakeasy";
 
-const { authenticator } = pkg;
 const users = {};
 const user_api_url = process.env.USER_API_URL || false;
 if (!user_api_url) {
@@ -85,19 +84,6 @@ export default async function authRoute(fastify, options) {
 			if (!resId) {
 				throw new Error();
 			}
-			const secret = authenticator.generateSecret();
-			const backupCodes = generateBackupCodes();
-			users[username] = { password: hashPass, secret, backupCodes };
-
-			qrcode.toDataURL(
-				optlib.authenticator.keyuri(username, "ft_trans", secret),
-				(err, imageUrl) => {
-					if (err) {
-						return reply.status(500).send("Error generating QR code");
-					}
-					res.send({ secret, imageUrl })
-				},
-			);
 
 			const user = Object.create(User);
 			user.username = await request.body.username;
@@ -141,7 +127,7 @@ export default async function authRoute(fastify, options) {
 		}
 	});
 
-	fastify.post("verify-2fa", (req, rep) => {
+	fastify.post("/verify-2fa", (req, rep) => {
 		const { username, token } = req.body;
 		const user = users[username];
 

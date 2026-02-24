@@ -1,8 +1,6 @@
-import database from "better-sqlite3"
+import Database from "better-sqlite3";
 
-const Database = database();
-
-const db = new Database("/db/db.sqlite"), verbose = console.log;
+const db = new Database("/db/db.sqlite");
 if (db === null) {
 	throw new Error("Failed to connect to the database.");
 }
