@@ -91,7 +91,8 @@ function findUserStatsById(userId)
 	const total_matches = db.prepare(`
 		SELECT COUNT(*) as cnt
 		FROM game_players
-		WHERE user_id = ?
+		JOIN game_sessions gs ON gs.id = game_players.game_session_id
+		WHERE user_id = ? AND game_session_id IN (SELECT id FROM game_sessions WHERE is_solo = 0)
 	`).get(userId).cnt || 0;
 
 
@@ -99,13 +100,13 @@ function findUserStatsById(userId)
 		SELECT COUNT(*) as cnt
 		FROM game_players gp
 		JOIN game_sessions gs ON gs.id = gp.game_session_id
-		WHERE gp.user_id = ? AND gp.is_winner = 1 AND gs.status = 'completed'
+		WHERE gp.user_id = ? AND gp.is_winner = 1 AND gs.status = 'completed' AND gs.is_solo = 0
 	`).get(userId).cnt || 0;
 
 	const total_score = db.prepare(`
 		SELECT SUM(score) as total
 		FROM game_players
-		WHERE user_id = ?
+		WHERE user_id = ? AND game_session_id IN (SELECT id FROM game_sessions WHERE is_solo = 0)
 	`).get(userId).total || 0;
 
 	const win_rate = total_matches > 0 ? (wins / total_matches) * 100 : 0;
@@ -113,13 +114,13 @@ function findUserStatsById(userId)
 	const answered = db.prepare(`
 		SELECT SUM(answered_count) as total
 		FROM game_players
-		WHERE user_id = ?
+		WHERE user_id = ? AND game_session_id IN (SELECT id FROM game_sessions WHERE is_solo = 0)
 	`).get(userId).total || 0;
 
 	const correct = db.prepare(`
 		SELECT SUM(correct_answers) as total
 		FROM game_players
-		WHERE user_id = ?
+		WHERE user_id = ? AND game_session_id IN (SELECT id FROM game_sessions WHERE is_solo = 0)
 	`).get(userId).total || 0;
 
 	const accuracy = answered > 0 ? (correct / answered) * 100 : 0;
