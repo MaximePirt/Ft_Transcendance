@@ -8,7 +8,7 @@ async function quizRoutes(fastify, options) {
 
 	/**
 	 * @brief Create a new game session
-	 * @input : mode, topic, number of questions, max_players, host_id
+	 * @input : mode, topic, number of questions, max_players, host_id, powerups
 	 * @return : 200 + game session code if success, 500 if error
 	 */
 	fastify.post('/game-sessions', {preHandler: fastify.authenticate, schema: schemas.createGameSessionSchema },
@@ -17,15 +17,13 @@ async function quizRoutes(fastify, options) {
 		try {
 			const gameSession = await quizController.createGameSession( request.body, userId);
 			console.log("Game session code:", gameSession);
-			return reply.code(200).send({ status: 'Game session created', gameSession});
+			return reply.code(200).send({ status: gameSession.status, sessionCode: gameSession.sessionCode });
 		}
 		catch (err) {
 			console.error("Error creating game session:", err);
 			return reply.code(500).send({ status: 'Error creating game session', error: err.message });
 		}
 	});
-
-
 
 	/**
 	 * @brief Get details of a game session

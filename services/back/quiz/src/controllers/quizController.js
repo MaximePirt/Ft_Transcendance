@@ -18,7 +18,7 @@ const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
 async function createGameSession(sessionData, hostId) {
 	hostId = 1;
 	const { mode, topic = null,
-			question_count, max_players = 4, power_ups } = sessionData;
+			question_count, max_players = 4, power_ups, is_solo } = sessionData;
 	// TODO: uncomment lines below in debug purpose, remove it in prod
 	// const power_ups = ["skip", "hint", "50-50"];
 
@@ -28,7 +28,7 @@ async function createGameSession(sessionData, hostId) {
 	try {
 		const sessionCode = quizModel.generateSessionCode();
 		try {
-			const insertGame = quizModel.insertGameSession(sessionCode, mode, topicJson, question_count, max_players, powerupsJson, hostId);
+			const insertGame = quizModel.insertGameSession(sessionCode, mode, topicJson, question_count, max_players, powerupsJson, is_solo, hostId);
 			quizModel.insertPlayerInGame(hostId, insertGame.lastInsertRowid);
 			console.log("Game session created with code:", sessionCode);
 		}
@@ -36,7 +36,10 @@ async function createGameSession(sessionData, hostId) {
 			console.error("Error inserting game session into database or host into game_session:", err);
 			throw new Error("Failed to create game session");
 		}
-		return (sessionCode);
+		if (!is_solo)
+			return { status: 'Game session started', sessionCode };
+		else
+			return { status: 'Solo game session started', sessionCode: startGameSession(hostId, sessionCode) };
 	}
 	catch (err) {
 		console.error("Error generating session code:", err);
@@ -148,6 +151,7 @@ async function getCurrentQuestion(userId, sessionId)
 	if (!question && session.current_question_order > quizModel.getTotalQuestionsForSession(sessionId))
 	{
 		quizModel.updateSessionStatus(sessionId, 'completed');
+		quizModel.updateWinnerForSession(sessionId);
 		return { game_status: 'completed', question: null, remaining_ms: 0 };
 	}
 	else if (!question)
