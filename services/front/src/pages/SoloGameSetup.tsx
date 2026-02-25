@@ -49,8 +49,25 @@ function SoloGameSetup() {
     setSelectedThemes(newSelected)
   }
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (selectedThemes.size > 0) {
+      const session = await fetch("https://localhost/api/quiz/game-sessions", {
+        method: 'POST',
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "random",
+          question_count: 2,
+          is_solo: 1,
+          power_ups: ["skip"],
+        }),
+      });
+      const data = await session.json();
+      console.log("API RESPONSE:", data);
+      // if (!session.ok) {
+      //   throw new Error("Session couldn't start");
+      // }
+
       navigate('/quiz/solo', { state: { themes: Array.from(selectedThemes) } })
     }
   }

@@ -16,7 +16,7 @@ function insertGameSession(sessionCode, mode, topic, question_count, max_players
 		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, power_ups, is_solo, host_id)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`);
-	const result = insert.run(sessionCode, mode, topic, question_count, max_players, power_ups, is_solo, hostId);
+	const result = insert.run(sessionCode, "random", topic, question_count, max_players, power_ups, is_solo, hostId);
 	if (result.changes !== 1)
 		throw new Error("Failed to insert game session into database");
 	return result;
