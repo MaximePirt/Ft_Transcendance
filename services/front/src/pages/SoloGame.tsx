@@ -92,6 +92,7 @@ function SoloGamePage() {
   const [showAnswer, setShowAnswer] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
 
+
   useEffect(() => {
     const abortController = new AbortController()
     
@@ -119,7 +120,14 @@ function SoloGamePage() {
     // Charger les questions depuis le backend si aucun état sauvegardé
     const fetchQuestions = async () => {
       try {
-        const response = await fetch('https://localhost/api/quiz/game-sessions/1/current-question', {
+        const sessionIdStr = sessionStorage.getItem("sessionId");
+        const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+        console.log("Session ID from localStorage:", sessionId);
+        if (!sessionId) {
+          console.log('Invalid session ID in localStorage:', sessionIdStr)
+          throw new Error('Invalid session ID')
+        }
+        const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
           signal: abortController.signal,
         })
         if (!response.ok) {

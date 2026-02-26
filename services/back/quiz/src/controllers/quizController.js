@@ -41,8 +41,14 @@ async function createGameSession(sessionData, hostId) {
 			return { status: 'Game session started', sessionCode, sessionId: session.id };
 		else
 		{
-			startGameSession(hostId, sessionCode);
-			return { status: 'Solo game session started', sessionCode: sessionCode, sessionId: session.id };
+			try {
+				startGameSession(hostId, sessionCode);
+				return { status: 'Solo game session started', sessionCode: sessionCode, sessionId: session.id };
+			}
+			catch (err) {
+				console.error("Error starting solo game session:", err);
+				return { status: 'Solo game session created but failed to start', sessionCode: sessionCode, sessionId: session.id, error: err.message };
+			}
 		}
 	}
 	catch (err) {
@@ -130,7 +136,7 @@ async function startGameSession(userId, sessionCode)
 		return {code: 200, session_id: session.id};
 	}
 	catch (err) {
-		throw new Error("Failed to start game session: " + err.message);
+		return {code: 500, error: 'Error starting game session', details: err.message};
 	}
 }
 

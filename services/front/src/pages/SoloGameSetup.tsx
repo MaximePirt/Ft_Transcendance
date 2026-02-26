@@ -74,8 +74,9 @@ function SoloGameSetup() {
       // if (!session.ok) {
       //   throw new Error("Session couldn't start");
       // }
-
-      navigate('/quiz/solo', { state: { themes: Array.from(selectedThemes) } })
+      console.log("stocking : Session ID:", data.sessionId);
+      sessionStorage.setItem("sessionId", String(data.sessionId));
+      navigate('/quiz/solo', { state: { themes: Array.from(selectedThemes) } });
     }
   }
 
