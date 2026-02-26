@@ -36,10 +36,14 @@ async function createGameSession(sessionData, hostId) {
 			console.error("Error inserting game session into database or host into game_session:", err);
 			throw new Error("Failed to create game session");
 		}
+		const session = quizModel.getSessionByCode(sessionCode);
 		if (!is_solo)
-			return { status: 'Game session started', sessionCode };
+			return { status: 'Game session started', sessionCode, sessionId: session.id };
 		else
-			return { status: 'Solo game session started', sessionCode: startGameSession(hostId, sessionCode) };
+		{
+			startGameSession(hostId, sessionCode);
+			return { status: 'Solo game session started', sessionCode: sessionCode, sessionId: session.id };
+		}
 	}
 	catch (err) {
 		console.error("Error generating session code:", err);

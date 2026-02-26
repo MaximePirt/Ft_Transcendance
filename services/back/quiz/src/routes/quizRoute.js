@@ -17,7 +17,7 @@ async function quizRoutes(fastify, options) {
 		try {
 			const gameSession = await quizController.createGameSession( request.body, userId);
 			console.log("Game session code:", gameSession);
-			return reply.code(200).send({ status: gameSession.status, sessionCode: gameSession.sessionCode });
+			return reply.code(200).send({ status: gameSession.status, sessionCode: gameSession.sessionCode, sessionId: gameSession.sessionId });
 		}
 		catch (err) {
 			console.error("Error creating game session:", err);

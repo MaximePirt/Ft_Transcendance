@@ -112,6 +112,13 @@ function updateWinnerForSession(sessionId) {
 
 function generateQuestionPool(mode, questionCount, topicJson)
 {
+	console.log("Printing every possible slugs for debugging:");
+	const allCategories = db.prepare(`SELECT slug FROM categories`).all();
+	console.log(allCategories.map(c => c.slug));
+	console.log("Printing every category name now:");
+	const allCategoryNames = db.prepare(`SELECT name FROM category_translations WHERE lang = 'fr'`).all();
+	console.log(allCategoryNames.map(c => c.name));
+
 	console.log("Model: Generating question pool with mode:", mode, "question count:", questionCount, "topic:", topicJson);
 	let query = `
 		SELECT q.id, q.difficulty, q.type, q.category_id

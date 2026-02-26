@@ -5,14 +5,15 @@ import '../App.css'
 
 const themes = (t: any) => [
   { id: 'All', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Cinéma', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
-  { id: 'JeuxVidéo', title: t('video_games', { defaultValue: 'JeuxVidéo' }), detail: t('video_games_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
+  { id: 'histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
+  { id: 'musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
+  { id: 'sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
+  { id: 'cinema', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
+  { id: 'jeuxvideo', title: t('video_games', { defaultValue: 'JeuxVidéo' }), detail: t('video_games_desc', { defaultValue: '' }), icon: '' },
+  { id: 'echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
+  { id: 'informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
 ]
+
 
 function SoloGameSetup() {
   const navigate = useNavigate()
@@ -51,12 +52,15 @@ function SoloGameSetup() {
 
   const handleStartGame = async () => {
     if (selectedThemes.size > 0) {
+      let topic = Array.from(selectedThemes).filter((theme) => theme !== 'All');
+      console.log("Selected themes for API:", topic);
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
         method: 'POST',
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "random",
+          topic: topic,
           question_count: 2,
           is_solo: 1,
           power_ups: ["skip"],
