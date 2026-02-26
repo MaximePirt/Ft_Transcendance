@@ -4,14 +4,14 @@ import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 const themes = (t: any) => [
-  { id: 'All', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }), icon: '' },
-  { id: 'histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
-  { id: 'musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
-  { id: 'sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
-  { id: 'cinema', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
-  { id: 'jeuxvideo', title: t('video_games', { defaultValue: 'JeuxVidéo' }), detail: t('video_games_desc', { defaultValue: '' }), icon: '' },
-  { id: 'echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
-  { id: 'informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
+  { id: 'All', slug: 'all', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Histoire', slug: 'histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Musiques', slug: 'musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Sports', slug: 'sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Cinéma', slug: 'cinema', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
+  { id: 'JeuxVidéo', slug:'jeux-video' ,title:t('video_games',{defaultValue:'JeuxVidéo'}),detail:t('video_games_desc',{defaultValue:''}),icon:''},
+  { id: 'Echec', slug: 'echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Informatique', slug: 'informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
 ]
 
 
@@ -22,6 +22,8 @@ function SoloGameSetup() {
   const [showThemesCard, setShowThemesCard] = useState(false)
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
+
+
 
   const handleThemeToggle = (themeId: string) => {
     if (themeId === 'All') {
@@ -51,6 +53,7 @@ function SoloGameSetup() {
   }
 
   const handleStartGame = async () => {
+    console.log("Theme List : ", themeList);
     if (selectedThemes.size > 0) {
       let topic = Array.from(selectedThemes).filter((theme) => theme !== 'All');
       console.log("Selected themes for API:", topic);
@@ -125,7 +128,7 @@ function SoloGameSetup() {
             }}>
               {themes(t).map((theme) => (
                 <label
-                  key={theme.id}
+                  key={theme.slug}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -163,8 +166,8 @@ function SoloGameSetup() {
                     />
                     <input
                       type="checkbox"
-                      checked={selectedThemes.has(theme.id)}
-                      onChange={() => handleThemeToggle(theme.id)}
+                      checked={selectedThemes.has(theme.slug)}
+                      onChange={() => handleThemeToggle(theme.slug)}
                       style={{
                         position: 'absolute',
                         top: '50%',
