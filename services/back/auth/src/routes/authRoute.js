@@ -1,9 +1,20 @@
 import { signupUser, loginUser, getUsername, codeVerification } from '../controllers/authController.js'
-import qrcode from "qrcode"
+import { createZohoTransporter } from '../services/authServices.js'
+import React from "react";
+import { render } from "@react-email/render";
+import SigninEmail from "../mails/signinEmail.js";
+import SignupEmail from "../mails/signupEmail.js"
 import bcrypt from 'bcryptjs';
-import speakeasy from "speakeasy";
 
-const users = {};
+const ERROR_CODES = {
+	MISSING_FIELDS: { status: 400, message: 'Email and password are required' },
+	PASSWORD_TOO_SHORT: { status: 400, message: 'Password must be at least 8 characters' },
+	EMAIL_EXISTS: { status: 409, message: 'Email already exists' },
+	INVALID_CREDENTIALS: { status: 401, message: 'Invalid email or password' },
+	DATABASE_ERROR: { status: 500, message: 'Internal server error' },
+	DEFAULT: { status: 500, message: 'An unexpected error occurred' }
+}
+
 const user_api_url = process.env.USER_API_URL || false;
 if (!user_api_url) {
 	console.error("USER_API_URL environment variable is not set.");
@@ -57,28 +68,58 @@ export default async function authRoute(fastify, options) {
 		}
 	);
 
-	function generateBackupCodes() {
-		const codes = [];
-		for (let i = 0; i < 10; i++) {
-			codes.push(crypto.randomBytes(4).toString("Hex"));
-		}
-		return codes;
-	}
+	fastify.post("/signout",
+		{ onRequest: [fastify.authenticate] },
+		async (req, reply) => {
+			try {
+				const userId = req.user.payload.id;
+				const offlineRes = await fetch(`${user_api_url}/${userId}`, {
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify({ onlineStatus: 0 }),
+				});
 
-	const users = {}
-	fastify.post('/auth/signup', async function (request, reply) {
+				reply.clearCookie("token", {
+					path: "/",
+					httpOnly: true,
+					signed: false,
+					secure: true,
+				});
+
+				if (!offlineRes.ok) {
+					return reply.code(200).send({ ok: true, message: "Signed out, offline update failed" });
+				}
+
+				return reply.code(200).send({ ok: true, message: "Signed out" });
+			} catch (e) {
+				reply.clearCookie("token", {
+					path: "/",
+					httpOnly: true,
+					signed: false,
+					secure: true,
+				});
+				return reply.code(200).send({ ok: true, message: "Signed out" });
+			}
+		}
+	);
+
+	let usersCode = [];
+	fastify.post('/signup', async function (request, reply) {
 		try {
 			const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
 			const email = await request.body.email;
 			const username = await request.body.username;
 			const password = await request.body.password;
 			const hashPass = await bcrypt.hash(password, 12);
+			console.log("username: ", username, " email: ", email, " password: ", hashPass);
 			const newReq = JSON.stringify({
-				username: username,
-				email: email,
+				username,
+				email,
 				password: hashPass
-			})
-			if (!password_regex.test(request.body.password))
+			});
+			if (!password_regex.test(password))
 				return reply.code(401).send({ error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
 			const resId = await signupUser(newReq, reply);
 			if (!resId) {
@@ -101,8 +142,9 @@ export default async function authRoute(fastify, options) {
 		}
 	})
 
-	fastify.post("/auth/signin", async function (request, reply) {
+	fastify.post("/signin", async function (request, reply) {
 		try {
+			console.log("user: ", request.body);
 			const reqId = await loginUser(request, reply);
 			const username = await getUsername(request, reply);
 			const email = await request.body.email;
@@ -127,26 +169,98 @@ export default async function authRoute(fastify, options) {
 		}
 	});
 
-	fastify.post("/verify-2fa", (req, rep) => {
-		const { username, token } = req.body;
-		const user = users[username];
+	fastify.post("/signin/mail", async function (req, rep) {
+		try {
+			const FIFTEEN_MIN = 15 * 60 * 1000;
+			const transporter = createZohoTransporter();
+			const email = await req.body.email;
+			const user = await getUserByEmail(email);
+			let codeValue = 0;
 
-		if (!user) {
-			return res.status(400).send("User not found");
-		}
-
-		const isValid = authenticator.check(token, user.secret);
-		if (!isValid) {
-			const backupCodeIndex = user.backupCodes.indexOf(token);
-			if (backupCodeIndex === -1) {
-				return rep.status(401).send("Invalid 2FA token or backup code");
+			console.log("user from db: ", user);
+			for (let i = 0; i < 6; i++) {
+				codeValue *= 10;
+				codeValue += (Math.floor(Math.random() * 10));
 			}
-			user.backupCodes.splice(backupCodeIndex, 1);
+			usersCode.push({
+				email: email,
+				code: codeValue.toString(),
+				expireAt: Date.now() + FIFTEEN_MIN
+			});
+			const html = await render(React.createElement(SigninEmail, { username: 'toto', code: codeValue }));
+			await transporter.sendMail({
+				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
+				to: "thi.dausque@gmail.com",
+				//to: user.email,
+				subject: `Hello toto !`,
+				html,
+			})
+			return rep.send({ success: true })
+		} catch (e) {
+			console.error('signin/email error: ', e.message);
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+
+			return rep.code(errorInfo.status).send({
+				success: false,
+				error: errorInfo.message
+			})
 		}
-		return rep.send("2FA verification successfull");
+	});
+
+	fastify.post("/signup/mail", async (request, reply) => {
+		try {
+			const FIFTEEN_MIN = 15 * 60 * 1000;
+			let codeValue = 0;
+			const username = await request.body.username;
+			const email = await request.body.email;
+			for (let i = 0; i < 6; i++) {
+				codeValue *= 10;
+				codeValue += (Math.floor(Math.random() * 10));
+			}
+			usersCode.push({
+				email: email,
+				code: codeValue.toString(),
+				expireAt: Date.now() + FIFTEEN_MIN
+			});
+			const html = await render(React.createElement(SignupEmail, { username: username, code: codeValue }));
+			const transporter = createZohoTransporter();
+
+			await transporter.sendMail({
+				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
+				to: "thi.dausque@gmail.com",
+				//to: user.email,
+				subject: `Welcome, ${username} !`,
+				html,
+			});
+
+			return reply.send({ success: true });
+		} catch (err) {
+			console.error(err);
+			return reply.code(500).send({ error: "MAIL_FAILED" });
+		}
+	});
+
+	fastify.post("/verify-2fa", async (req, rep) => {
+		const code = await req.body.code;
+		const username = await req.body.username;
+		const email = await req.body.email;
+		const codeFound = usersCode.find((e) => e.email === email);
+
+		if (Date.now() > codeFound.expireAt) {
+			usersCode = usersCode.filter((user) => user.email !== email);
+			return rep.code({
+				error: "The code has expired. Please request a new one."
+			});
+		}
+
+		if (codeFound && codeFound.code === code.toString()) {
+			return rep.send({ success: true });
+		} else {
+			return rep.code(401).send({ success: false, error: "invalid 6-digits code" });
+		}
 	})
 
-	fastify.post("/auth/logout", async (req, rep) => {
+	fastify.post("/logout", async (req, rep) => {
 		console.log("You've been Logged out")
 		rep.clearCookie('token', { path: '/' });
 

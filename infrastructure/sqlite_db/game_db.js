@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
 	status TEXT CHECK( status IN ('waiting', 'in_progress', 'completed', 'abandoned') ) NOT NULL DEFAULT 'waiting',
 	mode TEXT CHECK( mode IN ('easy', 'medium', 'hard', 'random') ) NOT NULL DEFAULT 'random',
 	topic TEXT,
+	power_ups TEXT DEFAULT '[]',
 	question_count INTEGER NOT NULL DEFAULT 10,
 	max_players INTEGER NOT NULL DEFAULT 4,
 	host_id INTEGER NULL,
@@ -46,12 +47,27 @@ CREATE TABLE IF NOT EXISTS game_players (
 	joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	answered_count INTEGER NOT NULL DEFAULT 0,
 	correct_answers INTEGER NOT NULL DEFAULT 0,
+	powerups_count INTEGER NOT NULL DEFAULT 0,
 	score INTEGER NOT NULL DEFAULT 0,
 	current_question_time DATETIME DEFAULT CURRENT_TIMESTAMP,
 	is_winner BOOLEAN NOT NULL DEFAULT 0,
 	is_active BOOLEAN NOT NULL DEFAULT 1,
 	disconnected_at DATETIME,
 	PRIMARY KEY (game_session_id, user_id),
+	FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Powerups table 
+CREATE TABLE IF NOT EXISTS game_powerups (
+	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	game_session_id INTEGER NOT NULL,
+	user_id INTEGER NOT NULL,
+	question_order INTEGER NOT NULL,
+	powerup_type TEXT NOT NULL,
+	used BOOLEAN DEFAULT 0,
+	used_at DATETIME,
+	granted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (game_session_id) REFERENCES game_sessions(id) ON DELETE CASCADE,
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

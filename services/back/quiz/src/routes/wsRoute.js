@@ -1,6 +1,6 @@
-// src/routes/wsRoute.js
 const wsHub = require('../ws/wsHub');
 const quizModel = require('../models/quizModel');
+const quizController = require('../controllers/quizController');
 const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 15000);
 
 
@@ -47,7 +47,7 @@ module.exports = async function wsRoutes(fastify) {
 			payload: { sessionId, game_status: session?.status ?? 'unknown' }
 			}));
 		}
-		socket.on('message', (data) => {
+		socket.on('message', async (data) => {
 			let msg;
 			try {
 				msg = JSON.parse(data.toString());
@@ -60,6 +60,35 @@ module.exports = async function wsRoutes(fastify) {
 					type: 'session_state',
 					payload: { sessionId, game_status: session?.status ?? 'unknown' }
 				}));
+			}
+			else if (msg.type === 'powerup_use') {
+				const { powerupId} = msg.payload ?? {};
+				if (!powerupId)
+				{
+					socket.send(JSON.stringify({
+						type: 'error',
+						payload: { ok: false, error: 'Missing powerupId' }
+					}));
+					return;
+				}
+				try {
+					const result = await quizController.usePowerup(sessionId, userId, powerupId);
+					if (!result || !result.ok)
+					{
+						return socket.send(JSON.stringify({
+							type: 'powerup_use_error',
+							payload: { ok: false, error: result?.error || 'Failed to use powerup' }
+						}));
+					}
+					socket.send(JSON.stringify({ type: 'powerup_used', payload: { ok: true, ...result } }));
+					wsHub.broadcast(sessionId, {type: 'powerup_used_broadcast', payload: { sessionId, userId, powerupId} });
+
+				} catch (e) {
+					socket.send(JSON.stringify({
+						type: 'powerup_use_error',
+						payload: { ok: false, error: e.message }
+					}));
+				}
 			}
 		});
 

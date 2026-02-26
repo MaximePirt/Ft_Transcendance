@@ -34,7 +34,16 @@ function getUserName(req, rep) {
 	}
 }
 
-function getUserId(rep, email, password) {
+function getUserModelEmail(email) {
+	const stmt = db.prepare(
+		`SELECT user FROM users WHERE email = ?`
+	).get(email);
+	if (!stmt)
+		throw new Error("USER_NOT_FOUND");
+	return stmt;
+}
+
+function getUserId(email, password) {
 	try {
 		const stmt = db.prepare(
 			`SELECT * FROM users
@@ -52,7 +61,7 @@ function getUserId(rep, email, password) {
 			return stmt.id;
 	} catch (e) {
 		console.error(e);
-		return rep.code(500).send({ error: 'Internal server error' });
+		return { code: 500, error: "Internal server error" }
 	}
 }
 
@@ -60,4 +69,5 @@ export {
 	addNewUser,
 	getUserName,
 	getUserId,
+	getUserModelEmail
 };
