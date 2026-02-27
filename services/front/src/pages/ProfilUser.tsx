@@ -56,12 +56,6 @@ const defaultUserProfile = {
 	username: 'PlayerOne',
 	email: 'player@quiz.sprint',
 	joinYear: 2024,
-	stats: {
-		gamesPlayed: 42,
-		winRate: 68,
-		bestScore: 9860,
-		streak: 7,
-	},
 	favorites: ['cinema', 'music', 'computer_science'],
 }
 
@@ -101,6 +95,66 @@ type RecentMatch = {
 	score: number
 	correctAnswers: number
 	answeredCount: number
+}
+
+type GameStats = {
+	totalMatches: number
+	wins: number
+	totalScore: number
+	answered: number
+	correct: number
+	winRate: number
+	accuracy: number
+}
+
+type Achievement = {
+	key: string
+	metric: string
+	target: number
+	value: number
+	progressPercent: number
+	unlocked: boolean
+	points: number
+}
+
+type AchievementSummary = {
+	unlockedCount: number
+	totalCount: number
+	unlockedPoints: number
+	totalPoints: number
+	progressPercent: number
+}
+
+type AchievementPayload = {
+	summary: AchievementSummary
+	unlocked: Achievement[]
+	inProgress: Achievement[]
+	all: Achievement[]
+}
+
+const defaultGameStats: GameStats = {
+	totalMatches: 0,
+	wins: 0,
+	totalScore: 0,
+	answered: 0,
+	correct: 0,
+	winRate: 0,
+	accuracy: 0,
+}
+
+const defaultAchievementSummary: AchievementSummary = {
+	unlockedCount: 0,
+	totalCount: 0,
+	unlockedPoints: 0,
+	totalPoints: 0,
+	progressPercent: 0,
+}
+
+const defaultAchievements: AchievementPayload = {
+	summary: defaultAchievementSummary,
+	unlocked: [],
+	inProgress: [],
+	all: [],
 }
 
 
@@ -160,13 +214,16 @@ function ProfilUser() {
 	const [friendActionError, setFriendActionError] = useState('')
 	const [friendActionSuccess, setFriendActionSuccess] = useState('')
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+	const [gameStats, setGameStats] = useState<GameStats>(defaultGameStats)
+	const [achievements, setAchievements] = useState<AchievementPayload>(defaultAchievements)
+	const [achievementsLoading, setAchievementsLoading] = useState(false)
 	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
 	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
 	
-	// fausse game data pour les stats de jeu, à remplacer par des vraies données quand l'API sera ok
-	const totalQuestions = userProfile.stats.gamesPlayed * 10
-	const correctAnswers = Math.round((totalQuestions * userProfile.stats.winRate) / 100)
-	const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
+	const totalQuestions = gameStats.answered
+	const correctAnswers = gameStats.correct
+	const accuracy = Number.isFinite(gameStats.accuracy) ? Math.round(gameStats.accuracy) : 0
+	const safeAccuracy = Math.max(0, Math.min(100, accuracy))
 
 	const formatMatchDate = (dateValue?: string) => {
 		if (!dateValue) return '-'
@@ -275,6 +332,68 @@ function ProfilUser() {
 		}
 	}
 
+	const loadGameStats = async (username: string, signal?: AbortSignal) => {
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
+			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for game stats')
+			const { id } = await userIdResponse.json()
+
+			const statsResponse = await fetch(`${API_BASE}/user/${id}/stats`, { signal })
+			if (!statsResponse.ok) throw new Error('Failed to load game stats')
+			const data = await statsResponse.json()
+			const stats = data?.result || {}
+			setGameStats({
+				totalMatches: Number(stats.total_matches || 0),
+				wins: Number(stats.wins || 0),
+				totalScore: Number(stats.total_score || 0),
+				answered: Number(stats.answered || 0),
+				correct: Number(stats.correct || 0),
+				winRate: Number(stats.win_rate || 0),
+				accuracy: Number(stats.accuracy || 0),
+			})
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') return
+			if (error instanceof TypeError) return
+			console.warn('[Profile] failed to load game stats', error)
+			setGameStats(defaultGameStats)
+		}
+	}
+
+	const loadAchievements = async (username: string, signal?: AbortSignal) => {
+		setAchievementsLoading(true)
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
+			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for achievements')
+			const { id } = await userIdResponse.json()
+
+			const response = await fetch(`${API_BASE}/user/${id}/achievements`, { signal })
+			if (!response.ok) throw new Error('Failed to load achievements')
+			const data = await response.json()
+			const payload = data?.result || {}
+			const summary = payload?.summary || {}
+			const normalized: AchievementPayload = {
+				summary: {
+					unlockedCount: Number(summary.unlockedCount || 0),
+					totalCount: Number(summary.totalCount || 0),
+					unlockedPoints: Number(summary.unlockedPoints || 0),
+					totalPoints: Number(summary.totalPoints || 0),
+					progressPercent: Number(summary.progressPercent || 0),
+				},
+				unlocked: Array.isArray(payload?.unlocked) ? payload.unlocked : [],
+				inProgress: Array.isArray(payload?.inProgress) ? payload.inProgress : [],
+				all: Array.isArray(payload?.all) ? payload.all : [],
+			}
+			setAchievements(normalized)
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') return
+			if (error instanceof TypeError) return
+			console.warn('[Profile] failed to load achievements', error)
+			setAchievements(defaultAchievements)
+		} finally {
+			setAchievementsLoading(false)
+		}
+	}
+
 	const normalizeAvatarUrl = (url?: string) => {
 		if (!url) return ''
 		const trimmed = String(url).trim()
@@ -306,12 +425,6 @@ function ProfilUser() {
 				username: user.username,
 				email: user.email,
 				joinYear: new Date().getFullYear(),
-				stats: {
-					gamesPlayed: 42,
-					winRate: 68,
-					bestScore: 9860,
-					streak: 7,
-				},
 				favorites: ['cinema', 'music', 'computer_science'],
 			})
 		}
@@ -344,12 +457,6 @@ function ProfilUser() {
 						username: userData.username || profileUsername,
 						email: userData.email || '',
 						joinYear: new Date(userData.created_at || Date.now()).getFullYear(),
-						stats: {
-							gamesPlayed: 42,
-							winRate: 68,
-							bestScore: 9860,
-							streak: 7,
-						},
 						favorites: ['cinema', 'music', 'computer_science'],
 					})
 					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
@@ -456,10 +563,14 @@ useEffect(() => {
 	useEffect(() => {
 		if (!profileUsername) {
 			setRecentMatches([])
+			setGameStats(defaultGameStats)
+			setAchievements(defaultAchievements)
 			return
 		}
 		const abortController = new AbortController()
 		void loadRecentMatches(profileUsername, abortController.signal)
+		void loadGameStats(profileUsername, abortController.signal)
+		void loadAchievements(profileUsername, abortController.signal)
 		return () => abortController.abort()
 	}, [profileUsername])
 
@@ -887,8 +998,60 @@ useEffect(() => {
 
 						<div className="control-group">
 							<p className="control-label">{t('profile_game_stats_title')}</p>
-							<p className="pref-desc">{t('profile_game_stats_ratio', { correct: correctAnswers, total: totalQuestions })}</p>
-							<p className="pref-desc">{t('profile_game_stats_accuracy', { percent: accuracy })}</p>
+							<div className="profile-game-stats-grid">
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_accuracy')}</p>
+									<p className="stat-value">{safeAccuracy}%</p>
+								</div>
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_correct')}</p>
+									<p className="stat-value">{correctAnswers}</p>
+								</div>
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_answered')}</p>
+									<p className="stat-value">{totalQuestions}</p>
+								</div>
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_wins')}</p>
+									<p className="stat-value">{gameStats.wins}</p>
+								</div>
+							</div>
+						</div>
+
+						<div className="control-group">
+							<p className="control-label">{t('profile_achievements_title')}</p>
+							{achievementsLoading ? (
+								<p className="pref-desc">{t('profile_achievements_loading')}</p>
+							) : (
+								<>
+									<p className="pref-desc">
+										{t('profile_achievements_summary', {
+											unlocked: achievements.summary.unlockedCount,
+											total: achievements.summary.totalCount,
+											points: achievements.summary.unlockedPoints,
+											maxPoints: achievements.summary.totalPoints,
+										})}
+									</p>
+									<div className="profile-achievements-track" role="progressbar" aria-valuenow={achievements.summary.progressPercent} aria-valuemin={0} aria-valuemax={100}>
+										<div className="profile-achievements-fill" style={{ width: `${achievements.summary.progressPercent}%` }} />
+									</div>
+									<p className="pref-desc">{t('profile_achievements_progress', { percent: achievements.summary.progressPercent })}</p>
+
+									<div className="profile-achievements-grid">
+										{achievements.inProgress.map((achievement) => (
+											<div key={achievement.key} className="profile-achievement-card">
+												<p className="profile-achievement-title">{t(`achievement_${achievement.key}_title`)}</p>
+												<p className="pref-desc">{t(`achievement_${achievement.key}_desc`, { target: achievement.target })}</p>
+												<p className="pref-desc">{achievement.value} / {achievement.target} · {achievement.progressPercent}%</p>
+											</div>
+										))}
+									</div>
+
+									{achievements.unlocked.length > 0 && (
+										<p className="pref-desc">{t('profile_achievements_unlocked_recent', { count: achievements.unlocked.length })}</p>
+									)}
+								</>
+							)}
 						</div>
 
 						<div className="control-group">

@@ -120,6 +120,25 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
+	fastify.get("/:id/achievements", async (request, reply) => {
+		const userId = Number(request.params.id);
+		try {
+			const achievements = await userController.getUserAchievementsById(userId);
+			return reply.code(200).send({ result: achievements });
+		}
+		catch (err)
+		{
+			request.log.error(err);
+			if (String(err?.message).includes('Invalid user ID')) {
+				return reply.code(400).send({ error: 'Invalid user ID' });
+			}
+			if (String(err?.message).includes('User not found')) {
+				return reply.code(404).send({ error: 'User not found' });
+			}
+			return reply.code(500).send({ error: "Internal Server Error" });
+		}
+	});
+
 	
 	fastify.get("/:id", async (request, reply) => {
 		const res = await userController.getUserById(request.params.id);
