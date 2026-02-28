@@ -143,63 +143,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		return () => abortController.abort()
 	}, [])
 
-	const login = async (email: string, password: string): Promise<boolean> => {
-		try {
-			const rawIdentifier = email.trim()
-			const candidateUsernames = rawIdentifier.includes('@')
-				? [rawIdentifier, rawIdentifier.split('@')[0]]
-				: [rawIdentifier]
+	const login = async (email: string, username: string): Promise<boolean> => {
+		const rawIdentifier = email.trim()
+		const candidateUsernames = rawIdentifier.includes('@')
+			? [rawIdentifier, rawIdentifier.split('@')[0]]
+			: [rawIdentifier]
 
-			// let signedIn = false
-			// for (const username of candidateUsernames) {
-			// 	const signinResponse = await fetch(`${API_BASE}/auth/signin`, {
-			// 		method: 'POST',
-			// 		headers: {
-			// 			'Content-Type': 'application/json',
-			// 		},
-			// 		credentials: 'include',
-			// 		body: JSON.stringify({ username, password }),
-			// 	})
-			// 	if (signinResponse.ok) {
-			// 		signedIn = true
-			// 		break
-			// 	}
-			// }
-			//
-			// if (!signedIn) {
-			// 	return false
-			// }
+		// let signedIn = false
+		// for (const username of candidateUsernames) {
+		// 	const signinResponse = await fetch(`${API_BASE}/auth/signin`, {
+		// 		method: 'POST',
+		// 		headers: {
+		// 			'Content-Type': 'application/json',
+		// 		},
+		// 		credentials: 'include',
+		// 		body: JSON.stringify({ username, password }),
+		// 	})
+		// 	if (signinResponse.ok) {
+		// 		signedIn = true
+		// 		break
+		// 	}
+		// }
+		//
+		// if (!signedIn) {
+		// 	return false
+		// }
 
-			const meResponse = await fetch(`${API_BASE}/auth/me`, {
-				method: 'GET',
-				credentials: 'include',
-			})
+		// const meResponse = await fetch(`${API_BASE}/auth/me`, {
+		// 	method: 'GET',
+		// 	credentials: 'include',
+		// })
+		//
+		// if (!meResponse.ok) {
+		// 	return false
+		// }
 
-			if (!meResponse.ok) {
-				return false
-			}
-
-			const me = await meResponse.json()
-			const userData = {
-				email: me?.email || rawIdentifier,
-				username: me?.username || candidateUsernames[candidateUsernames.length - 1],
-			}
-
-			setUser(userData)
-			localStorage.setItem('user', JSON.stringify(userData))
-			setIsAuthReady(true)
-			await applyPreferredLanguage(userData.username)
-			return true
-		} catch (error) {
-			if (error instanceof Error && error.name === 'AbortError') return false
-			console.error('Login error:', error)
-			return false
+		// const me = await meResponse.json()
+		const userData = {
+			email: email || rawIdentifier,
+			username: username || candidateUsernames[candidateUsernames.length - 1],
 		}
+
+		setUser(userData)
+		localStorage.setItem('user', JSON.stringify(userData))
+		setIsAuthReady(true)
+		await applyPreferredLanguage(username)
+		return true
 	}
 
-	const signup = async (email: string, username: string, password: string): Promise<boolean> => {
+	const signup = async (email: string, username: string): Promise<boolean> => {
 		try {
-			return await login(username, password)
+			return await login(email, username);
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return false
 			console.error('Signup error:', error)

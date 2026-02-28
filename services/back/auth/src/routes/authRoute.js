@@ -3,12 +3,13 @@ import { createZohoTransporter } from '../services/authServices.js'
 import React from "react";
 import { render } from "@react-email/render";
 import SigninEmail from "../mails/signinEmail.js";
-import SignupEmail from "../mails/signupEmail.js"
+import SignupEmail from "../mails/signupEmail.js";
+import { getUserByEmail } from '../controllers/authController.js';
 import bcrypt from 'bcryptjs';
 
 const ERROR_CODES = {
 	MISSING_FIELDS: { status: 400, message: 'Email and password are required' },
-	PASSWORD_TOO_SHORT: { status: 400, message: 'Password must be at least 8 characters' },
+	PASSWORD_TOO_SHORT: { status: 400, message: 'Password must be at least 12 characters' },
 	EMAIL_EXISTS: { status: 409, message: 'Email already exists' },
 	INVALID_CREDENTIALS: { status: 401, message: 'Invalid email or password' },
 	DATABASE_ERROR: { status: 500, message: 'Internal server error' },
@@ -113,19 +114,11 @@ export default async function authRoute(fastify, options) {
 			const username = await request.body.username;
 			const password = await request.body.password;
 			const hashPass = await bcrypt.hash(password, 12);
+
 			console.log("username: ", username, " email: ", email, " password: ", hashPass);
-			const newReq = JSON.stringify({
-				username,
-				email,
-				password: hashPass
-			});
 			if (!password_regex.test(password))
 				return reply.code(401).send({ error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
-			const resId = await signupUser(newReq, reply);
-			if (!resId) {
-				throw new Error();
-			}
-
+			const resId = await signupUser(email, username, hashPass);
 			const user = Object.create(User);
 			user.username = await request.body.username;
 			user.id = resId;
@@ -138,25 +131,27 @@ export default async function authRoute(fastify, options) {
 			});
 			return reply.code(200).send({ ok: true, message: "Signup successful" });
 		} catch (e) {
-			console.error(e)
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+
+			return rep.code(errorInfo.status).send({
+				success: false,
+				error: errorInfo.message
+			})
 		}
 	})
 
 	fastify.post("/signin", async function (request, reply) {
 		try {
 			console.log("user: ", request.body);
-			const reqId = await loginUser(request, reply);
-			const username = await getUsername(request, reply);
 			const email = await request.body.email;
+			const password = await request.body.password;
+			const reqId = await loginUser(email, password);
+			const username = await getUsername(email);
 			const user = Object.create(User);
-			if (!username || !reqId)
-				return;
+
 			user.email = await request.body.email;
 			user.username = username;
 			user.id = reqId;
-			if (!user.id) {
-				return reply.code(404).send({ error: "User ID not found" });
-			}
 			user.token = JWTgenerator(fastify, user);
 			reply.setCookie("token", user.token, {
 				httpOnly: true,
@@ -166,6 +161,11 @@ export default async function authRoute(fastify, options) {
 			});
 		} catch (e) {
 			console.error(e);
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
+			return reply.code(errorInfo.code).send({
+				success: false,
+				error: errorInfo.message
+			});
 		}
 	});
 
@@ -175,22 +175,17 @@ export default async function authRoute(fastify, options) {
 			const transporter = createZohoTransporter();
 			const email = await req.body.email;
 			const user = await getUserByEmail(email);
-			let codeValue = 0;
+			const codeValue = Math.floor(100000 + Math.random() * 900000);
 
-			console.log("user from db: ", user);
-			for (let i = 0; i < 6; i++) {
-				codeValue *= 10;
-				codeValue += (Math.floor(Math.random() * 10));
-			}
 			usersCode.push({
 				email: email,
 				code: codeValue.toString(),
 				expireAt: Date.now() + FIFTEEN_MIN
 			});
-			const html = await render(React.createElement(SigninEmail, { username: 'toto', code: codeValue }));
+			const html = await render(React.createElement(SigninEmail, { username: user.username, code: codeValue }));
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
-				to: "thi.dausque@gmail.com",
+				to: email,
 				//to: user.email,
 				subject: `Hello toto !`,
 				html,
@@ -210,13 +205,10 @@ export default async function authRoute(fastify, options) {
 	fastify.post("/signup/mail", async (request, reply) => {
 		try {
 			const FIFTEEN_MIN = 15 * 60 * 1000;
-			let codeValue = 0;
+			const codeValue = Math.floor(100000 + Math.random() * 900000);
 			const username = await request.body.username;
 			const email = await request.body.email;
-			for (let i = 0; i < 6; i++) {
-				codeValue *= 10;
-				codeValue += (Math.floor(Math.random() * 10));
-			}
+
 			usersCode.push({
 				email: email,
 				code: codeValue.toString(),
@@ -227,7 +219,7 @@ export default async function authRoute(fastify, options) {
 
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
-				to: "thi.dausque@gmail.com",
+				to: email,
 				//to: user.email,
 				subject: `Welcome, ${username} !`,
 				html,
@@ -235,8 +227,50 @@ export default async function authRoute(fastify, options) {
 
 			return reply.send({ success: true });
 		} catch (err) {
-			console.error(err);
-			return reply.code(500).send({ error: "MAIL_FAILED" });
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+
+			return rep.code(errorInfo.status).send({
+				success: false,
+				error: errorInfo.message
+			})
+		}
+	});
+
+	fastify.post("/send", async (req, rep) => {
+		try {
+			const username = await req.body.username;
+			const email = await req.body.email;
+			const codeValue = Math.floor(100000 + Math.random() * 900000);
+			const transporter = createZohoTransporter();
+			const codeFound = usersCode.find((e) => e.email === email);
+			const FIFTEEN_MIN = 15 * 60 * 1000;
+
+			if (codeFound)
+				usersCode = usersCode.filter((user) => user.email !== email);
+			else {
+				return rep.code(401).send({ success: false, error: "user doesn't exist" });
+			}
+			usersCode.push({
+				email: email,
+				code: codeValue.toString(),
+				expireAt: Date.now() + FIFTEEN_MIN
+			});
+			const html = await render(React.createElement(SigninEmail, { username: username, code: codeValue }));
+			await transporter.sendMail({
+				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
+				to: email,
+				//to: user.email,
+				subject: `Hey, ${username} !`,
+				html,
+			});
+		} catch (e) {
+			console.error(e);
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+
+			return rep.code(errorInfo.status).send({
+				success: false,
+				error: errorInfo.message
+			})
 		}
 	});
 
@@ -246,7 +280,11 @@ export default async function authRoute(fastify, options) {
 		const email = await req.body.email;
 		const codeFound = usersCode.find((e) => e.email === email);
 
+		console.log("email: ", email);
+		console.log("code: ", code);
+		console.log("code found: ", codeFound.code);
 		if (Date.now() > codeFound.expireAt) {
+			console.error("error: code expired");
 			usersCode = usersCode.filter((user) => user.email !== email);
 			return rep.code({
 				error: "The code has expired. Please request a new one."
@@ -254,8 +292,11 @@ export default async function authRoute(fastify, options) {
 		}
 
 		if (codeFound && codeFound.code === code.toString()) {
+			console.log("OK: valid authentication code");
+			usersCode = usersCode.filter((user) => user.email !== email);
 			return rep.send({ success: true });
 		} else {
+			console.log("error: bad code")
 			return rep.code(401).send({ success: false, error: "invalid 6-digits code" });
 		}
 	})

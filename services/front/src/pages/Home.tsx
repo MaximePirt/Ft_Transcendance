@@ -36,6 +36,7 @@ function HomePage() {
 	const [signupError, setSignupError] = useState('')
 	const [code, setCode] = useState('');
 	const [codeError, setCodeError] = useState('');
+	const [logoutError, setLogoutError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
 	const message = useRef<HTMLDivElement>(null);
@@ -62,8 +63,10 @@ function HomePage() {
 				})
 			})
 
+
 			if (!response.ok) {
-				throw new Error('Something went wrong');
+				const data = await response.json();
+				setLoginError(data.error || "Something went wrong");
 			} else if (isAuth) {
 				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
 					method: "POST",
@@ -72,25 +75,33 @@ function HomePage() {
 						email: email,
 					})
 				});
+
+				setUserEmail(email);
+				let data;
 				if (authMail.ok) {
-					if (await login(email, password)) {
+					if (await login(email, userUsername)) {
 						setShowLogin(false);
+						setCodeError('');
 						setShow2fa(true);
-						console.log('user connected & auth code email sent');
-					} else
-						throw new Error();
+					} else {
+						data = await authMail.json();
+						setLoginError(data.error || "Something went wrong");
+
+					}
 				} else {
-					console.error("authMail error");
-					throw new Error();
+					data = await authMail.json();
+					setLoginError(data.error || "Something went wrong");
 				}
 			}
 		} catch (e) {
 			console.error('Error : ', e);
+			setLoginError("Cannot connect to authentication server");
 		}
 	}
 
 	const handleAuthCode = async () => {
 		try {
+			console.log("code: ", code, "username: ", userUsername, "email: ", userEmail);
 			const send = await fetch(`${API_BASE}/auth/verify-2fa`, {
 				method: "POST",
 				headers: {
@@ -102,16 +113,20 @@ function HomePage() {
 					username: userUsername
 				})
 			});
+
+			const data = await send.json();
+
 			if (send.ok) {
+				setUserUsername('');
+				setUserEmail('');
 				console.log("ok")
 				setShow2fa(false);
 			} else {
 				console.error("error")
-				const rep = await send.json();
-				setCodeError(rep.error);
+				setCodeError(data.error || "Something went wrong");
 			}
 		} catch (e) {
-			console.error(e);
+			setCodeError("Cannot connect to authentication server");
 		}
 	}
 
@@ -121,12 +136,36 @@ function HomePage() {
 				method: "POST",
 				credentials: "include"
 			});
+
+			const data = await response.json();
+
 			if (!response.ok) {
-				throw new Error();
-			}
-			logout();
+				setLogoutError(data.error || "Something went wrong");
+			} else
+				logout();
 		} catch (e) {
-			console.error(e);
+			setLogoutError("Cannot connect to authentication server");
+		}
+	}
+
+	const sendCodeAgain = async () => {
+		try {
+			const resp = await fetch(`${API_BASE}/auth/send`, {
+				method: 'POST',
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({
+					username: userUsername,
+					email: userEmail
+				})
+			});
+
+			if (!resp.ok) {
+				setCodeError("send code again failed");
+			}
+		} catch (e) {
+			setCodeError("Cannot connect to authentication server");
 		}
 	}
 
@@ -147,11 +186,12 @@ function HomePage() {
 
 		setUserEmail(email);
 		setUserUsername(username);
+		// password !== username
 		if (password !== confirmPassword) {
-			setSignupError(t('passwords do not match') || 'Les mots de passe ne correspondent pas')
+			setSignupError("Password != confirm password");
 			return
 		} else if (!password_regex.test(password)) {
-			setSignupError(t('Password must be 12+ chars, include an uppercase, a number, and a special character.'))
+			setSignupError('Password must be 12+ chars, include an uppercase, a number, and a special character.');
 			return
 		}
 
@@ -167,10 +207,13 @@ function HomePage() {
 					password: newUser.password
 				})
 			})
+
+			const data = await response.json();
+
 			if (!response.ok) {
-				const err = await response.json();
-				setSignupError(err.error)
-				throw new Error(err.body.error);
+				setSignupError(data.error);
+				console.log("data error: ", data.error);
+				return
 			} else {
 				const success = await signup(email, username, password)
 				if (success) {
@@ -184,27 +227,28 @@ function HomePage() {
 							username: newUser.username
 						})
 					});
+
+					const data = await authMail.json();
+
 					if (authMail.ok) {
-						if (await login(email, password)) {
+						if (await login(email, username)) {
+							setUserUsername(username);
+							setUserEmail(email);
+							setCodeError('');
 							setShowSignup(false);
 							setShow2fa(true);
-							console.log('user connected & auth code email sent');
 						} else
-							throw new Error();
+							setSignupError(data.error || "Something went wrong");
 					} else {
-						console.error("authMail error");
-						throw new Error();
+						setSignupError(data.error || "Something went wrong");
 					}
-				} else {
-					setSignupError(t('signup_error') || 'Erreur lors de l\'inscription')
 				}
-
 			}
 		} catch (e) {
 			console.error('Error: ', e)
+			setSignupError("Cannot connect to authentication server");
 		}
 	}
-
 	return (
 		<main className="page">
 			<LanguageSelector />
@@ -363,10 +407,12 @@ function HomePage() {
 							<label className='field'>
 								<input type="text" id="verify-token" placeholder="XXXXXX" onChange={(e) => (setCode(e.target.value))} required />
 							</label>
-							<button type="submit" onClick={handleAuthCode} className="btn primary full">
-								{t("signup_button")}
-							</button>
 						</form>
+						<button type="submit" onClick={sendCodeAgain} className='btn primary full'>{t("send code again")}</button>
+						<button type="submit" onClick={handleAuthCode} className="btn primary full">
+							{t("GO !")}
+						</button>
+
 					</div>
 				</div>
 			)}
