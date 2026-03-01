@@ -155,7 +155,14 @@ function SoloGamePage() {
       playerAnswer = userAnswer
 
     try {
-      const response = await fetch('https://localhost/api/quiz/game-sessions/1/answer', {
+      const sessionIdStr = await sessionStorage.getItem("sessionId");
+      const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+      console.log("Session ID from localStorage:", sessionId);
+      if (!sessionId) {
+        console.log('Invalid session ID in localStorage:', sessionIdStr)
+        throw new Error('Invalid session ID')
+      }
+      const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/answer`, {
         method: 'POST',
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
