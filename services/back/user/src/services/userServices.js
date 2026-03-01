@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 
+// TODO: Mettre le host, port, user, et pass et ENV
 function createZohoTransporter() {
     return nodemailer.createTransport({
         host: "smtp.zoho.eu",

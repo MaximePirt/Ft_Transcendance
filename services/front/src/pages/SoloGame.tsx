@@ -13,76 +13,44 @@ const exitbutton = [
   { id: 'informatique', symbol: '🚪', url: '/custom-assets/informatique-exit-icon.png' },
 ]
 
+interface Option {
+  position: number
+  label: string
+}
+
 interface Question {
+  id: number
+  category_slug: string
+  question_order: number
   question_text: string
   type: 'mcq' | 'text'
-  options?: string[]
+  options?: Option[]
 }
 
-// interface QuizData {
-//   Quiz: Array<Record<string, Question[]>>
-// }
-
-// function shuffleQuestions(items: Question[]) {
-//   const shuffled = [...items]
-//   for (let i = shuffled.length - 1; i > 0; i -= 1) {
-//     const j = Math.floor(Math.random() * (i + 1))
-//       ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-//   }
-//   return shuffled
-// }
-
-function normalizeAnswer(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s'-]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
+interface  AnswerMCQ {
+  answer: Array<string>
+  type: string
 }
 
-// function levenshtein(a: string, b: string) {
-//   const dp: number[][] = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0))
-//   for (let i = 0; i <= a.length; i += 1) dp[i][0] = i
-//   for (let j = 0; j <= b.length; j += 1) dp[0][j] = j
-//   for (let i = 1; i <= a.length; i += 1) {
-//     for (let j = 1; j <= b.length; j += 1) {
-//       const cost = a[i - 1] === b[j - 1] ? 0 : 1
-//       dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost)
-//     }
-//   }
-//   return dp[a.length][b.length]
-// }
+interface  AnswerText {
+  answer: Array<string>
+  type: string
+}
 
-// function isTextAnswerCorrect(question: Question, answer: string) {
-//   const accepted = [question.response, ...(question.variants ?? [])]
-//   const normalizedUser = normalizeAnswer(answer)
-//   const normalizedAccepted = accepted.map((value) => normalizeAnswer(value))
-
-//   return normalizedAccepted.some((target) => {
-//     if (target === normalizedUser) return true
-
-//     // Tolérer les responses quasi-identiques (accents/typos légers)
-//     const distance = levenshtein(target, normalizedUser)
-//     const tolerance = Math.max(1, Math.floor(target.length * 0.2))
-//     if (distance <= tolerance) return true
-
-//     // Tolérer une inclusion forte (ex: on tape juste le nom principal)
-//     if (normalizedUser.length >= 4 && (target.includes(normalizedUser) || normalizedUser.includes(target))) {
-//       return true
-//     }
-
-//     return false
-//   })
-// }
+interface AnswerResult {
+		is_correct: number
+		current_score: number
+		correct_answers: AnswerMCQ | AnswerText
+		total_correct: number
+		total_answered: number
+}
 
 const STORAGE_KEY = 'soloGameState:v1'
 
 function SoloGamePage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
-  const [questions, setQuestions] = useState<Question[]>([])
+  const [question, setQuestion] = useState<Question>()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,6 +59,7 @@ function SoloGamePage() {
   const [score, setScore] = useState(0)
   const [showAnswer, setShowAnswer] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
+  const [rightAnswer, setRightAnswer] = useState<string | number>()
 
 
   useEffect(() => {
@@ -101,8 +70,8 @@ function SoloGamePage() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        if (parsed.questions?.length) {
-          setQuestions(parsed.questions)
+        if (parsed.question) {
+          setQuestion(parsed.question)
           setCurrentQuestionIndex(parsed.currentQuestionIndex ?? 0)
           setUserAnswer(parsed.userAnswer ?? '')
           setSelectedOption(parsed.selectedOption ?? null)
@@ -117,8 +86,8 @@ function SoloGamePage() {
       }
     }
 
-    // Charger les questions depuis le backend si aucun état sauvegardé
-    const fetchQuestions = async () => {
+    // FETCH DE LA QUESTION
+    const fetchQuestion = async () => {
       try {
         const sessionIdStr = await sessionStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
@@ -131,29 +100,31 @@ function SoloGamePage() {
           signal: abortController.signal,
         })
         if (!response.ok) {
-          throw new Error('Failed to fetch questions')
+          throw new Error('Failed to fetch question')
         }
-        const data = await response.json()
-        console.log(data)
 
+        const { question } = await response.json()
+        const data: Question = question
         setLoading(false)
+        setQuestion(data)
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return
-        setError(err instanceof Error ? err.message : t('error_occurred'))
-        setLoading(false)
-      }
+          if (err instanceof Error && err.name === 'AbortError') return
+          setError(err instanceof Error ? err.message : t('error_occurred'))
+          setLoading(false)
+        }
     }
 
-    fetchQuestions()
+    fetchQuestion()
     
     return () => abortController.abort()
-  }, [])
+    }, [])
 
+  //  UPDATE LE LOCALSTORAGE A CHAQUE CHANGEMENT SUR LA PAGE
   useEffect(() => {
-    if (loading || error || questions.length === 0) return
+    if (loading || error || !question) return
 
     const payload = {
-      questions,
+      question,
       currentQuestionIndex,
       userAnswer,
       selectedOption,
@@ -165,36 +136,67 @@ function SoloGamePage() {
     } catch (err) {
       console.warn('[SoloGame] failed to persist state', err)
     }
-  }, [questions, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
+  }, [question, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
 
-  const handleValidateAnswer = () => {
-    const currentQuestion = questions[currentQuestionIndex]
-    let correct = false
+  // REPONSE CHECK
+  const handleValidateAnswer = async () => {
+    let playerAnswer: string | number = 0
+    let id: number = question.id
 
-    let isCorrect = false
+    if (question.type == "mcq") {
+      question.options.map((optionObj: Option, index: number) => {
+        let option = optionObj.label
 
-    // si pas de reponse on met faux directement
-    if (currentQuestion.type === 'mcq') {
-      isCorrect = selectedOption
-        ? normalizeAnswer(selectedOption) === normalizeAnswer(currentQuestion.response)
-        : false
-    } else {
-      correct = isTextAnswerCorrect(currentQuestion, userAnswer)
+        if (selectedOption === option)
+          playerAnswer = index
+      })
     }
+    else
+      playerAnswer = userAnswer
 
-    setIsCorrect(correct)
-    setShowAnswer(true)
-    if (correct) {
-      setScore(score + 1)
+    try {
+      const response = await fetch('https://localhost/api/quiz/game-sessions/1/answer', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question_id: id,
+          answer: playerAnswer,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json()
+        console.error("API ERROR:", err)
+        throw new Error(err.error || 'Failed to get the answer')
+      }
+
+      const json = await response.json()
+      const data: AnswerResult = json.result
+
+      if (data.correct_answers.type === "text") {
+        let answer: AnswerText = data.correct_answers
+        setRightAnswer(answer.answer[0])
+      } else {
+        let answer: AnswerMCQ = data.correct_answers
+        setRightAnswer(answer.answer)
+      }
+      setIsCorrect(data.is_correct)
+      setShowAnswer(true)
+      if (data.is_correct) {
+        setScore(data.current_score)
+      }
+    } catch (err) {
+      console.warn('[SoloGame] failed to get the answer', err)
     }
   }
 
+  // PASSER A LA QUESTION SUIVANTE
   const handleNextQuestion = () => {
-    const isLastQuestion = currentQuestionIndex === questions.length - 1
+    const isLastQuestion = currentQuestionIndex === 1
 
     if (isLastQuestion) {
       localStorage.removeItem(STORAGE_KEY)
-      alert(`Quiz terminé ! Score: ${score} / ${questions.length}`)
+      alert(`Quiz terminé ! Score: ${score} / 2`)
       navigate('/quiz')
       return
     }
@@ -211,8 +213,6 @@ function SoloGamePage() {
       setSelectedOption(option)
     }
   }
-
-  const currentQuestion = questions[currentQuestionIndex]
 
   if (loading) {
     return (
@@ -251,7 +251,7 @@ function SoloGamePage() {
     )
   }
 
-  if (questions.length === 0) {
+  if (!question) {
     return (
       <main className="page">
         <div className="shell">
@@ -304,21 +304,23 @@ return (
       <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
         <h1>Partie Solo en cours</h1>
         <p className="lede" style={{ border: 'none', padding: 0, textAlign: 'center' }}>
-          Question <strong>{currentQuestionIndex + 1}</strong> sur {questions.length} • Score : <strong>{score}</strong>
+          Question <strong>{currentQuestionIndex + 1}</strong> sur 2 • Score : <strong>{score}</strong>
         </p>
       </div>
 
       {/* LA CARTE DE JEU (Pleine largeur) */}
       <div className="quiz-card-full">
         <h2 style={{ fontSize: '1.5rem', textAlign: 'center', marginBottom: '1.4rem' }}>
-          {currentQuestion.question}
+          {question.question_text}
         </h2>
 
         <div className="game-area">
-          {currentQuestion.type === 'qcm' && currentQuestion.options ? (
+          {question.type === 'mcq' && question.options ? (
             <div className="game-options-grid">
-              {currentQuestion.options.map((option, index) => {
-                const isCorrectAnswer = normalizeAnswer(option) === normalizeAnswer(currentQuestion.réponse)
+              {question.options.map((optionObj: Option, index: number) => {
+                let option = optionObj.label
+
+                const isCorrectAnswer = index === rightAnswer
                 const isSelected = selectedOption === option
                 let borderColor = '2px solid #000'
                 let backgroundColor = '#fff'
@@ -351,7 +353,7 @@ return (
                       border: borderColor,
                       background: backgroundColor,
                       cursor: showAnswer ? 'default' : 'pointer',
-                      opacity: showAnswer && !isCorrectAnswer && !isSelected ? 0.6 : 1
+                      opacity: showAnswer && !isCorrect && !isSelected ? 0.6 : 1
                     }}
                     disabled={showAnswer}
                   >
@@ -381,7 +383,7 @@ return (
               />
               {showAnswer && !isCorrect && (
                 <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                  Bonne réponse : {currentQuestion.réponse}
+                  Bonne réponse : {rightAnswer}
                 </p>
               )}
             </div>
@@ -395,13 +397,13 @@ return (
               className="btn secondary" 
               style={{ minWidth: '280px' }} 
               onClick={handleValidateAnswer}
-              disabled={currentQuestion.type === 'qcm' ? !selectedOption : !userAnswer}
+              disabled={question.type === 'mcq' ? !selectedOption : !userAnswer}
             >
               Valider
             </button>
           ) : (
             <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
-              {currentQuestionIndex === questions.length - 1 ? 'Terminer le Quiz' : 'Question suivante →'}
+              {currentQuestionIndex === 1 ? 'Terminer le Quiz' : 'Question suivante →'}
             </button>
           )}
         </div>
