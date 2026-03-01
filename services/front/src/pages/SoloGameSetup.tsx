@@ -56,6 +56,9 @@ function SoloGameSetup() {
     console.log("Theme List : ", themeList);
     if (selectedThemes.size > 0) {
       let topic = Array.from(selectedThemes).filter((theme) => theme !== 'All');
+      if (topic.includes('all')) {
+        topic = [];
+      }
       console.log("Selected themes for API:", topic);
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
         method: 'POST',
