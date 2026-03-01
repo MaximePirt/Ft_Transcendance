@@ -88,7 +88,6 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
-
 	/**
 	 * @brief Get user statistics
 	 * @input : user_id
@@ -113,14 +112,12 @@ async function userRoutes(fastify, options) {
 			}
 			return reply.code(200).send({ result: stats });
 		}
-		catch (err)
-		{
+		catch (err) {
 			request.log.error(err);
 			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
-	
 	fastify.get("/:id", async (request, reply) => {
 		const res = await userController.getUserById(request.params.id);
 		if (!res)
@@ -191,13 +188,13 @@ async function userRoutes(fastify, options) {
 		try {
 			const { userId, data } = request.body;
 			if (!userId || !data) {
-  				return reply.code(400).send({ error: "BAD_REQUEST" });
+				return reply.code(400).send({ error: "BAD_REQUEST" });
 			}
 
 			const user = await userController.getUserById(userId);
-		    if (!user) {
-      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
-    		}
+			if (!user) {
+				return reply.code(404).send({ error: "USER_NOT_FOUND" });
+			}
 
 			const html = await render(React.createElement(DataExportConfirmationEmail, { username: user.username }));
 			const transporter = createZohoTransporter();
@@ -210,9 +207,9 @@ async function userRoutes(fastify, options) {
 				html,
 				attachments: [
 					{
-					filename: `${user.username}-data.json`,
-					content: JSON.stringify(data, null, 2),
-					contentType: "application/json",
+						filename: `${user.username}-data.json`,
+						content: JSON.stringify(data, null, 2),
+						contentType: "application/json",
 					},
 				],
 			});
@@ -228,20 +225,20 @@ async function userRoutes(fastify, options) {
 		try {
 			const { userId, codeValidation } = request.body;
 			if (!userId || !codeValidation) {
-  				return reply.code(400).send({ error: "BAD_REQUEST" });
+				return reply.code(400).send({ error: "BAD_REQUEST" });
 			}
 
 			const user = await userController.getUserById(userId);
-		    if (!user) {
-      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
-    		}
+			if (!user) {
+				return reply.code(404).send({ error: "USER_NOT_FOUND" });
+			}
 
-			const html = await render(React.createElement(SignupEmail, { username: user.username, code: codeValidation}));
+			const html = await render(React.createElement(SignupEmail, { username: user.username, code: codeValidation }));
 			const transporter = createZohoTransporter();
 
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
-				to: "tristan.olivier.p@gmail.com",
+				to: "thi.dausque@gmail.com",
 				//to: user.email,
 				subject: `Welcome, ${user.username} !`,
 				html,
