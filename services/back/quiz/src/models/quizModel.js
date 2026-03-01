@@ -560,6 +560,17 @@ function usePowerup(powerupId, userId) {
 	return result.changes > 0;
 }
 
+function printSessionQuestions(sessionId) {
+	const questions = db.prepare(`
+		SELECT gsq.question_order, q.id AS question_id, q.difficulty, q.type, c.slug AS category_slug
+		FROM game_session_questions gsq
+		JOIN questions q ON gsq.question_id = q.id
+		LEFT JOIN categories c ON q.category_id = c.id
+		WHERE gsq.game_session_id = ?
+		ORDER BY gsq.question_order ASC
+	`).all(sessionId);
+	return questions;
+}
 
 module.exports = {
 	generateSessionCode,
@@ -594,5 +605,6 @@ module.exports = {
 	grantPowerup,
 	getAvailablePowerupsForPlayer,
 	usePowerup,
-	countPowerups
+	countPowerups,
+	printSessionQuestions
 };

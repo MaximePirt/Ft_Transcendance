@@ -21,7 +21,7 @@ async function quizRoutes(fastify, options) {
 		}
 		catch (err) {
 			console.error("Error creating game session:", err);
-			return reply.code(500).send({ status: 'Error creating game session', error: err.message });
+			return reply.code(err.code || 500).send({ status: 'Error creating game session', error: err.message });
 		}
 	});
 
@@ -148,8 +148,9 @@ async function quizRoutes(fastify, options) {
 			const {question, remaining_ms, status} = await quizController.getCurrentQuestion(userId, sessionId);
 			if (!question)
 			{
+				console.log("No current question found for game session ID:", sessionId);
 
-				return reply.code(404).send({ error: 'No current question found for this game session' });
+				return reply.code(400).send({ error: 'No current question found for this game session' });
 			}
 			return reply.code(200).send({ status: 'Current question retrieved', question: question, remaining_ms, game_status: status });
 		} catch (err) {

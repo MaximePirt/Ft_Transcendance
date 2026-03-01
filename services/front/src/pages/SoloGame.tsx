@@ -120,7 +120,7 @@ function SoloGamePage() {
     // Charger les questions depuis le backend si aucun état sauvegardé
     const fetchQuestions = async () => {
       try {
-        const sessionIdStr = sessionStorage.getItem("sessionId");
+        const sessionIdStr = await sessionStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
         console.log("Session ID from localStorage:", sessionId);
         if (!sessionId) {

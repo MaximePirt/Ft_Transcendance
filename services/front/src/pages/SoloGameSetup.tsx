@@ -9,7 +9,7 @@ const themes = (t: any) => [
   { id: 'Musiques', slug: 'musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
   { id: 'Sports', slug: 'sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
   { id: 'Cinéma', slug: 'cinema', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
-  { id: 'JeuxVidéo', slug:'jeux-video' ,title:t('video_games',{defaultValue:'JeuxVidéo'}),detail:t('video_games_desc',{defaultValue:''}),icon:''},
+  { id: 'JeuxVidéo', slug:'jeuxvideo' ,title:t('video_games',{defaultValue:'JeuxVidéo'}),detail:t('video_games_desc',{defaultValue:''}),icon:''},
   { id: 'Echec', slug: 'echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
   { id: 'Informatique', slug: 'informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
 ]
