@@ -212,6 +212,7 @@ export default async function authRoute(fastify, options) {
 			const username = await request.body.username;
 			const email = await request.body.email;
 
+			console.log("body user: ", await request.body)
 			usersCode.push({
 				email: email,
 				code: codeValue.toString(),
@@ -230,6 +231,7 @@ export default async function authRoute(fastify, options) {
 
 			return reply.send({ success: true });
 		} catch (err) {
+			console.error("ERROR ", err);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
 
 			return rep.code(errorInfo.status).send({

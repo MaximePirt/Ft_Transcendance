@@ -1,11 +1,10 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
-import { AUTH } from './ProfilUser'
 
 const topics = (t: any) => [
 	{ title: t('histoire'), detail: t('histoire_desc') },
@@ -65,7 +64,7 @@ function HomePage() {
 			if (!response.ok) {
 				const data = await response.json();
 				setLoginError(data.error || "Something went wrong");
-			} else if (AUTH) {
+			} else {
 				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -121,7 +120,7 @@ function HomePage() {
 				setShow2fa(false);
 			} else {
 				console.error("error")
-				setCodeError(data.error || "Something went wrong");
+				setCodeError("Something went wrong");
 			}
 		} catch (e) {
 			setCodeError("Cannot connect to authentication server");
@@ -136,13 +135,14 @@ function HomePage() {
 			});
 
 			const data = await response.json();
-
 			if (!response.ok) {
 				setLogoutError(data.error || "Something went wrong");
+				return;
 			} else
 				logout();
 		} catch (e) {
 			setLogoutError("Cannot connect to authentication server");
+			return;
 		}
 	}
 

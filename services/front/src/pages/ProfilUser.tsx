@@ -131,7 +131,6 @@ const DEFAULT_AVATAR_CHOICES = ['/avatar/Default.png', '/avatar/Default2.png', '
 
 const MAX_STICKERS = 3
 const MAX_TITLES = 2
-export const [AUTH, setAUTH] = useState(false);
 
 function ProfilUser() {
 	const navigate = useNavigate()
@@ -1266,8 +1265,6 @@ function ProfilUser() {
 					)}
 				</div>
 				<label>
-					<input type="checkbox" checked={AUTH} onChange={(e) => (setAUTH(e.target.checked))} id="2fauth" name="contact" value="2FA" />
-					2FA authentication
 				</label>
 				<DataRequester />
 			</div>
