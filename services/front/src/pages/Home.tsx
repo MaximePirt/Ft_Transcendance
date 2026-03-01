@@ -5,6 +5,7 @@ import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
+import { AUTH } from './ProfilUser'
 
 const topics = (t: any) => [
 	{ title: t('histoire'), detail: t('histoire_desc') },
@@ -39,8 +40,6 @@ function HomePage() {
 	const [logoutError, setLogoutError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
-	const message = useRef<HTMLDivElement>(null);
-	const qrCode = useRef<HTMLDivElement>(null);
 	const API_BASE = import.meta.env.AUTH_API_URL || 'https://localhost/api'
 
 	const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -49,7 +48,6 @@ function HomePage() {
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
 		const password = (form.elements.namedItem('password') as HTMLInputElement).value
-		const isAuth = true;
 		try {
 			const response = await fetch(`${API_BASE}/auth/signin`, {
 				method: "POST",
@@ -67,7 +65,7 @@ function HomePage() {
 			if (!response.ok) {
 				const data = await response.json();
 				setLoginError(data.error || "Something went wrong");
-			} else if (isAuth) {
+			} else if (AUTH) {
 				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -172,6 +170,7 @@ function HomePage() {
 	const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setSignupError('')
+		const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
 		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
@@ -190,6 +189,8 @@ function HomePage() {
 		if (password !== confirmPassword) {
 			setSignupError("Password != confirm password");
 			return
+		} else if (!username_regex.test(username)) {
+			setSignupError('Username should count between 3 & 16 characters and contains not any special characters');
 		} else if (!password_regex.test(password)) {
 			setSignupError('Password must be 12+ chars, include an uppercase, a number, and a special character.');
 			return

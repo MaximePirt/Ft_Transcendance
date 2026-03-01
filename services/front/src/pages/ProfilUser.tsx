@@ -131,6 +131,7 @@ const DEFAULT_AVATAR_CHOICES = ['/avatar/Default.png', '/avatar/Default2.png', '
 
 const MAX_STICKERS = 3
 const MAX_TITLES = 2
+export const [AUTH, setAUTH] = useState(false);
 
 function ProfilUser() {
 	const navigate = useNavigate()
@@ -162,7 +163,6 @@ function ProfilUser() {
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
 	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
 	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
-	const [auth2fa, setAuth2fa] = useState(false);
 
 	// fausse game data pour les stats de jeu, à remplacer par des vraies données quand l'API sera ok
 	const totalQuestions = userProfile.stats.gamesPlayed * 10
@@ -1266,7 +1266,7 @@ function ProfilUser() {
 					)}
 				</div>
 				<label>
-					<input type="checkbox" checked={auth2fa} onChange={(e) => setAuth2fa(e.target.checked)} id="2fauth" name="contact" value="2FA" />
+					<input type="checkbox" checked={AUTH} onChange={(e) => (setAUTH(e.target.checked))} id="2fauth" name="contact" value="2FA" />
 					2FA authentication
 				</label>
 				<DataRequester />

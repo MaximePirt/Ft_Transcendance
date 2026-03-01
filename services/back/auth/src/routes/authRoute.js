@@ -109,6 +109,7 @@ export default async function authRoute(fastify, options) {
 	let usersCode = [];
 	fastify.post('/signup', async function (request, reply) {
 		try {
+			const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
 			const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
 			const email = await request.body.email;
 			const username = await request.body.username;
@@ -117,7 +118,9 @@ export default async function authRoute(fastify, options) {
 
 			console.log("username: ", username, " email: ", email, " password: ", hashPass);
 			if (!password_regex.test(password))
-				return reply.code(401).send({ error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
+				return reply.code(401).send({ success: false, error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
+			else if (!username_regex.test(username))
+				return reply.code(401).send({ success: false, error: 'Username should count between 3 & 16 characters and contains not any special characters' });
 			const resId = await signupUser(email, username, hashPass);
 			const user = Object.create(User);
 			user.username = await request.body.username;
