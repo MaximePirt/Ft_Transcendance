@@ -159,6 +159,26 @@ async function quizRoutes(fastify, options) {
 		}
 	});
 
+	fastify.get(`/game-sessions/:id/next-question`, {preHandler: fastify.authenticate},
+	async (request, reply) => {
+		// const userId = request.user.id;
+		const userId = 1;
+		const sessionId = request.params.id;
+
+		try {
+			const {question, remaining_ms, status} = await quizController.getNextQuestion(userId, sessionId);
+			if (!question)
+			{
+				console.log("No next question found for game session ID:", sessionId);
+				return reply.code(200).send({ status: "completed", question: null, remaining_ms: 0 });
+			}
+			return reply.code(200).send({ status: 'Next question retrieved', question: question, remaining_ms, game_status: status });
+		} catch (err) {
+			console.error("Error retrieving next question for game session:", err);
+			return reply.code(500).send({ error: 'Error retrieving next question', error: err.message });
+		}
+	});
+
 
 	/**
 	 * @brief Submit an answer for the current question in a game session

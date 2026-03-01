@@ -198,10 +198,29 @@ function SoloGamePage() {
   }
 
   // PASSER A LA QUESTION SUIVANTE
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
+    const abortController = new AbortController()
+
+    const sessionIdStr = await sessionStorage.getItem("sessionId");
+    const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+    console.log("Session ID from localStorage:", sessionId);
+    if (!sessionId) {
+      console.log('Invalid session ID in localStorage:', sessionIdStr)
+      throw new Error('Invalid session ID')
+    }
+    const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      const err = await response.json()
+      console.error("API ERROR:", err)
+      throw new Error(err.error || 'Failed to get the next question')
+    }
     const isLastQuestion = currentQuestionIndex === 1
 
     if (isLastQuestion) {
+      console.log("Quiz terminé, score final:", score)
       localStorage.removeItem(STORAGE_KEY)
       alert(`Quiz terminé ! Score: ${score} / 2`)
       navigate('/quiz')
@@ -213,7 +232,31 @@ function SoloGamePage() {
     setSelectedOption(null)
     setShowAnswer(false)
     setIsCorrect(false)
-  }
+    try {
+        const sessionIdStr = await sessionStorage.getItem("sessionId");
+        const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+        console.log("Session ID from localStorage:", sessionId);
+        if (!sessionId) {
+          console.log('Invalid session ID in localStorage:', sessionIdStr)
+          throw new Error('Invalid session ID')
+        }
+        const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
+          signal: abortController.signal,
+        })
+        if (!response.ok) {
+          throw new Error('Failed to fetch question')
+        }
+
+        const { question } = await response.json()
+        const data: Question = question
+        setLoading(false)
+        setQuestion(data)
+      } catch (err) {
+          if (err instanceof Error && err.name === 'AbortError') return
+          setError(err instanceof Error ? err.message : t('error_occurred'))
+          setLoading(false)
+        }
+    }
 
   const handleOptionClick = (option: string) => {
     if (!showAnswer) {
