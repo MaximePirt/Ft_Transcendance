@@ -3,6 +3,15 @@ const fs = require("fs");
 const { pipeline } = require("stream/promises");
 const path = require("path");
 
+const ACHIEVEMENT_DEFS = [
+	{ key: 'first_match', metric: 'total_matches', target: 1, points: 10 },
+	{ key: 'regular_player', metric: 'total_matches', target: 10, points: 30 },
+	{ key: 'winning_start', metric: 'wins', target: 3, points: 25 },
+	{ key: 'sharp_shooter', metric: 'correct', target: 25, points: 35 },
+	{ key: 'high_scorer', metric: 'total_score', target: 1500, points: 35 },
+	{ key: 'accuracy_pro', metric: 'accuracy', target: 70, points: 40 },
+];
+
 async function getUsers() {
 	const users = await userModel.findAllUsers();
 	if (!users) {
@@ -61,6 +70,78 @@ async function getRecentMatchesByUserId(userId, limit) {
 	return matches || [];
 }
 
+async function getUserStatsById(userId)
+{
+	if (!Number(userId) || userId <= 0)
+		throw new Error("Invalid user ID");
+	const user = await getUserById(userId);
+	if (!user)
+		throw new Error("User not found");
+	const stats = userModel.findUserStatsById(userId);
+	if (!stats)
+		throw new Error("User stats not found");
+	return stats;
+}
+
+async function getUserAchievementsById(userId)
+{
+	if (!Number(userId) || userId <= 0)
+		throw new Error("Invalid user ID");
+	const user = await getUserById(userId);
+	if (!user)
+		throw new Error("User not found");
+
+	const stats = userModel.findUserStatsById(userId) || {};
+	const metrics = {
+		total_matches: Number(stats.total_matches || 0),
+		wins: Number(stats.wins || 0),
+		total_score: Number(stats.total_score || 0),
+		correct: Number(stats.correct || 0),
+		accuracy: Number(stats.accuracy || 0),
+	};
+
+	const all = ACHIEVEMENT_DEFS.map((def) => {
+		const value = Number(metrics[def.metric] || 0);
+		const clampedProgressValue = Math.min(value, def.target);
+		const progressPercent = def.target > 0
+			? Math.max(0, Math.min(100, Math.round((clampedProgressValue / def.target) * 100)))
+			: 0;
+		const unlocked = value >= def.target;
+		return {
+			key: def.key,
+			metric: def.metric,
+			target: def.target,
+			value,
+			progressPercent,
+			unlocked,
+			points: def.points,
+		};
+	});
+
+	const unlocked = all.filter((item) => item.unlocked);
+	const inProgress = all
+		.filter((item) => !item.unlocked)
+		.sort((a, b) => b.progressPercent - a.progressPercent)
+		.slice(0, 3);
+
+	const totalPoints = all.reduce((sum, item) => sum + item.points, 0);
+	const unlockedPoints = unlocked.reduce((sum, item) => sum + item.points, 0);
+	const progressPercent = totalPoints > 0 ? Math.round((unlockedPoints / totalPoints) * 100) : 0;
+
+	return {
+		summary: {
+			unlockedCount: unlocked.length,
+			totalCount: all.length,
+			unlockedPoints,
+			totalPoints,
+			progressPercent,
+		},
+		unlocked,
+		inProgress,
+		all,
+	};
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -68,5 +149,7 @@ module.exports = {
 	updateUser,
 	updateAvatar,
 	getUser,
-	getRecentMatchesByUserId
+	getRecentMatchesByUserId,
+	getUserStatsById,
+	getUserAchievementsById
 };

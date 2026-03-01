@@ -18,7 +18,7 @@ const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
 async function createGameSession(sessionData, hostId) {
 	hostId = 1;
 	const { mode, topic = null,
-			question_count, max_players = 4, power_ups } = sessionData;
+			question_count, max_players = 4, power_ups, is_solo } = sessionData;
 	// TODO: uncomment lines below in debug purpose, remove it in prod
 	// const power_ups = ["skip", "hint", "50-50"];
 
@@ -28,7 +28,7 @@ async function createGameSession(sessionData, hostId) {
 	try {
 		const sessionCode = quizModel.generateSessionCode();
 		try {
-			const insertGame = quizModel.insertGameSession(sessionCode, mode, topicJson, question_count, max_players, powerupsJson, hostId);
+			const insertGame = quizModel.insertGameSession(sessionCode, mode, topicJson, question_count, max_players, powerupsJson, is_solo, hostId);
 			quizModel.insertPlayerInGame(hostId, insertGame.lastInsertRowid);
 			console.log("Game session created with code:", sessionCode);
 		}
@@ -36,7 +36,20 @@ async function createGameSession(sessionData, hostId) {
 			console.error("Error inserting game session into database or host into game_session:", err);
 			throw new Error("Failed to create game session");
 		}
-		return (sessionCode);
+		const session = quizModel.getSessionByCode(sessionCode);
+		if (!is_solo)
+			return { status: 'Game session started', sessionCode, sessionId: session.id };
+		else
+		{
+			try {
+				startGameSession(hostId, sessionCode);
+				return { status: 'Solo game session started', sessionCode: sessionCode, sessionId: session.id };
+			}
+			catch (err) {
+				console.error("Error starting solo game session:", err);
+				return {code: err.code, status: 'Solo game session created but failed to start', sessionCode: sessionCode, sessionId: session.id, error: err.message };
+			}
+		}
 	}
 	catch (err) {
 		console.error("Error generating session code:", err);
@@ -123,7 +136,9 @@ async function startGameSession(userId, sessionCode)
 		return {code: 200, session_id: session.id};
 	}
 	catch (err) {
-		throw new Error("Failed to start game session: " + err.message);
+		if (err.message.includes("Not enough questions"))
+			return {code: 400, error: 'Not enough questions available to start the game session'};
+		return {code: 500, error: 'Error starting game session', details: err.message};
 	}
 }
 
@@ -140,18 +155,24 @@ async function getCurrentQuestion(userId, sessionId)
 
 	const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
 
-	const order = session.current_question_order;
-	if (!order)
-		return { game_status: 'in_progress', question: null, remaining_ms };
-
-	const question = quizModel.getQuestionByOrderForPlayer(sessionId, order, player.lang);
-	if (!question && session.current_question_order > quizModel.getTotalQuestionsForSession(sessionId))
+	const order = Number(session.current_question_order);
+	if (!order && order !== 0)
 	{
+		console.log("No current question order found for game session ID:", sessionId);
+		return { game_status: 'in_progress', question: null, remaining_ms };
+	}
+	const question = quizModel.getQuestionByOrderForPlayer(sessionId, order, player.lang);
+	if (!question && session.current_question_order > session.question_count)
+	{
+		console.log("No more questions available for game session ID:", sessionId, "Marking session as completed.");
 		quizModel.updateSessionStatus(sessionId, 'completed');
+		quizModel.updateWinnerForSession(sessionId);
 		return { game_status: 'completed', question: null, remaining_ms: 0 };
 	}
 	else if (!question)
+	{
 		throw new Error("No current question found for this game session");
+	}
 	console.log("Current question for user ID", userId, "in game session ID:", sessionId, ":", question);
 	return { game_status: session.status, question, remaining_ms };
 }
@@ -188,21 +209,6 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 
 	quizModel.updatePlayerScore(sessionId, userId, isCorrect, time_taken);
 
-	if (quizModel.haveAllPlayersAnswered(sessionId, question_id)) {
-		sessionTimer.clearTimer(sessionId);
-		const { status, new_order } = quizModel.advanceSession(sessionId);
-		const players = quizModel.getPlayersBySession(sessionId);
-		wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
-		if (status === 'in_progress')
-		{
-			sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
-			const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
-			wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
-			await grantPowerupsForQuestion(session, session.current_question_order);
-		}
-		else if (status === 'completed')
-			wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
-	}
 	const updatedPlayer = quizModel.findUserInSession(sessionId, userId);
 	console.log("User ID", userId, "submitted answer for question ID", question_id, "in game session ID:", sessionId, "Correct:", isCorrect);
 	const result = {
@@ -413,6 +419,36 @@ async function leaveGameSession(sessionId, userId)
 	}
 }
 
+async function getNextQuestion(userId, sessionId)
+{
+	const session = quizModel.getSessionById(sessionId);
+	if (!session)
+		throw new Error("Game session not found");
+
+	const question_id = quizModel.getCurrentQuestionId(sessionId);
+	if (quizModel.haveAllPlayersAnswered(sessionId, question_id)) {
+		sessionTimer.clearTimer(sessionId);
+		const { status, new_order } = quizModel.advanceSession(sessionId);
+		const players = quizModel.getPlayersBySession(sessionId);
+		wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
+		if (status === 'in_progress')
+		{
+			sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
+			const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
+			wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
+			await grantPowerupsForQuestion(session, session.current_question_order);
+		}
+		else if (status === 'completed')
+		{
+			wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
+			return({ game_status: 'completed', question: null, remaining_ms: 0 })
+		}
+		return (getCurrentQuestion(userId, sessionId));
+	}
+	else
+		throw new Error("Not all players have answered the current question yet");
+}
+
 async function getLeaderboard(sessionId)
 {
 	const session = quizModel.getSessionById(sessionId);
@@ -434,5 +470,6 @@ module.exports = {
 	leaveGameSession,
 	getLeaderboard,
 	grantPowerupsForQuestion,
-	usePowerup
+	usePowerup,
+	getNextQuestion
 };

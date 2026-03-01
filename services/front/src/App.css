@@ -1160,6 +1160,59 @@ h2 {
   padding-left: 10px;
 }
 
+.profile-game-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.profile-stat-card-kpi {
+  padding: 10px;
+}
+
+.profile-stat-card-kpi .stat-label {
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+
+.profile-stat-card-kpi .stat-value {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.profile-achievements-track {
+  width: 100%;
+  height: 12px;
+  border: var(--border-thin);
+  background: #fff;
+  box-shadow: var(--shadow-btn);
+  overflow: hidden;
+}
+
+.profile-achievements-fill {
+  height: 100%;
+  background: var(--secondary);
+}
+
+.profile-achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.profile-achievement-card {
+  border: var(--border-thin);
+  box-shadow: var(--shadow-btn);
+  background: #fff;
+  padding: 10px;
+}
+
+.profile-achievement-title {
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
 @media (max-width: 920px) {
   .profile-layout {
     grid-template-columns: 1fr;

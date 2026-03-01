@@ -9,14 +9,14 @@ function generateSessionCode()
 	return res;
 }
 
-function insertGameSession(sessionCode, mode, topic, question_count, max_players, power_ups, hostId)
+function insertGameSession(sessionCode, mode, topic, question_count, max_players, power_ups, is_solo, hostId)
 {
 	console.log("Inserting powers_ups for new game session:", power_ups);
 	const insert = db.prepare(`
-		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, power_ups, host_id)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, power_ups, is_solo, host_id)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`);
-	const result = insert.run(sessionCode, mode, topic, question_count, max_players, power_ups, hostId);
+	const result = insert.run(sessionCode, mode, topic, question_count, max_players, power_ups, is_solo, hostId);
 	if (result.changes !== 1)
 		throw new Error("Failed to insert game session into database");
 	return result;
@@ -87,9 +87,38 @@ function updateSessionStatus(sessionId, newStatus)
 	return res;
 }
 
+function updateWinnerForSession(sessionId) {
+	console.log("Model: Updating winner for completed game session ID:", sessionId);
+	const winner = db.prepare(`
+		SELECT user_id
+		FROM game_players
+		WHERE game_session_id = ? AND is_active = 1
+		ORDER BY score DESC, correct_answers DESC, answered_count ASC, joined_at ASC
+		LIMIT 1
+	`).get(sessionId);
+	if (!winner)
+		throw new Error("No active players found for game session to set winner");
+	const res = db.prepare(`
+		UPDATE game_players
+		SET is_winner = 1
+		WHERE game_session_id = ? AND user_id = ?
+	`).run(sessionId, winner.user_id);
+	if (res.changes !== 1)
+		throw new Error("Failed to update winner for game session");
+	console.log("Winner updated for game session ID:", sessionId, "Winner user ID:", winner.user_id);
+	return res;
+}
+
 
 function generateQuestionPool(mode, questionCount, topicJson)
 {
+	console.log("Printing every possible slugs for debugging:");
+	const allCategories = db.prepare(`SELECT slug FROM categories`).all();
+	console.log(allCategories.map(c => c.slug));
+	console.log("Printing every category name now:");
+	const allCategoryNames = db.prepare(`SELECT name FROM category_translations WHERE lang = 'fr'`).all();
+	console.log(allCategoryNames.map(c => c.name));
+
 	console.log("Model: Generating question pool with mode:", mode, "question count:", questionCount, "topic:", topicJson);
 	let query = `
 		SELECT q.id, q.difficulty, q.type, q.category_id
@@ -401,6 +430,7 @@ function advanceSession(sessionId) {
 		return { status: 'abandoned' };
 
 	if (session.current_question_order >= session.question_count) {
+		updateWinnerForSession(sessionId);
 		updateSessionStatus(sessionId, 'completed');
 		return { status: 'completed' };
 	}
@@ -530,6 +560,17 @@ function usePowerup(powerupId, userId) {
 	return result.changes > 0;
 }
 
+function printSessionQuestions(sessionId) {
+	const questions = db.prepare(`
+		SELECT gsq.question_order, q.id AS question_id, q.difficulty, q.type, c.slug AS category_slug
+		FROM game_session_questions gsq
+		JOIN questions q ON gsq.question_id = q.id
+		LEFT JOIN categories c ON q.category_id = c.id
+		WHERE gsq.game_session_id = ?
+		ORDER BY gsq.question_order ASC
+	`).all(sessionId);
+	return questions;
+}
 
 module.exports = {
 	generateSessionCode,
@@ -539,6 +580,7 @@ module.exports = {
 	getSessionByCode,
 	getPlayersBySession,
 	updateSessionStatus,
+	updateWinnerForSession,
 	generateQuestionPool,
 	insertPoolToSession,
 	findUserInSession,
@@ -563,5 +605,6 @@ module.exports = {
 	grantPowerup,
 	getAvailablePowerupsForPlayer,
 	usePowerup,
-	countPowerups
+	countPowerups,
+	printSessionQuestions
 };

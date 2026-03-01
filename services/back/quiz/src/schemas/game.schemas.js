@@ -26,15 +26,17 @@ const createGameSessionSchema = {
 			maximum: 8,
 			default: 4 
 		},
-		power_ups:
+		power_ups: 
 		{
-			type: 'array',
-			items: {
-				type: 'string',
-				default: []
-			}
+		type: 'array',
+		items: { type: 'string' },
+		default: []
+		},
+		is_solo: {
+			type: 'integer',
+			default: 0
 		}
-    }
+	},
 	}
 };
 
