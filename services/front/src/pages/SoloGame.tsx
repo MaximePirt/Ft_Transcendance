@@ -89,9 +89,8 @@ function SoloGamePage() {
     // FETCH DE LA QUESTION
     const fetchQuestion = async () => {
       try {
-        const sessionIdStr = await sessionStorage.getItem("sessionId");
+        const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-        console.log("Session ID from localStorage:", sessionId);
         if (!sessionId) {
           console.log('Invalid session ID in localStorage:', sessionIdStr)
           throw new Error('Invalid session ID')
@@ -102,6 +101,7 @@ function SoloGamePage() {
         if (!response.ok) {
           throw new Error('Failed to fetch question')
         }
+
 
         const { question } = await response.json()
         const data: Question = question
@@ -155,7 +155,7 @@ function SoloGamePage() {
       playerAnswer = userAnswer
 
     try {
-      const sessionIdStr = await sessionStorage.getItem("sessionId");
+      const sessionIdStr = await localStorage.getItem("sessionId");
       const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
       console.log("Session ID from localStorage:", sessionId);
       if (!sessionId) {
@@ -201,7 +201,7 @@ function SoloGamePage() {
   const handleNextQuestion = async () => {
     const abortController = new AbortController()
 
-    const sessionIdStr = await sessionStorage.getItem("sessionId");
+    const sessionIdStr = await localStorage.getItem("sessionId");
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
     console.log("Session ID from localStorage:", sessionId);
     if (!sessionId) {
@@ -217,12 +217,22 @@ function SoloGamePage() {
       console.error("API ERROR:", err)
       throw new Error(err.error || 'Failed to get the next question')
     }
-    const isLastQuestion = currentQuestionIndex === 1
+    const question_count_str = await localStorage.getItem("questionCount");
+    if (!question_count_str) {
+      console.log('No question count found in localStorage')
+      throw new Error('No question count found in localStorage')
+    }
+    let question_count = Number(question_count_str) || 0;
+    console.log("Question count from localStorage:", question_count);
+    const isLastQuestion = currentQuestionIndex === question_count - 1
+    console.log(`Current question index: ${currentQuestionIndex}, Question count: ${question_count}, Is last question: ${isLastQuestion}`)
 
     if (isLastQuestion) {
       console.log("Quiz terminé, score final:", score)
       localStorage.removeItem(STORAGE_KEY)
-      alert(`Quiz terminé ! Score: ${score} / 2`)
+      localStorage.removeItem("sessionId")
+      localStorage.removeItem("questionCount")
+      alert(`Quiz terminé ! Score: ${score} / ${question_count}`)
       navigate('/quiz')
       return
     }
@@ -233,7 +243,7 @@ function SoloGamePage() {
     setShowAnswer(false)
     setIsCorrect(false)
     try {
-        const sessionIdStr = await sessionStorage.getItem("sessionId");
+        const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
         console.log("Session ID from localStorage:", sessionId);
         if (!sessionId) {
@@ -321,6 +331,12 @@ function SoloGamePage() {
       </main>
     )
   }
+    const question_count_str = localStorage.getItem("questionCount");
+    if (!question_count_str) {
+      console.log('No question count found in localStorage')
+      throw new Error('No question count found in localStorage')
+    }
+    let question_count = Number(question_count_str) || 0;
 
 return (
   <main className="page">
@@ -354,7 +370,7 @@ return (
       <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
         <h1>Partie Solo en cours</h1>
         <p className="lede" style={{ border: 'none', padding: 0, textAlign: 'center' }}>
-          Question <strong>{currentQuestionIndex + 1}</strong> sur 2 • Score : <strong>{score}</strong>
+          Question <strong>{currentQuestionIndex + 1}</strong> sur <strong>{question_count}</strong> • Score : <strong>{score}</strong>
         </p>
       </div>
 

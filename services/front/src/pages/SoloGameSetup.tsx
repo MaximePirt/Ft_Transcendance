@@ -21,6 +21,8 @@ const powerUps = (t: any) => [
 ];
 
 const MAX_POWERUPS = 3;
+const MIN_Q = 2;
+const MAX_Q = 10;
 
 function SoloGameSetup() {
   const navigate = useNavigate()
@@ -29,6 +31,8 @@ function SoloGameSetup() {
   const [showThemesCard, setShowThemesCard] = useState(false)
   const [showPowerUpsCard, setShowPowerUpsCard] = useState(false);
   const [selectedPowerUps, setSelectedPowerUps] = useState<Set<string>>(new Set());
+  const [showQuestionCountCard, setShowQuestionCountCard] = useState(false);
+  const [questionCount, setQuestionCount] = useState<number>(2);
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
 
@@ -97,7 +101,7 @@ function SoloGameSetup() {
         body: JSON.stringify({
           mode: "random",
           topic: topic,
-          question_count: 2,
+          question_count: questionCount,
           is_solo: 1,
           power_ups: Array.from(selectedPowerUps),
         }),
@@ -108,7 +112,8 @@ function SoloGameSetup() {
       //   throw new Error("Session couldn't start");
       // }
       console.log("stocking : Session ID:", data.sessionId);
-      sessionStorage.setItem("sessionId", String(data.sessionId));
+      localStorage.setItem("sessionId", String(data.sessionId));
+      localStorage.setItem("questionCount", String(questionCount));
       navigate('/quiz/solo', { state: { themes: Array.from(selectedThemes) } });
     }
   }
@@ -224,6 +229,55 @@ function SoloGameSetup() {
             </div>
           </div>
         )}
+
+        
+      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <button
+          className="btn primary"
+          onClick={() => setShowQuestionCountCard(v => !v)}
+          disabled={selectedThemes.size === 0}
+          style={{
+          opacity: selectedThemes.size > 0 ? 1 : 0.5,
+          cursor: selectedThemes.size > 0 ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {t('question_count', { defaultValue: 'Nombre de questions' })} : {questionCount}
+        </button>
+      </div>
+      {showQuestionCountCard && (
+    <div style={{
+        marginTop: '2rem',
+        padding: 'clamp(1rem, 3vw, 2rem)',
+        backgroundColor: '#ffffffff',
+        border: '2px solid #000000',
+        borderRadius: '8px',
+        boxShadow: '4px 4px 0px #000000',
+      }}>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)' }}>
+            {t('choose_question_count', { defaultValue: 'Choisis le nombre de questions' })}
+          </h3>
+          <div style={{ color: '#666' }}>
+            {t('selected', { defaultValue: 'Sélectionné' })} : <b>{questionCount}</b>
+          </div>
+        </div>
+
+        <input
+          type="range"
+          min={MIN_Q}
+          max={MAX_Q}
+          step={1}
+          value={questionCount}
+          onChange={(e) => setQuestionCount(Number(e.target.value))}
+          style={{ width: '100%' }}
+        />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', color: '#666' }}>
+          <span>{MIN_Q}</span>
+          <span>{MAX_Q}</span>
+        </div>
+      </div>
+    )}
 
         <div style={{ marginTop: '2rem', textAlign: 'center' }}>
           <button
