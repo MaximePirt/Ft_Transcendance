@@ -60,6 +60,10 @@ function SoloGamePage() {
   const [showAnswer, setShowAnswer] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
   const [rightAnswer, setRightAnswer] = useState<string | number>()
+  const [powerups, setPowerups] = useState<any[]>([])
+  const [ws, setWs] = useState<WebSocket | null>(null)
+  const [hint, setHint] = useState<string | null>(null)
+  const [removedOptions, setRemovedOptions] = useState<string[]>([])
 
 
   useEffect(() => {
@@ -118,6 +122,50 @@ function SoloGamePage() {
     
     return () => abortController.abort()
     }, [])
+
+    // POWER UPS
+    useEffect(() => {
+    const sessionIdStr = localStorage.getItem("sessionId")
+    const sessionId = sessionIdStr ? Number(sessionIdStr) : null
+    if (!sessionId) return
+
+    const socket = new WebSocket(`ws://localhost:3002/ws/game-sessions/${sessionId}`)
+    socket.onopen = () => {
+      console.log("WebSocket connected")
+    }
+
+    socket.onmessage = (event) => {
+      const msg = JSON.parse(event.data)
+
+      if (msg.type === "powerups_granted") {
+        setPowerups(prev => [...prev, ...msg.payload.powerups])
+      }
+
+      if (msg.type === "powerup_used") {
+        if (!msg.payload.ok) return
+
+        if (msg.payload.powerup_type === "hint") {
+          setHint(msg.payload.hint)
+        }
+
+        if (msg.payload.powerup_type === "50-50") {
+          setRemovedOptions(msg.payload.removed_options)
+        }
+
+        if (msg.payload.powerup_type === "skip") {
+          handleNextQuestion()
+        }
+      }
+    }
+
+    socket.onerror = (err) => {
+      console.error("WebSocket error", err)
+    }
+
+    setWs(socket)
+
+    return () => socket.close()
+  }, [])
 
   //  UPDATE LE LOCALSTORAGE A CHAQUE CHANGEMENT SUR LA PAGE
   useEffect(() => {
@@ -240,6 +288,9 @@ function SoloGamePage() {
     setSelectedOption(null)
     setShowAnswer(false)
     setIsCorrect(false)
+    setHint(null)
+    setRemovedOptions([])
+    setPowerups([])
     try {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
@@ -364,6 +415,26 @@ return (
         </div>
       </div>
 
+      {/* Power ups */}
+      {powerups.length > 0 && (
+        <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+          {powerups.map((p) => (
+            <button
+              key={p.id}
+              className="btn ghost"
+              onClick={() => {
+                ws?.send(JSON.stringify({
+                  type: "powerup_use",
+                  payload: { powerupId: p.id }
+                }))
+              }}
+            >
+              {p.powerup_type}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Zone de Titre */}
       <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
         <h1>Partie Solo en cours</h1>
@@ -383,6 +454,7 @@ return (
             <div className="game-options-grid">
               {question.options.map((optionObj: Option, index: number) => {
                 let option = optionObj.label
+                if (removedOptions.includes(option)) return null
 
                 const isCorrectAnswer = index === rightAnswer
                 const isSelected = selectedOption === option
@@ -445,6 +517,11 @@ return (
                     : '#fff'
                 }}
               />
+              {hint && !showAnswer (
+                <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
+                  💡 Indice : {hint}
+                </p>
+              )}
               {showAnswer && !isCorrect && (
                 <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
                   Bonne réponse : {rightAnswer}
