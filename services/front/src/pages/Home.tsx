@@ -123,7 +123,6 @@ function HomePage() {
                 <article key={topic.title} className="card">
                   <div className="card-head">{topic.title}</div>
                   <p className="card-body">{topic.detail}</p>
-                  <span className="card-cta">{t("start_quiz")}</span>
                 </article>
               ))}
             </div>
