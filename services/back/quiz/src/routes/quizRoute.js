@@ -17,11 +17,11 @@ async function quizRoutes(fastify, options) {
 		try {
 			const gameSession = await quizController.createGameSession( request.body, userId);
 			console.log("Game session code:", gameSession);
-			return reply.code(200).send({ status: gameSession.status, sessionCode: gameSession.sessionCode });
+			return reply.code(200).send({ status: gameSession.status, sessionCode: gameSession.sessionCode, sessionId: gameSession.sessionId });
 		}
 		catch (err) {
 			console.error("Error creating game session:", err);
-			return reply.code(500).send({ status: 'Error creating game session', error: err.message });
+			return reply.code(err.code || 500).send({ status: 'Error creating game session', error: err.message });
 		}
 	});
 
@@ -148,13 +148,34 @@ async function quizRoutes(fastify, options) {
 			const {question, remaining_ms, status} = await quizController.getCurrentQuestion(userId, sessionId);
 			if (!question)
 			{
+				console.log("No current question found for game session ID:", sessionId);
 
-				return reply.code(404).send({ error: 'No current question found for this game session' });
+				return reply.code(400).send({ error: 'No current question found for this game session' });
 			}
 			return reply.code(200).send({ status: 'Current question retrieved', question: question, remaining_ms, game_status: status });
 		} catch (err) {
 			console.error("Error retrieving current question for game session:", err);
 			return reply.code(500).send({ error: 'Error retrieving current question', error: err.message });
+		}
+	});
+
+	fastify.get(`/game-sessions/:id/next-question`, {preHandler: fastify.authenticate},
+	async (request, reply) => {
+		// const userId = request.user.id;
+		const userId = 1;
+		const sessionId = request.params.id;
+
+		try {
+			const {question, remaining_ms, status} = await quizController.getNextQuestion(userId, sessionId);
+			if (!question)
+			{
+				console.log("No next question found for game session ID:", sessionId);
+				return reply.code(200).send({ status: "completed", question: null, remaining_ms: 0 });
+			}
+			return reply.code(200).send({ status: 'Next question retrieved', question: question, remaining_ms, game_status: status });
+		} catch (err) {
+			console.error("Error retrieving next question for game session:", err);
+			return reply.code(500).send({ error: 'Error retrieving next question', error: err.message });
 		}
 	});
 

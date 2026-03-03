@@ -4,23 +4,41 @@ import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 const themes = (t: any) => [
-  { id: 'All', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Cinéma', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
-  { id: 'JeuxVidéo', title: t('video_games', { defaultValue: 'JeuxVidéo' }), detail: t('video_games_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
+  { id: 'All', slug: 'all', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Histoire', slug: 'histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Musiques', slug: 'musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Sports', slug: 'sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Cinéma', slug: 'cinema', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
+  { id: 'JeuxVidéo', slug:'jeuxvideo' ,title:t('video_games',{defaultValue:'JeuxVidéo'}),detail:t('video_games_desc',{defaultValue:''}),icon:''},
+  { id: 'Echec', slug: 'echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
+  { id: 'Informatique', slug: 'informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
 ]
+
+const powerUps = (t: any) => [
+  { id: 'skip', slug: 'skip', title: t('pu_skip', { defaultValue: 'Skip' }), detail: t('pu_skip_desc', { defaultValue: '' }), icon: '' },
+  { id: 'hint', slug: 'hint', title: t('pu_hint', { defaultValue: 'Indice' }), detail: t('pu_hint_desc', { defaultValue: '' }), icon: '' },
+  { id: 'fifty', slug: 'fifty', title: t('pu_5050', { defaultValue: '50/50' }), detail: t('pu_5050_desc', { defaultValue: '' }), icon: '' },
+];
+
+const MAX_POWERUPS = 3;
+const MIN_Q = 2;
+const MAX_Q = 10;
 
 function SoloGameSetup() {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [selectedThemes, setSelectedThemes] = useState<Set<string>>(new Set())
   const [showThemesCard, setShowThemesCard] = useState(false)
+  const [showPowerUpsCard, setShowPowerUpsCard] = useState(false);
+  const [selectedPowerUps, setSelectedPowerUps] = useState<Set<string>>(new Set());
+  const [showQuestionCountCard, setShowQuestionCountCard] = useState(false);
+  const [questionCount, setQuestionCount] = useState<number>(2);
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
+  localStorage.removeItem("sessionId")
+  localStorage.removeItem("questionCount")
+
+
 
   const handleThemeToggle = (themeId: string) => {
     if (themeId === 'All') {
@@ -49,17 +67,45 @@ function SoloGameSetup() {
     setSelectedThemes(newSelected)
   }
 
+  const handlePowerUpToggle = (powerUpId: string) => {
+    
+    setSelectedPowerUps(prev => {
+      const next = new Set(prev);
+
+      if (next.has(powerUpId)) {
+        next.delete(powerUpId);
+        return next;
+      }
+
+      if (next.size >= MAX_POWERUPS) {
+        return next;
+      }
+
+      next.add(powerUpId);
+      return next;
+    });
+  };
+
   const handleStartGame = async () => {
+    console.log("Theme List : ", themeList);
+    console.log("powerUps List : ", powerUps(t));
+    console.log("Selected Power-ups:", Array.from(selectedPowerUps));
     if (selectedThemes.size > 0) {
+      let topic = Array.from(selectedThemes).filter((theme) => theme !== 'All');
+      if (topic.includes('all')) {
+        topic = [];
+      }
+      console.log("Selected themes for API:", topic);
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
         method: 'POST',
         credentials: 'include',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           mode: "random",
-          question_count: 2,
+          topic: topic,
+          question_count: questionCount,
           is_solo: 1,
-          power_ups: ["skip"],
+          power_ups: Array.from(selectedPowerUps),
         }),
       });
       const data = await session.json();
@@ -67,8 +113,10 @@ function SoloGameSetup() {
       // if (!session.ok) {
       //   throw new Error("Session couldn't start");
       // }
-
-      navigate('/quiz/solo', { state: { themes: Array.from(selectedThemes) } })
+      console.log("stocking : Session ID:", data.sessionId);
+      localStorage.setItem("sessionId", String(data.sessionId));
+      localStorage.setItem("questionCount", String(questionCount));
+      navigate('/quiz/solo', { state: { themes: Array.from(selectedThemes) } });
     }
   }
 
@@ -121,7 +169,7 @@ function SoloGameSetup() {
             }}>
               {themes(t).map((theme) => (
                 <label
-                  key={theme.id}
+                  key={theme.slug}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -159,8 +207,8 @@ function SoloGameSetup() {
                     />
                     <input
                       type="checkbox"
-                      checked={selectedThemes.has(theme.id)}
-                      onChange={() => handleThemeToggle(theme.id)}
+                      checked={selectedThemes.has(theme.slug)}
+                      onChange={() => handleThemeToggle(theme.slug)}
                       style={{
                         position: 'absolute',
                         top: '50%',
@@ -183,6 +231,166 @@ function SoloGameSetup() {
             </div>
           </div>
         )}
+
+        
+      <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+        <button
+          className="btn primary"
+          onClick={() => setShowQuestionCountCard(v => !v)}
+          disabled={selectedThemes.size === 0}
+          style={{
+          opacity: selectedThemes.size > 0 ? 1 : 0.5,
+          cursor: selectedThemes.size > 0 ? 'pointer' : 'not-allowed',
+          }}
+        >
+          {t('question_count', { defaultValue: 'Nombre de questions' })} : {questionCount}
+        </button>
+      </div>
+      {showQuestionCountCard && (
+    <div style={{
+        marginTop: '2rem',
+        padding: 'clamp(1rem, 3vw, 2rem)',
+        backgroundColor: '#ffffffff',
+        border: '2px solid #000000',
+        borderRadius: '8px',
+        boxShadow: '4px 4px 0px #000000',
+      }}>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)' }}>
+            {t('choose_question_count', { defaultValue: 'Choisis le nombre de questions' })}
+          </h3>
+          <div style={{ color: '#666' }}>
+            {t('selected', { defaultValue: 'Sélectionné' })} : <b>{questionCount}</b>
+          </div>
+        </div>
+
+        <input
+          type="range"
+          min={MIN_Q}
+          max={MAX_Q}
+          step={1}
+          value={questionCount}
+          onChange={(e) => setQuestionCount(Number(e.target.value))}
+          style={{ width: '100%' }}
+        />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', color: '#666' }}>
+          <span>{MIN_Q}</span>
+          <span>{MAX_Q}</span>
+        </div>
+      </div>
+    )}
+
+        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <button
+            className="btn primary"
+            onClick={() => setShowPowerUpsCard(v => !v)}
+            disabled={selectedThemes.size === 0}
+            style={{
+              opacity: selectedThemes.size > 0 ? 1 : 0.5,
+              cursor: selectedThemes.size > 0 ? 'pointer' : 'not-allowed',
+            }}
+          >
+            {selectedPowerUps.size > 0
+              ? `${selectedPowerUps.size}/${MAX_POWERUPS} ${t('power_ups_selected', { defaultValue: 'power-up(s) sélectionné(s)' })}`
+              : t('power_ups', { defaultValue: 'Power-ups' })}
+          </button>
+      </div>
+
+      {showPowerUpsCard && (
+        <div style={{
+          marginTop: '2rem',
+          padding: 'clamp(1rem, 3vw, 2rem)',
+          backgroundColor: '#ffffffff',
+          border: '2px solid #000000',
+          borderRadius: '8px',
+          boxShadow: '4px 4px 0px #000000',
+        }}>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)' }}>
+              {t("available_powerups", { defaultValue: "Power-ups disponibles" })}
+            </h3>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1rem',
+          }}>
+            {powerUps(t).map((pu) => {
+              const isChecked = selectedPowerUps.has(pu.id)
+              const limitReached = selectedPowerUps.size >= MAX_POWERUPS
+
+              return (
+                <label
+                  key={pu.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 'clamp(0.75rem, 2vw, 1rem)',
+                    backgroundColor: '#f9f9f9',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s',
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{
+                    position: 'relative',
+                    width: '64px',
+                    height: '64px',
+                    marginRight: '1rem',
+                    flexShrink: 0
+                  }}>
+                    <img
+                      src={isChecked ? `/powerup-icons/${pu.id}.gif` : `/powerup-icons/${pu.id}.png`}
+                      alt={pu.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        imageRendering: 'pixelated',
+                        position: 'absolute',
+                        zIndex: 1,
+                        objectFit: 'contain'
+                      }}
+                      onError={(e) => { e.currentTarget.style.display = 'none' }}
+                    />
+
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handlePowerUpToggle(pu.id)}
+                      disabled={!isChecked && limitReached}
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 2,
+                        cursor: 'pointer',
+                        width: '24px',
+                        height: '24px',
+                        opacity: 0.7
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ width: '100%' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: 'clamp(14px, 2vw, 16px)' }}>
+                      {pu.title}
+                    </div>
+                    <div style={{ fontSize: 'clamp(12px, 1.5vw, 14px)', color: '#666' }}>
+                      {pu.detail}
+                    </div>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
 
         <div style={{ marginTop: '2rem', textAlign: 'center' }}>
           <button
