@@ -35,6 +35,8 @@ function SoloGameSetup() {
   const [questionCount, setQuestionCount] = useState<number>(2);
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
+  localStorage.removeItem("sessionId")
+  localStorage.removeItem("questionCount")
 
 
 

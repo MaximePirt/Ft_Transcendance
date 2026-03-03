@@ -1165,3 +1165,87 @@ h2 {
     grid-template-columns: 1fr;
   }
 }
+
+.leaderboardCard {
+  margin-top: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.leaderboardTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboardTable thead th {
+  text-align: left;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--primary);
+  background: var(--primary);
+}
+
+.leaderboardTable tbody td {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.leaderboardTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.leaderboardTable tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.colRank {
+  width: 60px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.colPlayer {
+  width: auto;
+}
+
+.colScore {
+  width: 120px;
+  text-align: center;
+}
+
+.colMeta {
+  width: 120px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.playerName {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.scorePill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(76, 175, 80, 0.16);
+  border: 1px solid rgba(76, 175, 80, 0.30);
+  font-weight: 700;
+  min-width: 54px;
+  text-align: center;
+}
+
+.emptyState {
+  margin-top: 20px;
+  padding: 20px;
+  text-align: center;
+  opacity: 0.75;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+}

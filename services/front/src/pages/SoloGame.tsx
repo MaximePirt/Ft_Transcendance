@@ -230,10 +230,8 @@ function SoloGamePage() {
     if (isLastQuestion) {
       console.log("Quiz terminé, score final:", score)
       localStorage.removeItem(STORAGE_KEY)
-      localStorage.removeItem("sessionId")
       localStorage.removeItem("questionCount")
-      alert(`Quiz terminé ! Score: ${score} / ${question_count}`)
-      navigate('/quiz')
+      navigate("/quiz/end", { state: { score, total: question_count, mode: "solo" } })
       return
     }
 
