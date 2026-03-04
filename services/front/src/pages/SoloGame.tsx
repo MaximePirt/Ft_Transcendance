@@ -61,10 +61,10 @@ function SoloGamePage() {
   const [isCorrect, setIsCorrect] = useState(false)
   const [rightAnswer, setRightAnswer] = useState<string | number>()
   const [powerups, setPowerups] = useState<any[]>([])
+  const [nextPowerupId, setNextPowerupId] = useState(1);
   const [ws, setWs] = useState<WebSocket | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [removedOptions, setRemovedOptions] = useState<string[]>([])
-
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -96,7 +96,7 @@ function SoloGamePage() {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
         if (!sessionId) {
-          console.log('Invalid session ID in localStorage:', sessionIdStr)
+          //console.log('Invalid session ID in localStorage:', sessionIdStr)
           throw new Error('Invalid session ID')
         }
         const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
@@ -107,10 +107,9 @@ function SoloGamePage() {
         }
 
 
-        const { question } = await response.json()
-        const data: Question = question
+        const data = await response.json()
         setLoading(false)
-        setQuestion(data)
+        setQuestion(data.question)
       } catch (err) {
           if (err instanceof Error && err.name === 'AbortError') return
           setError(err instanceof Error ? err.message : t('error_occurred'))
@@ -136,9 +135,18 @@ function SoloGamePage() {
 
     socket.onmessage = (event) => {
       const msg = JSON.parse(event.data)
+      console.log(msg);
 
       if (msg.type === "powerups_granted") {
-        setPowerups(prev => [...prev, ...msg.payload.powerups])
+        setPowerups(prev => [
+          ...prev, 
+          ...msg.payload.powerups.map((p: any, index: number) => ({
+            ...p,
+            id: nextPowerupId,
+            disabled: false
+          }))
+        ])
+        setNextPowerupId(nextPowerupId + 1);
       }
 
       if (msg.type === "powerup_used") {
@@ -148,7 +156,7 @@ function SoloGamePage() {
           setHint(msg.payload.hint)
         }
 
-        if (msg.payload.powerup_type === "50-50") {
+        if (msg.payload.powerup_type === "fifty") {
           setRemovedOptions(msg.payload.removed_options)
         }
 
@@ -163,7 +171,6 @@ function SoloGamePage() {
     }
 
     setWs(socket)
-
     return () => socket.close()
   }, [])
 
@@ -188,6 +195,7 @@ function SoloGamePage() {
 
   // REPONSE CHECK
   const handleValidateAnswer = async () => {
+    console.log(nextPowerupId)
     let playerAnswer: string | number = 0
     let id: number = question.id
 
@@ -205,9 +213,9 @@ function SoloGamePage() {
     try {
       const sessionIdStr = await localStorage.getItem("sessionId");
       const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-      console.log("Session ID from localStorage:", sessionId);
+      //console.log("Session ID from localStorage:", sessionId);
       if (!sessionId) {
-        console.log('Invalid session ID in localStorage:', sessionIdStr)
+        //console.log('Invalid session ID in localStorage:', sessionIdStr)
         throw new Error('Invalid session ID')
       }
       const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/answer`, {
@@ -221,7 +229,7 @@ function SoloGamePage() {
       });
       if (!response.ok) {
         const err = await response.json()
-        console.error("API ERROR:", err)
+        //console.error("API ERROR:", err)
         throw new Error(err.error || 'Failed to get the answer')
       }
 
@@ -251,9 +259,9 @@ function SoloGamePage() {
 
     const sessionIdStr = await localStorage.getItem("sessionId");
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-    console.log("Session ID from localStorage:", sessionId);
+    //console.log("Session ID from localStorage:", sessionId);
     if (!sessionId) {
-      console.log('Invalid session ID in localStorage:', sessionIdStr)
+      //console.log('Invalid session ID in localStorage:', sessionIdStr)
       throw new Error('Invalid session ID')
     }
     const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
@@ -267,13 +275,13 @@ function SoloGamePage() {
     }
     const question_count_str = await localStorage.getItem("questionCount");
     if (!question_count_str) {
-      console.log('No question count found in localStorage')
+      //console.log('No question count found in localStorage')
       throw new Error('No question count found in localStorage')
     }
     let question_count = Number(question_count_str) || 0;
-    console.log("Question count from localStorage:", question_count);
+    //console.log("Question count from localStorage:", question_count);
     const isLastQuestion = currentQuestionIndex === question_count - 1
-    console.log(`Current question index: ${currentQuestionIndex}, Question count: ${question_count}, Is last question: ${isLastQuestion}`)
+    //console.log(`Current question index: ${currentQuestionIndex}, Question count: ${question_count}, Is last question: ${isLastQuestion}`)
 
     if (isLastQuestion) {
       console.log("Quiz terminé, score final:", score)
@@ -290,13 +298,12 @@ function SoloGamePage() {
     setIsCorrect(false)
     setHint(null)
     setRemovedOptions([])
-    setPowerups([])
     try {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-        console.log("Session ID from localStorage:", sessionId);
+        //console.log("Session ID from localStorage:", sessionId);
         if (!sessionId) {
-          console.log('Invalid session ID in localStorage:', sessionIdStr)
+          //console.log('Invalid session ID in localStorage:', sessionIdStr)
           throw new Error('Invalid session ID')
         }
         const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
@@ -380,178 +387,189 @@ function SoloGamePage() {
       </main>
     )
   }
-    const question_count_str = localStorage.getItem("questionCount");
-    if (!question_count_str) {
-      console.log('No question count found in localStorage')
-      throw new Error('No question count found in localStorage')
-    }
-    let question_count = Number(question_count_str) || 0;
 
-return (
-  <main className="page">
-    <div className="shell">
-      {/* Header du Quiz */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px' }}>
-        <p className="eyebrow">Quiz Sprint - Mode Solo</p>
-         <div className="ExitButtonContainer">
-            {(() => {
-              const exitBtn = exitbutton.find(btn => btn.id === "informatique")
-              return exitBtn && (
-                <button
-                  onClick={() => {
-                    localStorage.removeItem(STORAGE_KEY)
-                    navigate('/quiz')
-                  }}
-                  title="Quitter la partie"
-                >
-                  {exitBtn.url ? (
-                    <img src={exitBtn.url} alt={exitBtn.symbol} />
-                  ) : (
-                    exitBtn.symbol
-                  )} 
-                </button>
-            )
-          })()}
+  const question_count_str = localStorage.getItem("questionCount");
+  if (!question_count_str) {
+    console.log('No question count found in localStorage')
+    throw new Error('No question count found in localStorage')
+  }
+  let question_count = Number(question_count_str) || 0;
+
+  const maxPowerupSlots = 3;
+  const displayedPowerups = [
+    ...powerups,
+    ...Array(maxPowerupSlots - powerups.length).fill(null).map((_, i) => ({
+      id: `placeholder-${i}`,
+      powerup_type: 'Power-Up Slot',
+      disabled: true
+    }))
+  ];
+
+  return (
+    <main className="page">
+      <div className="shell">
+        {/* Header du Quiz */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px' }}>
+          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <div className="ExitButtonContainer">
+              {(() => {
+                const exitBtn = exitbutton.find(btn => btn.id === "informatique")
+                return exitBtn && (
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem(STORAGE_KEY)
+                      navigate('/quiz')
+                    }}
+                    title="Quitter la partie"
+                  >
+                    {exitBtn.url ? (
+                      <img src={exitBtn.url} alt={exitBtn.symbol} />
+                    ) : (
+                      exitBtn.symbol
+                    )} 
+                  </button>
+              )
+            })()}
+          </div>
         </div>
-      </div>
 
-      {/* Power ups */}
-      {powerups.length > 0 && (
-        <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
-          {powerups.map((p) => (
-            <button
-              key={p.id}
-              className="btn ghost"
-              onClick={() => {
+        {/* Power ups */}
+        {displayedPowerups.map(p => (
+          <button
+            key={p.id}
+            className="btn ghost"
+            disabled={p.disabled}
+            style={{ opacity: p.disabled ? 0.4 : 1, cursor: p.disabled ? 'not-allowed' : 'pointer', padding: 10 }}
+            onClick={() => {
+              if (!p.disabled) {
                 ws?.send(JSON.stringify({
                   type: "powerup_use",
                   payload: { powerupId: p.id }
-                }))
-              }}
-            >
-              {p.powerup_type}
-            </button>
-          ))}
+                }));
+              }
+            }}
+          >
+            {p.powerup_type}
+          </button>
+        ))}
+
+        {/* Zone de Titre */}
+        <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
+          <h1>Partie Solo en cours</h1>
+          <p className="lede" style={{ border: 'none', padding: 0, textAlign: 'center' }}>
+            Question <strong>{currentQuestionIndex + 1}</strong> sur <strong>{question_count}</strong> • Score : <strong>{score}</strong>
+          </p>
         </div>
-      )}
 
-      {/* Zone de Titre */}
-      <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
-        <h1>Partie Solo en cours</h1>
-        <p className="lede" style={{ border: 'none', padding: 0, textAlign: 'center' }}>
-          Question <strong>{currentQuestionIndex + 1}</strong> sur <strong>{question_count}</strong> • Score : <strong>{score}</strong>
-        </p>
-      </div>
+        {/* LA CARTE DE JEU (Pleine largeur) */}
+        <div className="quiz-card-full">
+          <h2 style={{ fontSize: '1.5rem', textAlign: 'center', marginBottom: '1.4rem' }}>
+            {question.question_text}
+          </h2>
 
-      {/* LA CARTE DE JEU (Pleine largeur) */}
-      <div className="quiz-card-full">
-        <h2 style={{ fontSize: '1.5rem', textAlign: 'center', marginBottom: '1.4rem' }}>
-          {question.question_text}
-        </h2>
+          <div className="game-area">
+            {question.type === 'mcq' && question.options ? (
+              <div className="game-options-grid">
+                {question.options.map((optionObj: Option, index: number) => {
+                  let option = optionObj.label
+                  if (removedOptions.includes(option)) return null
 
-        <div className="game-area">
-          {question.type === 'mcq' && question.options ? (
-            <div className="game-options-grid">
-              {question.options.map((optionObj: Option, index: number) => {
-                let option = optionObj.label
-                if (removedOptions.includes(option)) return null
-
-                const isCorrectAnswer = index === rightAnswer
-                const isSelected = selectedOption === option
-                let borderColor = '2px solid #000'
-                let backgroundColor = '#fff'
-                
-                if (showAnswer) {
-                  if (isCorrectAnswer) {
+                  const isCorrectAnswer = index === rightAnswer
+                  const isSelected = selectedOption === option
+                  let borderColor = '2px solid #000'
+                  let backgroundColor = '#fff'
+                  
+                  if (showAnswer) {
+                    if (isCorrectAnswer) {
+                      borderColor = '4px solid #4CAF50'
+                      backgroundColor = '#E8F5E9'
+                    } else if (isSelected && !isCorrect) {
+                      borderColor = '4px solid #f44336'
+                      backgroundColor = '#FFEBEE'
+                    }
+                  } else if (isSelected) {
                     borderColor = '4px solid #4CAF50'
-                    backgroundColor = '#E8F5E9'
-                  } else if (isSelected && !isCorrect) {
-                    borderColor = '4px solid #f44336'
-                    backgroundColor = '#FFEBEE'
                   }
-                } else if (isSelected) {
-                  borderColor = '4px solid #4CAF50'
-                }
 
-                return (
-                  <button
-                    key={index}
-                    onClick={() => handleOptionClick(option)}
-                    className={`btn ${selectedOption === option ? 'primary' : 'ghost'}`}
-                    style={{ 
-                      textTransform: 'none', 
-                      fontSize: '1.1rem', 
-                      padding: '18px 16px', 
-                      minHeight: '60px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center',
-                      border: borderColor,
-                      background: backgroundColor,
-                      cursor: showAnswer ? 'default' : 'pointer',
-                      opacity: showAnswer && !isCorrect && !isSelected ? 0.6 : 1
-                    }}
-                    disabled={showAnswer}
-                  >
-                    {option}
-                  </button>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="field">
-              <input
-                type="text"
-                className="game-input-field"
-                placeholder="Tapez votre réponse ici..."
-                value={userAnswer}
-                onChange={(e) => setUserAnswer(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && !showAnswer && handleValidateAnswer()}
-                disabled={showAnswer}
-                style={{
-                  border: showAnswer 
-                    ? (isCorrect ? '3px solid #4CAF50' : '3px solid #f44336')
-                    : '2px solid #000',
-                  background: showAnswer
-                    ? (isCorrect ? '#E8F5E9' : '#FFEBEE')
-                    : '#fff'
-                }}
-              />
-              {hint && !showAnswer (
-                <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                  💡 Indice : {hint}
-                </p>
-              )}
-              {showAnswer && !isCorrect && (
-                <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                  Bonne réponse : {rightAnswer}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => handleOptionClick(option)}
+                      className={`btn ${selectedOption === option ? 'primary' : 'ghost'}`}
+                      style={{ 
+                        textTransform: 'none', 
+                        fontSize: '1.1rem', 
+                        padding: '18px 16px', 
+                        minHeight: '60px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        border: borderColor,
+                        background: backgroundColor,
+                        cursor: showAnswer ? 'default' : 'pointer',
+                        opacity: showAnswer && !isCorrect && !isSelected ? 0.6 : 1
+                      }}
+                      disabled={showAnswer}
+                    >
+                      {option}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="field">
+                <input
+                  type="text"
+                  className="game-input-field"
+                  placeholder="Tapez votre réponse ici..."
+                  value={userAnswer}
+                  onChange={(e) => setUserAnswer(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && !showAnswer && handleValidateAnswer()}
+                  disabled={showAnswer}
+                  style={{
+                    border: showAnswer 
+                      ? (isCorrect ? '3px solid #4CAF50' : '3px solid #f44336')
+                      : '2px solid #000',
+                    background: showAnswer
+                      ? (isCorrect ? '#E8F5E9' : '#FFEBEE')
+                      : '#fff'
+                  }}
+                />
+                {!showAnswer && hint && (
+                  <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
+                    💡 Indice : {hint}
+                  </p>
+                )}
+                {showAnswer && !isCorrect && (
+                  <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
+                    Bonne réponse : {rightAnswer}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
-        {/* Bouton d'action centré ou plein pied */}
-        <div className="actions" style={{ justifyContent: 'center', marginTop: '1.8rem' }}>
-          {!showAnswer ? (
-            <button 
-              className="btn secondary" 
-              style={{ minWidth: '280px' }} 
-              onClick={handleValidateAnswer}
-              disabled={question.type === 'mcq' ? !selectedOption : !userAnswer}
-            >
-              Valider
-            </button>
-          ) : (
-            <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
-              {currentQuestionIndex === 1 ? 'Terminer le Quiz' : 'Question suivante →'}
-            </button>
-          )}
+          {/* Bouton d'action centré ou plein pied */}
+          <div className="actions" style={{ justifyContent: 'center', marginTop: '1.8rem' }}>
+            {!showAnswer ? (
+              <button 
+                className="btn secondary" 
+                style={{ minWidth: '280px' }} 
+                onClick={handleValidateAnswer}
+                disabled={question.type === 'mcq' ? !selectedOption : !userAnswer}
+              >
+                Valider
+              </button>
+            ) : (
+              <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
+                {currentQuestionIndex === 1 ? 'Terminer le Quiz' : 'Question suivante →'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  </main>
-)
+    </main>
+  )
 }
 
 export default SoloGamePage
