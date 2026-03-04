@@ -113,12 +113,10 @@ function SoloGameSetup() {
           power_ups: Array.from(selectedPowerUps),
         }),
       });
+      if (!session.ok) {
+        throw new Error("Session couldn't start");
+      }
       const data = await session.json();
-      console.log("API RESPONSE:", data);
-      // if (!session.ok) {
-      //   throw new Error("Session couldn't start");
-      // }
-      console.log("stocking : Session ID:", data.sessionId);
       localStorage.setItem("sessionId", String(data.sessionId));
       localStorage.setItem("sessionCode", String(data.sessionCode));
       localStorage.setItem("maxPlayers", String(playerCount));

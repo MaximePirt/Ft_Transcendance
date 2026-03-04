@@ -51,7 +51,8 @@ function getSessionByCode(sessionCode)
 {
 	console.log("Model : Fetching game session by code:", sessionCode);
 	const data = db.prepare(`
-		SELECT id, code, mode, topic, question_count, max_players, host_id, status, started_at, ended_at
+		SELECT id, code, mode, topic, question_count, max_players, host_id, status, started_at, ended_at,
+			current_question_order, current_question_time, power_ups		
 		FROM game_sessions
 		WHERE code = ?
 	`).get(sessionCode);
