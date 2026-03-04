@@ -71,6 +71,20 @@ async function getGameSessionData(sessionId)
 	return session;
 }
 
+async function getGameSessionDataByCode(sessionCode)
+{
+	console.log("Fetching game session data for session code:", sessionCode);
+	const session = quizModel.getSessionByCode(sessionCode);
+	if (!session) {
+		console.log("No game session found for code:", sessionCode);
+		return null;
+	}
+	const players = quizModel.getPlayersBySession(session.id);
+	session.players = players;
+	console.log("Game session data with players:", session);
+	return session;
+}
+
 async function joinGameSession(userId, sessionCode)
 {
 	console.log("User ID", userId, "is trying to join game session with code:", sessionCode);
@@ -203,7 +217,6 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 
 	const question_answer = quizModel.getCorrectAnswerForQuestion(question_id, player.lang);
 	const isCorrect = quizModel.checkAnswer(question_answer, answer);
-	console.log("isCorrect variable just after calling checkAnswer:", isCorrect);
 
 	quizModel.recordPlayerAnswer(sessionId, userId, question_id, answer, time_taken, isCorrect);
 
@@ -310,7 +323,11 @@ async function usePowerup(sessionId, userId, powerupId)
 				throw new Error("No current question found for this game session");
 			if (hintquestion.type !== 'text')
 				throw new Error("Hints are only available for text questions");
-			const answer = quizModel.getCorrectAnswerForQuestion(hintquestion.id, player.lang);
+			const answerobject = quizModel.getCorrectAnswerForQuestion(hintquestion.id, player.lang);
+			const answerJson = typeof answerobject === "string" ? JSON.parse(answerobject) : answerobject;
+			const answer = Array.isArray(answerJson.answer) ? answerJson.answer[0] : answerJson.answer;
+			if (typeof answer !== "string")
+				throw new Error("Correct answer is not a string");
 			let hint = "";
 			for (let i = 0; i < answer.length; i++) {
 				if (i % 3 === 0)
@@ -463,6 +480,7 @@ async function getLeaderboard(sessionId)
 module.exports = {
 	createGameSession,
 	getGameSessionData,
+	getGameSessionDataByCode,
 	joinGameSession,
 	startGameSession,
 	getCurrentQuestion,
