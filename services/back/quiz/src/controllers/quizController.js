@@ -20,7 +20,7 @@ async function createGameSession(sessionData, hostId) {
 	const { mode, topic = null,
 			question_count, max_players = 4, power_ups, is_solo } = sessionData;
 	// TODO: uncomment lines below in debug purpose, remove it in prod
-	// const power_ups = ["skip", "hint", "50-50"];
+	// const power_ups = ["skip", "hint", "fifty"];
 
 	const powerupsJson = power_ups && Array.isArray(power_ups) ? JSON.stringify(power_ups) : null;
 
@@ -338,13 +338,13 @@ async function usePowerup(sessionId, userId, powerupId)
 			powerupPayload = { hint };
 			break;
 		}
-		case '50-50':
+		case 'fifty':
 		{
 			const question = quizModel.getQuestionByOrderForPlayer(sessionId, session.current_question_order, player.lang);
 			if (!question)
 				throw new Error("No current question found for this game session");
 			if (question.type !== 'mcq')
-				throw new Error("50-50 powerup is only available for multiple choice questions");
+				throw new Error("fifty powerup is only available for multiple choice questions");
 			const correctAnswer = quizModel.getCorrectAnswerForQuestion(question.id, player.lang).trim();
 			const options = question.options.split(";;").map(o => o.trim());
 
@@ -354,7 +354,7 @@ async function usePowerup(sessionId, userId, powerupId)
 					incorrectOptions.push(options[i]);
 			}
 			if (incorrectOptions.length < 2)
-				throw new Error("Not enough incorrect options to use 50-50 powerup");
+				throw new Error("Not enough incorrect options to use fifty powerup");
 
 			let optionsNumber = options.length - 2;
 			let removedOptions = [];

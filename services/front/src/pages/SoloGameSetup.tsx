@@ -20,6 +20,8 @@ const powerUps = (t: any) => [
   { id: 'fifty', slug: 'fifty', title: t('pu_5050', { defaultValue: '50/50' }), detail: t('pu_5050_desc', { defaultValue: '' }), icon: '' },
 ];
 
+const STORAGE_KEY = 'soloGameState:v1'
+
 const MAX_POWERUPS = 3;
 const MIN_Q = 2;
 const MAX_Q = 10;
@@ -37,6 +39,7 @@ function SoloGameSetup() {
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
   localStorage.removeItem("sessionId")
   localStorage.removeItem("questionCount")
+  localStorage.removeItem(STORAGE_KEY);
 
 
 
