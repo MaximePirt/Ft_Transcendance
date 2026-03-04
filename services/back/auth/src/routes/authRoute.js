@@ -115,6 +115,10 @@ export default async function authRoute(fastify, options) {
 			const username = await request.body.username;
 			const password = await request.body.password;
 			const hashPass = await bcrypt.hash(password, 12);
+			const codeFound = usersCode.find((e) => e.email === email);
+
+			if (codeFound)
+				usersCode = usersCode.filter((user) => user.email !== email);
 
 			console.log("username: ", username, " email: ", email, " password: ", hashPass);
 			if (!password_regex.test(password))
@@ -151,6 +155,10 @@ export default async function authRoute(fastify, options) {
 			const reqId = await loginUser(email, password);
 			const username = await getUsername(email);
 			const user = Object.create(User);
+			const codeFound = usersCode.find((e) => e.email === email);
+
+			if (codeFound)
+				usersCode = usersCode.filter((user) => user.email !== email);
 
 			user.email = await request.body.email;
 			user.username = username;
