@@ -142,6 +142,17 @@ async function getUserAchievementsById(userId)
 	};
 }
 
+async function getWinsLeaderboard(limit = 5)
+{
+	const safeLimit = Math.max(1, Math.min(Number(limit) || 5, 10));
+	const rows = userModel.findWinsLeaderboard(safeLimit) || [];
+	return rows.map((row) => ({
+		id: Number(row.id),
+		username: String(row.username || ''),
+		wins: Number(row.wins || 0),
+	}));
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -151,5 +162,6 @@ module.exports = {
 	getUser,
 	getRecentMatchesByUserId,
 	getUserStatsById,
-	getUserAchievementsById
+	getUserAchievementsById,
+	getWinsLeaderboard
 };

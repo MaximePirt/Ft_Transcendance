@@ -88,6 +88,17 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
+	fastify.get('/leaderboard/wins', async (request, reply) => {
+		const limit = Number(request.query?.limit || 5);
+		try {
+			const leaderboard = await userController.getWinsLeaderboard(limit);
+			return reply.code(200).send({ result: leaderboard });
+		} catch (error) {
+			request.log.error(error);
+			return reply.code(500).send({ error: 'Internal Server Error' });
+		}
+	});
+
 
 	/**
 	 * @brief Get user statistics

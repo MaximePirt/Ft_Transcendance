@@ -1,10 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
+
+// @ts-ignore
+const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+
+type LeaderboardPlayer = {
+  id: string
+  username: string
+  wins: number
+}
 
 const topics = (t: any) => [
   { title: t('histoire'), detail: t('histoire_desc') },
@@ -27,6 +36,40 @@ function HomePage() {
   const [policy, setPolicy] = useState<'privacy' | 'terms' | null>(null)
   const [loginError, setLoginError] = useState('')
   const [signupError, setSignupError] = useState('')
+  const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false)
+  const [leaderboardError, setLeaderboardError] = useState(false)
+
+  useEffect(() => {
+    const abortController = new AbortController()
+
+    const loadLeaderboard = async () => {
+      setLeaderboardLoading(true)
+      setLeaderboardError(false)
+      try {
+        const response = await fetch(`${API_BASE}/user/leaderboard/wins?limit=5`, { signal: abortController.signal })
+        if (!response.ok) throw new Error('Failed to load leaderboard')
+        const data = await response.json()
+        const list = Array.isArray(data?.result) ? data.result : []
+        const normalized: LeaderboardPlayer[] = list.slice(0, 5).map((player: { id: string | number; username?: string; wins?: number }) => ({
+          id: String(player.id),
+          username: String(player.username || '-'),
+          wins: Number(player.wins || 0),
+        }))
+        setLeaderboard(normalized)
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        if (error instanceof TypeError) return
+        setLeaderboard([])
+        setLeaderboardError(true)
+      } finally {
+        setLeaderboardLoading(false)
+      }
+    }
+
+    void loadLeaderboard()
+    return () => abortController.abort()
+  }, [])
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -94,40 +137,65 @@ function HomePage() {
           </>
         )}
       </div>
-      <div className="shell">
-        <p className="eyebrow">Quiz Sprint</p>
-        <div className="hero">
-          <div className="copy">
-            <h1>{t("ready")}</h1>
-            <p className="lede">
-              {t("tagline")}
-            </p>
-            <div className="actions">
-              <button className="btn primary" onClick={() => navigate('/quiz')}>
-                {t("start_quiz")}
-              </button>
+      <div className="home-main-layout">
+        <div className="shell home-shell">
+          <p className="eyebrow">Quiz Sprint</p>
+          <div className="hero">
+            <div className="copy">
+              <h1>{t("ready")}</h1>
+              <p className="lede">
+                {t("tagline")}
+              </p>
+              <div className="actions">
+                <button className="btn primary" onClick={() => navigate('/quiz')}>
+                  {t("start_quiz")}
+                </button>
+              </div>
+              <div className="SpaceZone">
+                {SpaceZone.map((item, index) => (
+                  <div key={`${item.label}-${index}`} className="highlight">
+                    <span className="label">{item.label}</span>
+                    <span className="value">{item.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="SpaceZone">
-              {SpaceZone.map((item, index) => (
-                <div key={`${item.label}-${index}`} className="highlight">
-                  <span className="label">{item.label}</span>
-                  <span className="value">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="panel">
-            <div className="panel-title">  </div>
-            <div className="grid">
-              {topics(t).map((topic) => (
-                <article key={topic.title} className="card">
-                  <div className="card-head">{topic.title}</div>
-                  <p className="card-body">{topic.detail}</p>
-                </article>
-              ))}
+            <div className="panel">
+              <div className="panel-title">  </div>
+              <div className="grid">
+                {topics(t).map((topic) => (
+                  <article key={topic.title} className="card">
+                    <div className="card-head">{topic.title}</div>
+                    <p className="card-body">{topic.detail}</p>
+                  </article>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+
+        <aside className="home-leaderboard-side" aria-label={t('profile_leaderboard_title')}>
+          <article className="card home-leaderboard-card">
+            <div className="card-head">{t('profile_leaderboard_title')}</div>
+            {leaderboardLoading ? (
+              <p className="card-body">{t('profile_leaderboard_loading')}</p>
+            ) : leaderboardError ? (
+              <p className="card-body">{t('profile_leaderboard_unavailable')}</p>
+            ) : leaderboard.length === 0 ? (
+              <p className="card-body">{t('profile_leaderboard_empty')}</p>
+            ) : (
+              leaderboard.map((player, index) => (
+                <p key={player.id} className="home-leaderboard-row">
+                  {t('profile_leaderboard_row', {
+                    rank: index + 1,
+                    username: player.username,
+                    wins: player.wins,
+                  })}
+                </p>
+              ))
+            )}
+          </article>
+        </aside>
       </div>
 
       <footer className="footer">
