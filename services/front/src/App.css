@@ -500,6 +500,17 @@ h2 {
   padding: 20px;
 }
 
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 214, 0, 0.8);
+  /* Jaune semi-transparent */
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
 .login-card {
   background: rgb(174, 38, 38);
   border: var(--border-thick);
