@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../App.css'
 import { privacyContent, termsContent } from '../content/policies'
@@ -39,7 +39,17 @@ function HomePage() {
 	const [logoutError, setLogoutError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
+	const [AuthRequired, setAuthRequired] = useState('');
 	const API_BASE = import.meta.env.AUTH_API_URL || 'https://localhost/api'
+
+	useEffect(() => {
+		const warn = (e: BeforeUnloadEvent) => {
+			e.preventDefault()
+			handleLogout();
+		}
+		window.addEventListener('beforeunload', warn)
+		return () => window.removeEventListener('beforeunload', warn)
+	}, [])
 
 	const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
@@ -98,6 +108,8 @@ function HomePage() {
 
 	const handleAuthCode = async () => {
 		try {
+			if (!code)
+				alert('enter auth code please');
 			console.log("code: ", code, "username: ", userUsername, "email: ", userEmail);
 			const send = await fetch(`${API_BASE}/auth/verify-2fa`, {
 				method: "POST",
@@ -177,7 +189,7 @@ function HomePage() {
 		const username = (form.elements.namedItem('username') as HTMLInputElement).value
 		const password = (form.elements.namedItem('password') as HTMLInputElement).value
 		const confirmPassword = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value
-		const newUser: User = {
+		const newUser = {
 			email: email,
 			username: username,
 			password: password
@@ -191,6 +203,7 @@ function HomePage() {
 			return
 		} else if (!username_regex.test(username)) {
 			setSignupError('Username should count between 3 & 16 characters and contains not any special characters');
+			return
 		} else if (!password_regex.test(password)) {
 			setSignupError('Password must be 12+ chars, include an uppercase, a number, and a special character.');
 			return
@@ -430,7 +443,7 @@ function HomePage() {
 								×
 							</button>
 						</div>
-						<form className="login-form" onSubmit={handleSignup}>
+						<form className="login-form" onSubmit={(e) => { handleSignup(e), e.preventDefault() }}>
 							{signupError && <div style={{ color: 'red', marginBottom: '1rem' }}>{signupError}</div>}
 							<label className="field">
 								<span>{t("email")}</span>
