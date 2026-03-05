@@ -41,6 +41,16 @@ async function quizRoutes(fastify, options) {
 		return reply.code(200).send({ status: 'Game session details', sessionData });
 	});
 
+	fastify.get('/game-sessions/code/:code', {preHandler: fastify.authenticate},
+	async (request, reply) => {
+		const code = request.params.code;
+		const sessionData = await quizController.getGameSessionDataByCode(code);
+		if (!sessionData) {
+			return reply.code(400).send({ status: 'Game session not found' });
+		}
+		return reply.code(200).send({ status: 'Game session details', sessionData });
+	});
+
 	/**
 	 * @brief Join a game session
 	 * @input : game_session_id
@@ -59,7 +69,7 @@ async function quizRoutes(fastify, options) {
 		catch (err)
 		{
 			if (err.message.includes("not found"))
-				return reply.code(404).send({ status: 'Game session not found' });
+				return reply.code(400).send({ status: 'Game session not found' });
 			else if (err.message.includes("already started")
 				|| err.message.includes("full"))
 				return reply.code(400).send({ status: 'Cannot join game session', error: err.message });
