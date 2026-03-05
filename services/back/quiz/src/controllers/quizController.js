@@ -272,7 +272,6 @@ async function usePowerup(sessionId, userId, powerupId)
 {
 	sessionId = Number(sessionId);
 	userId = Number(userId);
-	powerupId = Number(powerupId);
 	const session = quizModel.getSessionById(sessionId);
 	if (!session)
 		throw new Error("Game session not found");
@@ -284,7 +283,7 @@ async function usePowerup(sessionId, userId, powerupId)
 	const powerupAvailable = quizModel.getAvailablePowerupsForPlayer(sessionId, userId);
 	if (!powerupAvailable)
 		throw new Error("Powerup not found");
-	const powerupexist = powerupAvailable.find(p => p.id === powerupId);
+	const powerupexist = powerupAvailable.find(p => p.powerup_type === powerupId);
 	if (!powerupexist)
 		throw new Error("Player does not have this type of powerup available");
 	const question = quizModel.getQuestionByOrderForPlayer(sessionId, session.current_question_order, player.lang);
@@ -347,8 +346,9 @@ async function usePowerup(sessionId, userId, powerupId)
 				throw new Error("No current question found for this game session");
 			if (question.type !== 'mcq')
 				throw new Error("fifty powerup is only available for multiple choice questions");
-			const correctAnswer = quizModel.getCorrectAnswerForQuestion(question.id, player.lang).trim();
-			const options = question.options.split(";;").map(o => o.trim());
+			const correctAnswerRaw = quizModel.getCorrectAnswerForQuestion(question.id, player.lang);
+			const correctAnswer = typeof correctAnswerRaw === "string" ? JSON.parse(correctAnswerRaw).answer : correctAnswerRaw.answer;
+			const options = Array.isArray(question.options) ? question.options : question.options.split(";;").map(o => o.trim());
 
 			let incorrectOptions = [];
 			for (let i = 0 ; i < options.length; i++) {
