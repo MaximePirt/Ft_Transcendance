@@ -4,7 +4,7 @@ const sessionTimer = require('../jobs/sessionTimer');
 const wsHub = require('../ws/wsHub');
 
 
-const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 15000);
+const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 9999999);
 const max_powerups = Number(process.env.MAX_POWERUPS_PER_PLAYER || 2);
 const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
 

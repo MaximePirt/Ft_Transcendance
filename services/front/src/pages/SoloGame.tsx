@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../App.css'
+import { log } from 'node:console'
 
 const exitbutton = [
   { id: 'musiques', symbol: '🚪', url: '/custom-assets/music-exit-icon.png' },
@@ -25,6 +26,11 @@ interface Question {
   question_text: string
   type: 'mcq' | 'text'
   options?: Option[]
+}
+
+interface removedOption {
+  label: string
+  position: number
 }
 
 interface  AnswerMCQ {
@@ -61,10 +67,9 @@ function SoloGamePage() {
   const [isCorrect, setIsCorrect] = useState(false)
   const [rightAnswer, setRightAnswer] = useState<string | number>()
   const [powerups, setPowerups] = useState<any[]>([])
-  const [nextPowerupId, setNextPowerupId] = useState(1);
   const [ws, setWs] = useState<WebSocket | null>(null)
   const [hint, setHint] = useState<string | null>(null)
-  const [removedOptions, setRemovedOptions] = useState<string[]>([])
+  const [removedOptions, setRemovedOptions] = useState<removedOption[]>([])
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -142,11 +147,9 @@ function SoloGamePage() {
           ...prev, 
           ...msg.payload.powerups.map((p: any, index: number) => ({
             ...p,
-            id: nextPowerupId,
             disabled: false
           }))
         ])
-        setNextPowerupId(nextPowerupId + 1);
       }
 
       if (msg.type === "powerup_used") {
@@ -155,12 +158,12 @@ function SoloGamePage() {
         if (msg.payload.powerup_type === "hint") {
           setHint(msg.payload.hint);
         }
-
         if (msg.payload.powerup_type === "fifty") {
-          setRemovedOptions(msg.payload.removed_options.label);
-          console.log(removedOptions);
+          setRemovedOptions(msg.payload.removed_options);
+          console.log("my removed options : ",removedOptions);
+          console.log("his options :", msg.payload.removed_options);
+          
         }
-
         if (msg.payload.powerup_type === "skip") {
           handleNextQuestion();
         }
@@ -399,7 +402,6 @@ function SoloGamePage() {
   const displayedPowerups = [
     ...powerups,
     ...Array(maxPowerupSlots - powerups.length).fill(null).map((_, i) => ({
-      id: `placeholder-${i}`,
       powerup_type: 'Power-Up Slot',
       disabled: true
     }))
@@ -444,7 +446,7 @@ function SoloGamePage() {
               if (!p.disabled) {
                 ws?.send(JSON.stringify({
                   type: "powerup_use",
-                  payload: { powerupId: p.id }
+                  payload: { powerupId: p.powerup_type }
                 }));
               }
             }}
@@ -472,7 +474,7 @@ function SoloGamePage() {
               <div className="game-options-grid">
                 {question.options.map((optionObj: Option, index: number) => {
                   let option = optionObj.label
-                  if (removedOptions.includes(option)) return null
+                  if (removedOptions.length > 0 && removedOptions.find(o => o.label === option)) return null
 
                   const isCorrectAnswer = index === rightAnswer
                   const isSelected = selectedOption === option
