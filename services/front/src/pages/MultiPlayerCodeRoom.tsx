@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 import '../App.css'
 
-
 const INTERVAL_TIME = 15000 
 
 type Player = {
@@ -18,6 +17,7 @@ function MultiPlayerCodeRoom() {
 	const { roomCode } = useParams()
 	const [code, setCode] = useState<string>('')
 	const [isHost, setIsHost] = useState(false)
+
 	const [players, setPlayers] = useState<Player[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)

@@ -157,50 +157,50 @@ if (error) {
           </div>
         </div>
 
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <input
-            type="text"
-            value={roomCode}
-            onChange={handleInputChange}
-            placeholder={t("code_placeholder")}
-            maxLength={6}
-            style={{
-              fontSize: 'clamp(1.5rem, 4vw, 2rem)',
-              padding: 'clamp(0.75rem, 2vw, 1rem)',
-              textAlign: 'center',
-              letterSpacing: '0.3em',
-              width: '100%',
-              maxWidth: '400px',
-              border: '2px solid #000000',
-              borderRadius: '8px',
-              textTransform: 'uppercase',
-              backgroundColor: '#ffffffff',
-              color: '#080808ff',
-            }}
-          />
-          {error && (
-            <p style={{ color: 'red', marginTop: '0.5rem', fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>
-              ⚠️ {error}
-            </p>
-          )}
-        </div>
+				<div style={{ marginTop: '2rem', textAlign: 'center' }}>
+					<input
+						type="text"
+						value={roomCode}
+						onChange={handleInputChange}
+						placeholder={t("code_placeholder")}
+						maxLength={6}
+						style={{
+							fontSize: 'clamp(1.5rem, 4vw, 2rem)',
+							padding: 'clamp(0.75rem, 2vw, 1rem)',
+							textAlign: 'center',
+							letterSpacing: '0.3em',
+							width: '100%',
+							maxWidth: '400px',
+							border: '2px solid #000000',
+							borderRadius: '8px',
+							textTransform: 'uppercase',
+							backgroundColor: '#ffffffff',
+							color: '#080808ff',
+						}}
+					/>
+					{error && (
+						<p style={{ color: 'red', marginTop: '0.5rem', fontSize: 'clamp(0.8rem, 1.5vw, 0.9rem)' }}>
+							⚠️ {error}
+						</p>
+					)}
+				</div>
 
-        <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <button
-            className="btn primary"
-            onClick={handleJoin}
-            disabled={roomCode.length !== 6}
-            style={{
-              opacity: roomCode.length === 6 ? 1 : 0.5,
-              cursor: roomCode.length === 6 ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {t("join_game")}
-          </button>
-        </div>
-      </div>
-    </main>
-  )
+				<div style={{ marginTop: '2rem', textAlign: 'center' }}>
+					<button
+						className="btn primary"
+						onClick={handleJoin}
+						disabled={roomCode.length !== 6}
+						style={{
+							opacity: roomCode.length === 6 ? 1 : 0.5,
+							cursor: roomCode.length === 6 ? 'pointer' : 'not-allowed',
+						}}
+					>
+						{t("join_game")}
+					</button>
+				</div>
+			</div>
+		</main>
+	)
 }
 
 export default JoinGame

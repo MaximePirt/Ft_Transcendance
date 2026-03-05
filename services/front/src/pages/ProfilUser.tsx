@@ -56,12 +56,6 @@ const defaultUserProfile = {
 	username: 'PlayerOne',
 	email: 'player@quiz.sprint',
 	joinYear: 2024,
-	stats: {
-		gamesPlayed: 42,
-		winRate: 68,
-		bestScore: 9860,
-		streak: 7,
-	},
 	favorites: ['cinema', 'music', 'computer_science'],
 }
 
@@ -103,6 +97,72 @@ type RecentMatch = {
 	answeredCount: number
 }
 
+type GameStats = {
+	totalMatches: number
+	wins: number
+	totalScore: number
+	answered: number
+	correct: number
+	winRate: number
+	accuracy: number
+}
+
+type Achievement = {
+	key: string
+	metric: string
+	target: number
+	value: number
+	progressPercent: number
+	unlocked: boolean
+	points: number
+}
+
+type AchievementSummary = {
+	unlockedCount: number
+	totalCount: number
+	unlockedPoints: number
+	totalPoints: number
+	progressPercent: number
+}
+
+type AchievementPayload = {
+	summary: AchievementSummary
+	unlocked: Achievement[]
+	inProgress: Achievement[]
+	all: Achievement[]
+}
+
+type LeaderboardPlayer = {
+	id: string
+	username: string
+	wins: number
+}
+
+const defaultGameStats: GameStats = {
+	totalMatches: 0,
+	wins: 0,
+	totalScore: 0,
+	answered: 0,
+	correct: 0,
+	winRate: 0,
+	accuracy: 0,
+}
+
+const defaultAchievementSummary: AchievementSummary = {
+	unlockedCount: 0,
+	totalCount: 0,
+	unlockedPoints: 0,
+	totalPoints: 0,
+	progressPercent: 0,
+}
+
+const defaultAchievements: AchievementPayload = {
+	summary: defaultAchievementSummary,
+	unlocked: [],
+	inProgress: [],
+	all: [],
+}
+
 
 // truc a la con avec les stickers a tout moment ca degage
 const stickerPalette = [
@@ -113,7 +173,7 @@ const stickerPalette = [
 	{ id: 'heart', symbol: '❤️' },
 	{ id: 'star', symbol: '⭐' },
 	{ id: 'jeux_video', symbol: '🎮', url: '/theme-icons/JeuxVidéo.png' },
-    { id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/JeuxVidéo.gif' },
+	{ id: 'jeux_video2', symbol: '🎮', url: '/theme-icons/JeuxVidéo.gif' },
 ]
 
 const bgPresets = ['#0f0f10', '#111827', '#1f2937', '#0b5fff', '#8b5cf6', '#10b981', '#eab308']
@@ -160,13 +220,18 @@ function ProfilUser() {
 	const [friendActionError, setFriendActionError] = useState('')
 	const [friendActionSuccess, setFriendActionSuccess] = useState('')
 	const [userProfile, setUserProfile] = useState(defaultUserProfile)
+	const [gameStats, setGameStats] = useState<GameStats>(defaultGameStats)
+	const [achievements, setAchievements] = useState<AchievementPayload>(defaultAchievements)
+	const [achievementsLoading, setAchievementsLoading] = useState(false)
 	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
 	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
-	
-	// fausse game data pour les stats de jeu, à remplacer par des vraies données quand l'API sera ok
-	const totalQuestions = userProfile.stats.gamesPlayed * 10
-	const correctAnswers = Math.round((totalQuestions * userProfile.stats.winRate) / 100)
-	const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0
+	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
+	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
+	const [leaderboardError, setLeaderboardError] = useState(false)
+	const totalQuestions = gameStats.answered
+	const correctAnswers = gameStats.correct
+	const accuracy = Number.isFinite(gameStats.accuracy) ? Math.round(gameStats.accuracy) : 0
+	const safeAccuracy = Math.max(0, Math.min(100, accuracy))
 
 	const formatMatchDate = (dateValue?: string) => {
 		if (!dateValue) return '-'
@@ -275,6 +340,97 @@ function ProfilUser() {
 		}
 	}
 
+	const loadGameStats = async (username: string, signal?: AbortSignal) => {
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
+			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for game stats')
+			const { id } = await userIdResponse.json()
+
+			const statsResponse = await fetch(`${API_BASE}/user/${id}/stats`, { signal })
+			if (!statsResponse.ok) throw new Error('Failed to load game stats')
+			const data = await statsResponse.json()
+			const stats = data?.result || {}
+			setGameStats({
+				totalMatches: Number(stats.total_matches || 0),
+				wins: Number(stats.wins || 0),
+				totalScore: Number(stats.total_score || 0),
+				answered: Number(stats.answered || 0),
+				correct: Number(stats.correct || 0),
+				winRate: Number(stats.win_rate || 0),
+				accuracy: Number(stats.accuracy || 0),
+			})
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') return
+			if (error instanceof TypeError) return
+			console.warn('[Profile] failed to load game stats', error)
+			setGameStats(defaultGameStats)
+		}
+	}
+
+	const loadAchievements = async (username: string, signal?: AbortSignal) => {
+		setAchievementsLoading(true)
+		try {
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
+			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for achievements')
+			const { id } = await userIdResponse.json()
+
+			const response = await fetch(`${API_BASE}/user/${id}/achievements`, { signal })
+			if (!response.ok) throw new Error('Failed to load achievements')
+			const data = await response.json()
+			const payload = data?.result || {}
+			const summary = payload?.summary || {}
+			const normalized: AchievementPayload = {
+				summary: {
+					unlockedCount: Number(summary.unlockedCount || 0),
+					totalCount: Number(summary.totalCount || 0),
+					unlockedPoints: Number(summary.unlockedPoints || 0),
+					totalPoints: Number(summary.totalPoints || 0),
+					progressPercent: Number(summary.progressPercent || 0),
+				},
+				unlocked: Array.isArray(payload?.unlocked) ? payload.unlocked : [],
+				inProgress: Array.isArray(payload?.inProgress) ? payload.inProgress : [],
+				all: Array.isArray(payload?.all) ? payload.all : [],
+			}
+			setAchievements(normalized)
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') return
+			if (error instanceof TypeError) return
+			console.warn('[Profile] failed to load achievements', error)
+			setAchievements(defaultAchievements)
+		} finally {
+			setAchievementsLoading(false)
+		}
+	}
+
+	const loadLeaderboard = async (signal?: AbortSignal) => {
+		setLeaderboardLoading(true)
+		setLeaderboardError(false)
+		try {
+			const response = await fetch(`${API_BASE}/user/leaderboard/wins?limit=5`, { signal })
+			if (!response.ok) throw new Error('Failed to load leaderboard')
+			const data = await response.json()
+			const list = Array.isArray(data?.result) ? data.result : []
+			const normalized: LeaderboardPlayer[] = list.slice(0, 5).map((player: {
+				id: string | number
+				username?: string
+				wins?: number
+			}) => ({
+				id: String(player.id),
+				username: String(player.username || '-'),
+				wins: Number(player.wins || 0),
+			}))
+			setLeaderboard(normalized)
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') return
+			if (error instanceof TypeError) return
+			console.warn('[Profile] failed to load leaderboard', error)
+			setLeaderboard([])
+			setLeaderboardError(true)
+		} finally {
+			setLeaderboardLoading(false)
+		}
+	}
+
 	const normalizeAvatarUrl = (url?: string) => {
 		if (!url) return ''
 		const trimmed = String(url).trim()
@@ -306,12 +462,6 @@ function ProfilUser() {
 				username: user.username,
 				email: user.email,
 				joinYear: new Date().getFullYear(),
-				stats: {
-					gamesPlayed: 42,
-					winRate: 68,
-					bestScore: 9860,
-					streak: 7,
-				},
 				favorites: ['cinema', 'music', 'computer_science'],
 			})
 		}
@@ -324,7 +474,7 @@ function ProfilUser() {
 		if (!profileUsername) return
 		const abortController = new AbortController()
 		let isActive = true
-		
+
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
@@ -344,12 +494,6 @@ function ProfilUser() {
 						username: userData.username || profileUsername,
 						email: userData.email || '',
 						joinYear: new Date(userData.created_at || Date.now()).getFullYear(),
-						stats: {
-							gamesPlayed: 42,
-							winRate: 68,
-							bestScore: 9860,
-							streak: 7,
-						},
 						favorites: ['cinema', 'music', 'computer_science'],
 					})
 					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
@@ -357,7 +501,7 @@ function ProfilUser() {
 					setStickers([])
 					setTitles([titleOptions[0].id, titleOptions[1].id])
 					setDescription(String(userData.profileCardDescription || '').slice(0, 40))
-					
+
 					// Charger les données de personnalisation depuis le serveur
 					if (userData.profileCardStickers) {
 						try {
@@ -369,7 +513,7 @@ function ProfilUser() {
 							console.warn('Failed to parse stickers', e)
 						}
 					}
-					
+
 					if (userData.profileCardTitles) {
 						try {
 							const parsed = JSON.parse(userData.profileCardTitles)
@@ -380,86 +524,93 @@ function ProfilUser() {
 							console.warn('Failed to parse titles', e)
 						}
 					}
-					
+
 					if (canEdit) {
 						if (userData.theme) localStorage.setItem('theme', userData.theme)
 						if (userData.font) localStorage.setItem('font', userData.font)
 					}
 
 					// Note: On n'applique plus le thème/font d'un utilisateur visité pour éviter les conflits
-					
+
 					return
 				}
 			} catch (e) {
-			if (e instanceof DOMException && e.name === 'AbortError') return
-			if (e instanceof TypeError) return
-			console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
-			try {
-				const stored = localStorage.getItem('profileCard')
-				if (stored && canEdit) {
-					const data = JSON.parse(stored)
-					if (data.stickers) setStickers(data.stickers)
-					if (data.titles) setTitles(data.titles)
-					if (data.bgColor) setBgColor(data.bgColor)
-					if (data.description) setDescription(data.description)
+				if (e instanceof DOMException && e.name === 'AbortError') return
+				if (e instanceof TypeError) return
+				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
+				try {
+					const stored = localStorage.getItem('profileCard')
+					if (stored && canEdit) {
+						const data = JSON.parse(stored)
+						if (data.stickers) setStickers(data.stickers)
+						if (data.titles) setTitles(data.titles)
+						if (data.bgColor) setBgColor(data.bgColor)
+						if (data.description) setDescription(data.description)
+					}
+				} catch (e) {
+					console.warn('[ProfileCard] failed to load from localStorage', e)
 				}
-			} catch (e) {
-				console.warn('[ProfileCard] failed to load from localStorage', e)
 			}
 		}
-	}
-	
-	void loadProfileCard()
 
-	return () => {
-		isActive = false
-		abortController.abort()
-	}
-}, [profileUsername, canEdit, isPublicView])
+		void loadProfileCard()
 
-useEffect(() => {
-	if (!user || !canEdit) return
-	const abortController = new AbortController()
-	const refreshFriends = async () => {
-		try {
-			await Promise.all([loadFriends(user.username, abortController.signal), loadFriendRequests(abortController.signal)])
-		} catch (e) {
-			if (e instanceof Error && e.name === 'AbortError') return
-			if (e instanceof TypeError) return
-			console.warn('[Profile] failed to load social data', e)
+		return () => {
+			isActive = false
+			abortController.abort()
 		}
-	}
+	}, [profileUsername, canEdit, isPublicView])
 
-	void refreshFriends()
-
-	const refreshInterval = window.setInterval(() => {
-		if (document.visibilityState === 'visible') {
-			void refreshFriends()
+	useEffect(() => {
+		if (!user || !canEdit) return
+		const abortController = new AbortController()
+		const refreshFriends = async () => {
+			try {
+				await Promise.all([loadFriends(user.username, abortController.signal), loadFriendRequests(abortController.signal)])
+			} catch (e) {
+				if (e instanceof Error && e.name === 'AbortError') return
+				if (e instanceof TypeError) return
+				console.warn('[Profile] failed to load social data', e)
+			}
 		}
-	}, 10000)
 
-	const onVisibilityChange = () => {
-		if (document.visibilityState === 'visible') {
-			void refreshFriends()
+		void refreshFriends()
+
+		const refreshInterval = window.setInterval(() => {
+			if (document.visibilityState === 'visible') {
+				void refreshFriends()
+			}
+		}, 10000)
+
+		const onVisibilityChange = () => {
+			if (document.visibilityState === 'visible') {
+				void refreshFriends()
+			}
 		}
-	}
 
-	document.addEventListener('visibilitychange', onVisibilityChange)
+		document.addEventListener('visibilitychange', onVisibilityChange)
 
-	return () => {
-		abortController.abort()
-		window.clearInterval(refreshInterval)
-		document.removeEventListener('visibilitychange', onVisibilityChange)
-	}
-}, [user, canEdit])
+		return () => {
+			abortController.abort()
+			window.clearInterval(refreshInterval)
+			document.removeEventListener('visibilitychange', onVisibilityChange)
+		}
+	}, [user, canEdit])
 
 	useEffect(() => {
 		if (!profileUsername) {
 			setRecentMatches([])
+			setGameStats(defaultGameStats)
+			setAchievements(defaultAchievements)
+			setLeaderboard([])
+			setLeaderboardError(false)
 			return
 		}
 		const abortController = new AbortController()
 		void loadRecentMatches(profileUsername, abortController.signal)
+		void loadGameStats(profileUsername, abortController.signal)
+		void loadAchievements(profileUsername, abortController.signal)
+		void loadLeaderboard(abortController.signal)
 		return () => abortController.abort()
 	}, [profileUsername])
 
@@ -806,20 +957,20 @@ useEffect(() => {
 				</div>
 				<div className="profile-layout">
 					<section className="profile-card-preview">
-							<div
-								ref={dropZoneRef}
-								className="profile-card-canvas"
-								onDragOver={
-									canEdit
-										? (e) => {
-											e.preventDefault()
-											if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-										}
-										: undefined
-								}
-								onDrop={canEdit ? handleDrop : undefined}
-								style={{ background: bgColor }}
-							>
+						<div
+							ref={dropZoneRef}
+							className="profile-card-canvas"
+							onDragOver={
+								canEdit
+									? (e) => {
+										e.preventDefault()
+										if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+									}
+									: undefined
+							}
+							onDrop={canEdit ? handleDrop : undefined}
+							style={{ background: bgColor }}
+						>
 							<div className="profile-card-avatar">
 								<img
 									src={resolveAvatarUrl(avatarUrl || DEFAULT_AVATAR)}
@@ -851,7 +1002,7 @@ useEffect(() => {
 								</button>
 							))}
 						</div>
-						
+
 						<div className="control-group">
 							<p className="control-label">{t('profile_language_label')}</p>
 							<div className="chip-row">
@@ -864,8 +1015,8 @@ useEffect(() => {
 											onClick={() => changeLanguage(lng.code)}
 											className={`chip ${active ? 'chip-active' : ''}`}
 										>
-										{lng.lang}
-									</button>
+											{lng.lang}
+										</button>
 									)
 								})}
 							</div>
@@ -887,8 +1038,81 @@ useEffect(() => {
 
 						<div className="control-group">
 							<p className="control-label">{t('profile_game_stats_title')}</p>
-							<p className="pref-desc">{t('profile_game_stats_ratio', { correct: correctAnswers, total: totalQuestions })}</p>
-							<p className="pref-desc">{t('profile_game_stats_accuracy', { percent: accuracy })}</p>
+							<div className="profile-game-stats-grid">
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_accuracy')}</p>
+									<p className="stat-value">{safeAccuracy}%</p>
+								</div>
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_correct')}</p>
+									<p className="stat-value">{correctAnswers}</p>
+								</div>
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_answered')}</p>
+									<p className="stat-value">{totalQuestions}</p>
+								</div>
+								<div className="profile-stat-card profile-stat-card-kpi">
+									<p className="stat-label">{t('profile_game_stats_kpi_wins')}</p>
+									<p className="stat-value">{gameStats.wins}</p>
+								</div>
+							</div>
+						</div>
+
+						<div className="control-group">
+							<p className="control-label">{t('profile_leaderboard_title')}</p>
+							{leaderboardLoading ? (
+								<p className="pref-desc">{t('profile_leaderboard_loading')}</p>
+							) : leaderboardError ? (
+								<p className="pref-desc">{t('profile_leaderboard_unavailable')}</p>
+							) : leaderboard.length === 0 ? (
+								<p className="pref-desc">{t('profile_leaderboard_empty')}</p>
+							) : (
+								leaderboard.map((player, index) => (
+									<p key={player.id} className="pref-desc">
+										{t('profile_leaderboard_row', {
+											rank: index + 1,
+											username: player.username,
+											wins: player.wins,
+										})}
+									</p>
+								))
+							)}
+						</div>
+
+						<div className="control-group">
+							<p className="control-label">{t('profile_achievements_title')}</p>
+							{achievementsLoading ? (
+								<p className="pref-desc">{t('profile_achievements_loading')}</p>
+							) : (
+								<>
+									<p className="pref-desc">
+										{t('profile_achievements_summary', {
+											unlocked: achievements.summary.unlockedCount,
+											total: achievements.summary.totalCount,
+											points: achievements.summary.unlockedPoints,
+											maxPoints: achievements.summary.totalPoints,
+										})}
+									</p>
+									<div className="profile-achievements-track" role="progressbar" aria-valuenow={achievements.summary.progressPercent} aria-valuemin={0} aria-valuemax={100}>
+										<div className="profile-achievements-fill" style={{ width: `${achievements.summary.progressPercent}%` }} />
+									</div>
+									<p className="pref-desc">{t('profile_achievements_progress', { percent: achievements.summary.progressPercent })}</p>
+
+									<div className="profile-achievements-grid">
+										{achievements.inProgress.map((achievement) => (
+											<div key={achievement.key} className="profile-achievement-card">
+												<p className="profile-achievement-title">{t(`achievement_${achievement.key}_title`)}</p>
+												<p className="pref-desc">{t(`achievement_${achievement.key}_desc`, { target: achievement.target })}</p>
+												<p className="pref-desc">{achievement.value} / {achievement.target} · {achievement.progressPercent}%</p>
+											</div>
+										))}
+									</div>
+
+									{achievements.unlocked.length > 0 && (
+										<p className="pref-desc">{t('profile_achievements_unlocked_recent', { count: achievements.unlocked.length })}</p>
+									)}
+								</>
+							)}
 						</div>
 
 						<div className="control-group">
@@ -923,133 +1147,133 @@ useEffect(() => {
 
 					{canEdit && (
 						<section className="profile-card-controls">
-						<div className="panel-title">{t('profile_customize')}</div>
-						<div className="control-group">
-							<label className="control-label" htmlFor="avatar-upload">
-								{t('profile_avatar_label')}
-							</label>
-							<div className="control-row">
-								<input
-									ref={avatarInputRef}
-									id="avatar-upload"
-									type="file"
-									accept="image/png,image/jpeg"
-									onChange={handleAvatarChange}
-									disabled={avatarUploading}
-									style={{ display: 'none' }}
-								/>
-								<button
-									type="button"
-									className="btn ghost"
-									onClick={handleBrowseAvatar}
-									disabled={avatarUploading}
-								>
-									{t('profile_avatar_browse')}
-								</button>
-								<span className="pref-desc" style={{ margin: 0 }}>
-									{selectedAvatarFileName || t('profile_avatar_no_file')}
-								</span>
+							<div className="panel-title">{t('profile_customize')}</div>
+							<div className="control-group">
+								<label className="control-label" htmlFor="avatar-upload">
+									{t('profile_avatar_label')}
+								</label>
+								<div className="control-row">
+									<input
+										ref={avatarInputRef}
+										id="avatar-upload"
+										type="file"
+										accept="image/png,image/jpeg"
+										onChange={handleAvatarChange}
+										disabled={avatarUploading}
+										style={{ display: 'none' }}
+									/>
+									<button
+										type="button"
+										className="btn ghost"
+										onClick={handleBrowseAvatar}
+										disabled={avatarUploading}
+									>
+										{t('profile_avatar_browse')}
+									</button>
+									<span className="pref-desc" style={{ margin: 0 }}>
+										{selectedAvatarFileName || t('profile_avatar_no_file')}
+									</span>
+								</div>
+								<p className="control-label" style={{ marginTop: '0.5rem' }}>{t('profile_avatar_defaults')}</p>
+								<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+									{DEFAULT_AVATAR_CHOICES.map((avatarPath) => {
+										const activeAvatar = avatarUrl || DEFAULT_AVATAR
+										const isActive = activeAvatar === avatarPath
+										return (
+											<button
+												key={avatarPath}
+												type="button"
+												onClick={() => void handleSelectDefaultAvatar(avatarPath)}
+												disabled={avatarUploading}
+												aria-label={avatarPath}
+												style={{
+													width: '44px',
+													height: '44px',
+													borderRadius: '8px',
+													padding: 0,
+													overflow: 'hidden',
+													border: isActive ? '2px solid #2563eb' : '1px solid #d1d5db',
+													background: 'transparent',
+													cursor: avatarUploading ? 'not-allowed' : 'pointer',
+												}}
+											>
+												<img
+													src={avatarPath}
+													alt={avatarPath}
+													style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+												/>
+											</button>
+										)
+									})}
+								</div>
+								<p className="pref-desc">
+									{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}
+								</p>
+								{avatarError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{avatarError}</p>}
+								{avatarSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('profile_avatar_success')}</p>}
 							</div>
-							<p className="control-label" style={{ marginTop: '0.5rem' }}>{t('profile_avatar_defaults')}</p>
-							<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-								{DEFAULT_AVATAR_CHOICES.map((avatarPath) => {
-									const activeAvatar = avatarUrl || DEFAULT_AVATAR
-									const isActive = activeAvatar === avatarPath
-									return (
-										<button
-											key={avatarPath}
-											type="button"
-											onClick={() => void handleSelectDefaultAvatar(avatarPath)}
-											disabled={avatarUploading}
-											aria-label={avatarPath}
-											style={{
-												width: '44px',
-												height: '44px',
-												borderRadius: '8px',
-												padding: 0,
-												overflow: 'hidden',
-												border: isActive ? '2px solid #2563eb' : '1px solid #d1d5db',
-												background: 'transparent',
-												cursor: avatarUploading ? 'not-allowed' : 'pointer',
-											}}
-										>
-											<img
-												src={avatarPath}
-												alt={avatarPath}
-												style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+							<div className="control-group">
+								<label className="control-label" htmlFor="bg-picker">
+									{t('profile_bg_label')}
+								</label>
+								<div className="control-row">
+									<input
+										id="bg-picker"
+										type="color"
+										value={bgColor}
+										onChange={(e) => setBgColor(e.target.value)}
+									/>
+									<div className="swatch-row">
+										{bgPresets.map((color) => (
+											<button
+												key={color}
+												type="button"
+												className="swatch"
+												style={{ background: color }}
+												onClick={() => setBgColor(color)}
+												aria-label={color}
 											/>
-										</button>
-									)
-								})}
-							</div>
-							<p className="pref-desc">
-								{avatarUploading ? t('profile_avatar_uploading') : t('profile_avatar_hint')}
-							</p>
-							{avatarError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{avatarError}</p>}
-							{avatarSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('profile_avatar_success')}</p>}
-						</div>
-						<div className="control-group">
-							<label className="control-label" htmlFor="bg-picker">
-								{t('profile_bg_label')}
-							</label>
-							<div className="control-row">
-								<input
-									id="bg-picker"
-									type="color"
-									value={bgColor}
-									onChange={(e) => setBgColor(e.target.value)}
-								/>
-								<div className="swatch-row">
-									{bgPresets.map((color) => (
-										<button
-											key={color}
-											type="button"
-											className="swatch"
-											style={{ background: color }}
-											onClick={() => setBgColor(color)}
-											aria-label={color}
-										/>
-									))}
+										))}
+									</div>
 								</div>
 							</div>
-						</div>
 
-						<div className="control-group">
-							<p className="control-label">{t('profile_stickers_label')}</p>
-							<div className="sticker-palette">
-								{stickerPalette.map((sticker) => (
-									<button
-										key={sticker.id}
-										type="button"
-										draggable
-										onDragStart={(e) => handleDragStart(e, { symbol: sticker.symbol, url: sticker.url })}
-										onClick={() => addSticker({ symbol: sticker.symbol, url: sticker.url })}
-										disabled={stickers.length >= MAX_STICKERS}
-										className={`sticker-chip ${sticker.url ? 'sticker-chip-img' : ''}`}
-										aria-label={sticker.symbol}
-									>
-										{sticker.url ? <img src={sticker.url} alt={sticker.symbol} /> : sticker.symbol}
-									</button>
-								))}
+							<div className="control-group">
+								<p className="control-label">{t('profile_stickers_label')}</p>
+								<div className="sticker-palette">
+									{stickerPalette.map((sticker) => (
+										<button
+											key={sticker.id}
+											type="button"
+											draggable
+											onDragStart={(e) => handleDragStart(e, { symbol: sticker.symbol, url: sticker.url })}
+											onClick={() => addSticker({ symbol: sticker.symbol, url: sticker.url })}
+											disabled={stickers.length >= MAX_STICKERS}
+											className={`sticker-chip ${sticker.url ? 'sticker-chip-img' : ''}`}
+											aria-label={sticker.symbol}
+										>
+											{sticker.url ? <img src={sticker.url} alt={sticker.symbol} /> : sticker.symbol}
+										</button>
+									))}
+								</div>
+								<p className="pref-desc">{t('profile_drag_tip')} {t('profile_remove_tip')}</p>
 							</div>
-					<p className="pref-desc">{t('profile_drag_tip')} {t('profile_remove_tip')}</p>
-						</div>
 
-						<div className="control-group">
-							<label className="control-label" htmlFor="profile-description">
-								{t('profile_desc_label')}
-							</label>
-							<input
-								id="profile-description"
-								type="text"
-								maxLength={40}
-								value={description}
-								onChange={(e) => setDescription(e.target.value.slice(0, 40))}
-								placeholder={t('profile_desc_placeholder')}
-								className="profile-desc-input"
-							/>
-							<p className="pref-desc">{t('profile_desc_hint')}</p>
-						</div>
+							<div className="control-group">
+								<label className="control-label" htmlFor="profile-description">
+									{t('profile_desc_label')}
+								</label>
+								<input
+									id="profile-description"
+									type="text"
+									maxLength={40}
+									value={description}
+									onChange={(e) => setDescription(e.target.value.slice(0, 40))}
+									placeholder={t('profile_desc_placeholder')}
+									className="profile-desc-input"
+								/>
+								<p className="pref-desc">{t('profile_desc_hint')}</p>
+							</div>
 
 							<div className="control-group">
 								<p className="control-label">{t('profile_titles_label', { max: MAX_TITLES })}</p>
@@ -1065,7 +1289,7 @@ useEffect(() => {
 												disabled={blocked}
 												className={`chip ${active ? 'chip-active' : ''}`}
 											>
-											{t(opt.text)}
+												{t(opt.text)}
 											</button>
 										)
 									})}
@@ -1079,69 +1303,69 @@ useEffect(() => {
 								</div>
 							</div>
 
-						<div className="actions">
-							<button className="btn ghost" type="button" onClick={handleReset}>
-								{t('profile_reset')}
-							</button>
-							<button className="btn" type="button" onClick={handleSaveNow} disabled={isSaving}>
-								{isSaving ? t('saving') : t('save')}
-							</button>
-							<button className="btn primary" type="button" onClick={() => navigate('/')}>
-								{t('back')}
-							</button>
-						</div>
-						{saveError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{saveError}</p>}
-						{saveSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('save_success')}</p>}
+							<div className="actions">
+								<button className="btn ghost" type="button" onClick={handleReset}>
+									{t('profile_reset')}
+								</button>
+								<button className="btn" type="button" onClick={handleSaveNow} disabled={isSaving}>
+									{isSaving ? t('saving') : t('save')}
+								</button>
+								<button className="btn primary" type="button" onClick={() => navigate('/')}>
+									{t('back')}
+								</button>
+							</div>
+							{saveError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{saveError}</p>}
+							{saveSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{t('save_success')}</p>}
 
-						<p className="pref-desc profile-share-notice">{t('profile_share_notice')}</p>
+							<p className="pref-desc profile-share-notice">{t('profile_share_notice')}</p>
 						</section>
 					)}
 
 					{canEdit && (
 						<section className="profile-friends-section">
-					<div className="panel-title">{t('profile_friends_section')}</div>
+							<div className="panel-title">{t('profile_friends_section')}</div>
 
-						<div className="control-group">
-							<label className="control-label" htmlFor="friend-search">
-							{t('profile_add_friend')}
-							</label>
-							<div className="control-row">
-								<input
-									id="friend-search"
-									type="text"
-									value={friendSearchInput}
-									onChange={(e) => setFriendSearchInput(e.target.value)}
-								placeholder={t('profile_username_placeholder')}
-								className="profile-desc-input"
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') void handleSendFriendRequest()
-								}}
-							/>
-							<button
-								className="btn primary"
-								type="button"
-								onClick={() => void handleSendFriendRequest()}
-								disabled={!friendSearchInput.trim()}
-							>
-								{t('profile_send')}
-								</button>
-							</div>
-							{friendActionError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{friendActionError}</p>}
-							{friendActionSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{friendActionSuccess}</p>}
-						</div>
-
-						{friendRequests.filter((r) => r.type === 'received').length > 0 && (
 							<div className="control-group">
-								<p className="control-label">
-									{t('profile_friend_requests', { count: friendRequests.filter((r) => r.type === 'received').length })}
-								</p>
-								<div className="friends-list">
-									{friendRequests
-										.filter((r) => r.type === 'received')
-										.map((request) => (
-											<div key={request.id} className="friend-item friend-request-item">
-												<div className="friend-info">
-													<div>
+								<label className="control-label" htmlFor="friend-search">
+									{t('profile_add_friend')}
+								</label>
+								<div className="control-row">
+									<input
+										id="friend-search"
+										type="text"
+										value={friendSearchInput}
+										onChange={(e) => setFriendSearchInput(e.target.value)}
+										placeholder={t('profile_username_placeholder')}
+										className="profile-desc-input"
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') void handleSendFriendRequest()
+										}}
+									/>
+									<button
+										className="btn primary"
+										type="button"
+										onClick={() => void handleSendFriendRequest()}
+										disabled={!friendSearchInput.trim()}
+									>
+										{t('profile_send')}
+									</button>
+								</div>
+								{friendActionError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{friendActionError}</p>}
+								{friendActionSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{friendActionSuccess}</p>}
+							</div>
+
+							{friendRequests.filter((r) => r.type === 'received').length > 0 && (
+								<div className="control-group">
+									<p className="control-label">
+										{t('profile_friend_requests', { count: friendRequests.filter((r) => r.type === 'received').length })}
+									</p>
+									<div className="friends-list">
+										{friendRequests
+											.filter((r) => r.type === 'received')
+											.map((request) => (
+												<div key={request.id} className="friend-item friend-request-item">
+													<div className="friend-info">
+														<div>
 															<span
 																className="friend-name"
 																onClick={() => openUserProfile(request.username)}
@@ -1154,49 +1378,49 @@ useEffect(() => {
 															>
 																{request.username}
 															</span>
-														<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
-															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
-														</span>
+															<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
+																{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
+															</span>
+														</div>
+													</div>
+													<div className="friend-actions">
+														<button
+															className="btn-icon btn-accept"
+															type="button"
+															onClick={() => void handleAcceptRequest(request.id)}
+															title={t('profile_accept')}
+															style={{ color: '#059669' }}
+														>
+															✓
+														</button>
+														<button
+															className="btn-icon btn-decline"
+															type="button"
+															onClick={() => void handleDeclineRequest(request.id)}
+															title={t('profile_decline')}
+															style={{ color: '#b91c1c' }}
+														>
+															✕
+														</button>
 													</div>
 												</div>
-												<div className="friend-actions">
-													<button
-														className="btn-icon btn-accept"
-														type="button"
-														onClick={() => void handleAcceptRequest(request.id)}
-														title={t('profile_accept')}
-														style={{ color: '#059669' }}
-													>
-														✓
-													</button>
-													<button
-														className="btn-icon btn-decline"
-														type="button"
-														onClick={() => void handleDeclineRequest(request.id)}
-														title={t('profile_decline')}
-														style={{ color: '#b91c1c' }}
-													>
-														✕
-													</button>
-												</div>
-											</div>
-										))}
+											))}
+									</div>
 								</div>
-							</div>
-						)}
+							)}
 
-						{friendRequests.filter((r) => r.type === 'sent').length > 0 && (
-							<div className="control-group">
-								<p className="control-label">
-									{t('profile_sent_requests', { count: friendRequests.filter((r) => r.type === 'sent').length })}
-								</p>
-								<div className="friends-list">
-									{friendRequests
-										.filter((r) => r.type === 'sent')
-										.map((request) => (
-											<div key={request.id} className="friend-item">
-												<div className="friend-info">
-													<div>
+							{friendRequests.filter((r) => r.type === 'sent').length > 0 && (
+								<div className="control-group">
+									<p className="control-label">
+										{t('profile_sent_requests', { count: friendRequests.filter((r) => r.type === 'sent').length })}
+									</p>
+									<div className="friends-list">
+										{friendRequests
+											.filter((r) => r.type === 'sent')
+											.map((request) => (
+												<div key={request.id} className="friend-item">
+													<div className="friend-info">
+														<div>
 															<span
 																className="friend-name"
 																onClick={() => openUserProfile(request.username)}
@@ -1209,27 +1433,27 @@ useEffect(() => {
 															>
 																{request.username}
 															</span>
-														<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
-															{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
-														</span>
+															<span className={`friend-status ${request.status}`} style={{ color: request.status === 'online' ? '#059669' : '#b91c1c' }}>
+																{request.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
+															</span>
+														</div>
 													</div>
 												</div>
-											</div>
-										))}
+											))}
+									</div>
 								</div>
-							</div>
-						)}
+							)}
 
-						<div className="control-group">
-						<p className="control-label">{t('profile_my_friends', { count: friends.length })}</p>
-						<div className="friends-list">
-							{friends.length === 0 ? (
-								<p className="pref-desc">{t('profile_no_friends')}</p>
-								) : (
-									friends.map((friend) => (
-										<div key={friend.id} className="friend-item">
-											<div className="friend-info">
-												<div>
+							<div className="control-group">
+								<p className="control-label">{t('profile_my_friends', { count: friends.length })}</p>
+								<div className="friends-list">
+									{friends.length === 0 ? (
+										<p className="pref-desc">{t('profile_no_friends')}</p>
+									) : (
+										friends.map((friend) => (
+											<div key={friend.id} className="friend-item">
+												<div className="friend-info">
+													<div>
 														<span
 															className="friend-name"
 															onClick={() => openUserProfile(friend.username)}
@@ -1242,28 +1466,30 @@ useEffect(() => {
 														>
 															{friend.username}
 														</span>
-													<span className={`friend-status ${friend.status}`} style={{ color: friend.status === 'online' ? '#059669' : '#b91c1c' }}>
-													{friend.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
-													</span>
+														<span className={`friend-status ${friend.status}`} style={{ color: friend.status === 'online' ? '#059669' : '#b91c1c' }}>
+															{friend.status === 'online' ? `● ${t('profile_online')}` : `○ ${t('profile_offline')}`}
+														</span>
+													</div>
 												</div>
+												<button
+													className="btn-icon btn-remove"
+													type="button"
+													style={{ color: '#b91c1c' }}
+													onClick={() => void handleRemoveFriend(friend.id)}
+													title={t('profile_remove')}
+												>
+													✕
+												</button>
 											</div>
-											<button
-												className="btn-icon btn-remove"
-												type="button"
-												style={{ color: '#b91c1c' }}
-												onClick={() => void handleRemoveFriend(friend.id)}
-												title={t('profile_remove')}
-											>
-												✕
-											</button>
-										</div>
-									))
-								)}
+										))
+									)}
+								</div>
 							</div>
-						</div>
 						</section>
 					)}
 				</div>
+				<label>
+				</label>
 				<DataRequester />
 			</div>
 		</main>
