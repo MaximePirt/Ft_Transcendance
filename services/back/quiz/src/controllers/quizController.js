@@ -349,15 +349,13 @@ async function usePowerup(sessionId, userId, powerupId)
 			const correctAnswerRaw = quizModel.getCorrectAnswerForQuestion(question.id, player.lang);
 			const correctAnswer = typeof correctAnswerRaw === "string" ? JSON.parse(correctAnswerRaw).answer : correctAnswerRaw.answer;
 			const options = Array.isArray(question.options) ? question.options : question.options.split(";;").map(o => o.trim());
-
 			let incorrectOptions = [];
 			for (let i = 0 ; i < options.length; i++) {
-				if (options[i] !== correctAnswer)
+				if (options[i].position !== correctAnswer)
 					incorrectOptions.push(options[i]);
 			}
 			if (incorrectOptions.length < 2)
 				throw new Error("Not enough incorrect options to use fifty powerup");
-
 			let optionsNumber = options.length - 2;
 			let removedOptions = [];
 			for(let i = 0; i < optionsNumber; i++)
