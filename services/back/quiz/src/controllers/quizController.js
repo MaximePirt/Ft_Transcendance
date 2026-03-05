@@ -145,7 +145,6 @@ async function startGameSession(userId, sessionCode)
 		wsHub.broadcast(session.id, {type: 'game_started', payload: { sessionId: session.id }});
 		wsHub.broadcast(session.id, {type: 'question_started', payload: {sessionId: session.id, question_order: session.current_question_order,
 			remaining_ms: quizModel.getRemainingMs(session.id, QUESTION_TIMER)}});
-		await grantPowerupsForQuestion(session, session.current_question_order);
 		console.log("Session", session.id, "started with", questionPool.length, "questions");
 		return {code: 200, session_id: session.id};
 	}
@@ -270,7 +269,6 @@ async function usePowerup(sessionId, userId, powerupId)
 {
 	sessionId = Number(sessionId);
 	userId = Number(userId);
-	powerupId = Number(powerupId);
 	const session = quizModel.getSessionById(sessionId);
 	if (!session)
 		throw new Error("Game session not found");
@@ -282,7 +280,7 @@ async function usePowerup(sessionId, userId, powerupId)
 	const powerupAvailable = quizModel.getAvailablePowerupsForPlayer(sessionId, userId);
 	if (!powerupAvailable)
 		throw new Error("Powerup not found");
-	const powerupexist = powerupAvailable.find(p => p.id === powerupId);
+	const powerupexist = powerupAvailable.find(p => p.powerup_type === powerupId);
 	if (!powerupexist)
 		throw new Error("Player does not have this type of powerup available");
 	const question = quizModel.getQuestionByOrderForPlayer(sessionId, session.current_question_order, player.lang);
