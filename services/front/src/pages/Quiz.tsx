@@ -34,7 +34,7 @@ function QuizPage() {
             margin: '0 auto',
           }}>
             <button className="btn primary" onClick={() => navigate('/quiz/solo-setup')}>{t("solo_mode")}</button>
-            <button className="btn primary" onClick={() => navigate('/quiz/multi')}>{t("create_room")}</button>
+            <button className="btn primary" onClick={() => navigate('/quiz/multi-setup')}>{t("create_room")}</button>
             <button className="btn primary" onClick={() => navigate('/quiz/join')}>{t("join_room")}</button>
           </div>
         </div>

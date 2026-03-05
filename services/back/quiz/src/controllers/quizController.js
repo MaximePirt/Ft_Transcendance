@@ -4,7 +4,7 @@ const sessionTimer = require('../jobs/sessionTimer');
 const wsHub = require('../ws/wsHub');
 
 
-const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 15000);
+const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 9999999);
 const max_powerups = Number(process.env.MAX_POWERUPS_PER_PLAYER || 2);
 const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
 
@@ -20,7 +20,7 @@ async function createGameSession(sessionData, hostId) {
 	const { mode, topic = null,
 			question_count, max_players = 4, power_ups, is_solo } = sessionData;
 	// TODO: uncomment lines below in debug purpose, remove it in prod
-	// const power_ups = ["skip", "hint", "50-50"];
+	// const power_ups = ["skip", "hint", "fifty"];
 
 	const powerupsJson = power_ups && Array.isArray(power_ups) ? JSON.stringify(power_ups) : null;
 
@@ -66,6 +66,20 @@ async function getGameSessionData(sessionId)
 		return null;
 	}
 	const players = quizModel.getPlayersBySession(sessionId);
+	session.players = players;
+	console.log("Game session data with players:", session);
+	return session;
+}
+
+async function getGameSessionDataByCode(sessionCode)
+{
+	console.log("Fetching game session data for session code:", sessionCode);
+	const session = quizModel.getSessionByCode(sessionCode);
+	if (!session) {
+		console.log("No game session found for code:", sessionCode);
+		return null;
+	}
+	const players = quizModel.getPlayersBySession(session.id);
 	session.players = players;
 	console.log("Game session data with players:", session);
 	return session;
@@ -131,7 +145,6 @@ async function startGameSession(userId, sessionCode)
 		wsHub.broadcast(session.id, {type: 'game_started', payload: { sessionId: session.id }});
 		wsHub.broadcast(session.id, {type: 'question_started', payload: {sessionId: session.id, question_order: session.current_question_order,
 			remaining_ms: quizModel.getRemainingMs(session.id, QUESTION_TIMER)}});
-		await grantPowerupsForQuestion(session, session.current_question_order);
 		console.log("Session", session.id, "started with", questionPool.length, "questions");
 		return {code: 200, session_id: session.id};
 	}
@@ -203,7 +216,6 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 
 	const question_answer = quizModel.getCorrectAnswerForQuestion(question_id, player.lang);
 	const isCorrect = quizModel.checkAnswer(question_answer, answer);
-	console.log("isCorrect variable just after calling checkAnswer:", isCorrect);
 
 	quizModel.recordPlayerAnswer(sessionId, userId, question_id, answer, time_taken, isCorrect);
 
@@ -222,34 +234,37 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 }
 
 async function grantPowerupsForQuestion(session, questionOrder) {
-	const sessionId = session.id;
-	const enabledPowerups = JSON.parse(session.power_ups || '[]');
-	if (enabledPowerups.length === 0)
-	{
-		console.log("No powerups enabled for this session, skipping powerup granting.");
-		return;
-	}
-	const activePlayers = quizModel.getPlayersBySession(sessionId)
-		.filter(p => p.is_active === 1);
-	const grantedPowerups = [];
-	activePlayers.forEach(player => {
-		if (Math.random() < POWERUP_PROBABILITY && quizModel.countPowerups(sessionId, player.id) < max_powerups) {
-			const randomType = enabledPowerups[Math.floor(Math.random() * enabledPowerups.length)];
-			quizModel.grantPowerup(sessionId, player.id, questionOrder, randomType);
-			grantedPowerups.push({
-				user_id: player.id,
-				powerup_type: randomType
-			});
-			console.log(`Granted ${randomType} to user ${player.id} for question ${questionOrder}`);
-		}
-		else
-			console.log(`No powerup granted to user ${player.id} for question ${questionOrder} (already has ${quizModel.countPowerups(sessionId, player.id)} powerups)`);
-	});
+    console.log("==========================================\n\n");
+    const sessionId = session.id;
+    const enabledPowerups = JSON.parse(session.power_ups || '[]');
+    if (enabledPowerups.length === 0)
+    {
+        console.log("No powerups enabled for this session, skipping powerup granting.");
+        return;
+    }
+    const activePlayers = quizModel.getPlayersBySession(sessionId)
+        .filter(p => p.is_active === 1);
+    const grantedPowerups = [];
+    activePlayers.forEach(player => {
+        console.log(quizModel.countPowerups(sessionId, player.id), "powerups already granted to user ID", player.id);
+        if (Math.random() < POWERUP_PROBABILITY && quizModel.countPowerups(sessionId, player.id) < max_powerups) {
+            const randomType = enabledPowerups[Math.floor(Math.random() * enabledPowerups.length)];
+            quizModel.grantPowerup(sessionId, player.id, questionOrder, randomType);
+            grantedPowerups.push({
+                user_id: player.id,
+                powerup_type: randomType
+            });
+            console.log(`Granted ${randomType} to user ${player.id} for question ${questionOrder}`);
+        }
+        else
+            console.log(`No powerup granted to user ${player.id} for question ${questionOrder} (already has ${quizModel.countPowerups(sessionId, player.id)} powerups)`);
+    });
 
-	if (grantedPowerups.length > 0) {
-		wsHub.broadcast(sessionId, {type: 'powerups_granted', 
-			payload: { sessionId, questionOrder, powerups: grantedPowerups }});
-	}
+    if (grantedPowerups.length > 0) {
+        wsHub.broadcast(sessionId, {type: 'powerups_granted', 
+            payload: { sessionId, questionOrder, powerups: grantedPowerups }});
+    }
+    console.log("==========================================\n\n");
 }
 
 
@@ -257,7 +272,6 @@ async function usePowerup(sessionId, userId, powerupId)
 {
 	sessionId = Number(sessionId);
 	userId = Number(userId);
-	powerupId = Number(powerupId);
 	const session = quizModel.getSessionById(sessionId);
 	if (!session)
 		throw new Error("Game session not found");
@@ -269,7 +283,7 @@ async function usePowerup(sessionId, userId, powerupId)
 	const powerupAvailable = quizModel.getAvailablePowerupsForPlayer(sessionId, userId);
 	if (!powerupAvailable)
 		throw new Error("Powerup not found");
-	const powerupexist = powerupAvailable.find(p => p.id === powerupId);
+	const powerupexist = powerupAvailable.find(p => p.powerup_type === powerupId);
 	if (!powerupexist)
 		throw new Error("Player does not have this type of powerup available");
 	const question = quizModel.getQuestionByOrderForPlayer(sessionId, session.current_question_order, player.lang);
@@ -310,7 +324,11 @@ async function usePowerup(sessionId, userId, powerupId)
 				throw new Error("No current question found for this game session");
 			if (hintquestion.type !== 'text')
 				throw new Error("Hints are only available for text questions");
-			const answer = quizModel.getCorrectAnswerForQuestion(hintquestion.id, player.lang);
+			const answerobject = quizModel.getCorrectAnswerForQuestion(hintquestion.id, player.lang);
+			const answerJson = typeof answerobject === "string" ? JSON.parse(answerobject) : answerobject;
+			const answer = Array.isArray(answerJson.answer) ? answerJson.answer[0] : answerJson.answer;
+			if (typeof answer !== "string")
+				throw new Error("Correct answer is not a string");
 			let hint = "";
 			for (let i = 0; i < answer.length; i++) {
 				if (i % 3 === 0)
@@ -321,24 +339,23 @@ async function usePowerup(sessionId, userId, powerupId)
 			powerupPayload = { hint };
 			break;
 		}
-		case '50-50':
+		case 'fifty':
 		{
 			const question = quizModel.getQuestionByOrderForPlayer(sessionId, session.current_question_order, player.lang);
 			if (!question)
 				throw new Error("No current question found for this game session");
 			if (question.type !== 'mcq')
-				throw new Error("50-50 powerup is only available for multiple choice questions");
-			const correctAnswer = quizModel.getCorrectAnswerForQuestion(question.id, player.lang).trim();
-			const options = question.options.split(";;").map(o => o.trim());
-
+				throw new Error("fifty powerup is only available for multiple choice questions");
+			const correctAnswerRaw = quizModel.getCorrectAnswerForQuestion(question.id, player.lang);
+			const correctAnswer = typeof correctAnswerRaw === "string" ? JSON.parse(correctAnswerRaw).answer : correctAnswerRaw.answer;
+			const options = Array.isArray(question.options) ? question.options : question.options.split(";;").map(o => o.trim());
 			let incorrectOptions = [];
 			for (let i = 0 ; i < options.length; i++) {
-				if (options[i] !== correctAnswer)
+				if (options[i].position !== correctAnswer)
 					incorrectOptions.push(options[i]);
 			}
 			if (incorrectOptions.length < 2)
-				throw new Error("Not enough incorrect options to use 50-50 powerup");
-
+				throw new Error("Not enough incorrect options to use fifty powerup");
 			let optionsNumber = options.length - 2;
 			let removedOptions = [];
 			for(let i = 0; i < optionsNumber; i++)
@@ -463,6 +480,7 @@ async function getLeaderboard(sessionId)
 module.exports = {
 	createGameSession,
 	getGameSessionData,
+	getGameSessionDataByCode,
 	joinGameSession,
 	startGameSession,
 	getCurrentQuestion,

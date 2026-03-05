@@ -2,6 +2,7 @@
 	"name": "back-auth",
 	"version": "1.0.0",
 	"description": "",
+	"type": "module",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
@@ -18,6 +19,8 @@
 		"@fastify/multipart": "^9.4.0",
 		"@fastify/static": "^9.0.0",
 		"@fastify/view": "^11.1.1",
+		"@react-email/components": "^1.0.8",
+		"@react-email/render": "^2.0.4",
 		"bcryptjs": "^3.0.3",
 		"better-sqlite3": "^12.5.0",
 		"ejs": "^3.1.10",
@@ -26,6 +29,10 @@
 		"nodejs": "^0.0.0",
 		"nodemailer": "^7.0.12",
 		"nunjucks": "^3.2.4",
+		"otplib": "^13.3.0",
+		"qrcode": "^1.5.4",
+		"react": "^19.2.4",
+		"speakeasy": "^2.0.0",
 		"tsx": "^4.21.0"
 	}
 }
