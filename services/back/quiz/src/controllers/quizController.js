@@ -16,11 +16,8 @@ const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
  */
 
 async function createGameSession(sessionData, hostId) {
-	hostId = 1;
 	const { mode, topic = null,
 			question_count, max_players = 4, power_ups, is_solo } = sessionData;
-	// TODO: uncomment lines below in debug purpose, remove it in prod
-	// const power_ups = ["skip", "hint", "fifty"];
 
 	const powerupsJson = power_ups && Array.isArray(power_ups) ? JSON.stringify(power_ups) : null;
 

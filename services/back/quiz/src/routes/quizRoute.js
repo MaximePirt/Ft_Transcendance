@@ -14,7 +14,7 @@ async function quizRoutes(fastify, options) {
 	fastify.post('/game-sessions', {preHandler: fastify.authenticate, schema: schemas.createGameSessionSchema },
 	async (request, reply) => {
 		// userId = 1;
-		const userId = request.user.payload.id;
+		const userId = request.user.id;
 		console.log("User ID", userId, "is creating a new game session with settings:", request.body);
 		try {
 			const gameSession = await quizController.createGameSession( request.body, userId);
@@ -61,7 +61,7 @@ async function quizRoutes(fastify, options) {
 	 */
 	fastify.post('/game-sessions/join', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
-		const userId = request.user.payload.id;
+		const userId = request.user.id;
 		// const userId = 2;
 		console.log("User ID", userId, "is trying to join game session with code:", request.body.code);
 		const { code } = request.body;
@@ -89,7 +89,7 @@ async function quizRoutes(fastify, options) {
 	// TODO: Remove this route before deploying to production
 	fastify.post('/game-sessions/joinbis', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
-		const userId = request.user.payload.id;
+		const userId = request.user.id;
 		console.log("User ID", userId, "is trying to join game session with code:", request.body.code);
 		// const userId = 1;
 		const { code } = request.body;
@@ -130,7 +130,7 @@ async function quizRoutes(fastify, options) {
 	 */
 	fastify.post(`/game-sessions/start`, {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
-		const userId = request.user.payload.id;
+		const userId = request.user.id;
 		console.log("User ID", userId, "is trying to start game session with code:", request.body.code);
 		// const userId = 1;
 		const { code } = request.body;
@@ -155,7 +155,7 @@ async function quizRoutes(fastify, options) {
 
 	fastify.get(`/game-sessions/:id/current-question`, {preHandler: fastify.authenticate, schema: schemas.GameSessionId},
 	async (request, reply) => {
-		const userId = request.user.payload.id;
+		const userId = request.user.id;
 		console.log("User ID", userId, "is requesting current question for game session ID:", request.params.id);
 		// const userId = 1;
 		const sessionId = request.params.id;
@@ -177,7 +177,7 @@ async function quizRoutes(fastify, options) {
 
 	fastify.get(`/game-sessions/:id/next-question`, {preHandler: fastify.authenticate},
 	async (request, reply) => {
-		const userId = request.user.payload.id;
+		const userId = request.user.id;
 		// const userId = 1;
 		console.log("User ID", userId, "is requesting next question for game session ID:", request.params.id);
 		const sessionId = request.params.id;
@@ -205,7 +205,7 @@ async function quizRoutes(fastify, options) {
 	//TODO: Add schema validation for answer submission (question_id, answer)
 	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate},
 	async (request, reply) => {
-		const userId = Number(request.user.payload.id);
+		const userId = Number(request.user.id);
 		// const userId = 1;
 		const sessionId = Number(request.params.id);
 		const { question_id, answer} = request.body;
@@ -228,7 +228,7 @@ async function quizRoutes(fastify, options) {
 
 	fastify.delete('/game-sessions/:id/players/me', {preHandler: fastify.authenticate},
 	async (request, reply) => {
-		const userId = Number(request.user.payload.id);
+		const userId = Number(request.user.id);
 		console.log("User ID", userId, "is trying to leave game session with ID:", request.params.id);
 		// const userId = 1;
 		const session = Number(request.params.id);

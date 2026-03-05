@@ -13,7 +13,7 @@ function addNewUser(username, email, password) {
 	else if (!validateEmail)
 		throw new Error("INVALID_CREDENTIALS");
 	console.log("Data successfully sent in database !");
-	return stmt;
+	return stmt.lastInsertRowid;
 }
 
 function getUserName(email) {
