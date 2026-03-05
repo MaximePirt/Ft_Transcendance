@@ -458,8 +458,8 @@ function SoloGamePage() {
                 className="btn ghost"
                 disabled={isDisabled}
                 style={{
-                  opacity: isDisabled ? 1 : 0.4,
-                  cursor: isDisabled ? "pointer" : "not-allowed"
+                  opacity: isDisabled ? 0.4 : 1,
+                  cursor: isDisabled ? "not-allowed" : "pointer"
                 }}
                 onClick={() => {
                   ws?.send(JSON.stringify({
