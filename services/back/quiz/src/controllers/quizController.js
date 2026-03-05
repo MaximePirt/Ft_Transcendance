@@ -145,7 +145,6 @@ async function startGameSession(userId, sessionCode)
 		wsHub.broadcast(session.id, {type: 'game_started', payload: { sessionId: session.id }});
 		wsHub.broadcast(session.id, {type: 'question_started', payload: {sessionId: session.id, question_order: session.current_question_order,
 			remaining_ms: quizModel.getRemainingMs(session.id, QUESTION_TIMER)}});
-		await grantPowerupsForQuestion(session, session.current_question_order);
 		console.log("Session", session.id, "started with", questionPool.length, "questions");
 		return {code: 200, session_id: session.id};
 	}
@@ -235,34 +234,37 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 }
 
 async function grantPowerupsForQuestion(session, questionOrder) {
-	const sessionId = session.id;
-	const enabledPowerups = JSON.parse(session.power_ups || '[]');
-	if (enabledPowerups.length === 0)
-	{
-		console.log("No powerups enabled for this session, skipping powerup granting.");
-		return;
-	}
-	const activePlayers = quizModel.getPlayersBySession(sessionId)
-		.filter(p => p.is_active === 1);
-	const grantedPowerups = [];
-	activePlayers.forEach(player => {
-		if (Math.random() < POWERUP_PROBABILITY && quizModel.countPowerups(sessionId, player.id) < max_powerups) {
-			const randomType = enabledPowerups[Math.floor(Math.random() * enabledPowerups.length)];
-			quizModel.grantPowerup(sessionId, player.id, questionOrder, randomType);
-			grantedPowerups.push({
-				user_id: player.id,
-				powerup_type: randomType
-			});
-			console.log(`Granted ${randomType} to user ${player.id} for question ${questionOrder}`);
-		}
-		else
-			console.log(`No powerup granted to user ${player.id} for question ${questionOrder} (already has ${quizModel.countPowerups(sessionId, player.id)} powerups)`);
-	});
+    console.log("==========================================\n\n");
+    const sessionId = session.id;
+    const enabledPowerups = JSON.parse(session.power_ups || '[]');
+    if (enabledPowerups.length === 0)
+    {
+        console.log("No powerups enabled for this session, skipping powerup granting.");
+        return;
+    }
+    const activePlayers = quizModel.getPlayersBySession(sessionId)
+        .filter(p => p.is_active === 1);
+    const grantedPowerups = [];
+    activePlayers.forEach(player => {
+        console.log(quizModel.countPowerups(sessionId, player.id), "powerups already granted to user ID", player.id);
+        if (Math.random() < POWERUP_PROBABILITY && quizModel.countPowerups(sessionId, player.id) < max_powerups) {
+            const randomType = enabledPowerups[Math.floor(Math.random() * enabledPowerups.length)];
+            quizModel.grantPowerup(sessionId, player.id, questionOrder, randomType);
+            grantedPowerups.push({
+                user_id: player.id,
+                powerup_type: randomType
+            });
+            console.log(`Granted ${randomType} to user ${player.id} for question ${questionOrder}`);
+        }
+        else
+            console.log(`No powerup granted to user ${player.id} for question ${questionOrder} (already has ${quizModel.countPowerups(sessionId, player.id)} powerups)`);
+    });
 
-	if (grantedPowerups.length > 0) {
-		wsHub.broadcast(sessionId, {type: 'powerups_granted', 
-			payload: { sessionId, questionOrder, powerups: grantedPowerups }});
-	}
+    if (grantedPowerups.length > 0) {
+        wsHub.broadcast(sessionId, {type: 'powerups_granted', 
+            payload: { sessionId, questionOrder, powerups: grantedPowerups }});
+    }
+    console.log("==========================================\n\n");
 }
 
 

@@ -153,15 +153,16 @@ function SoloGamePage() {
         if (!msg.payload.ok) return
 
         if (msg.payload.powerup_type === "hint") {
-          setHint(msg.payload.hint)
+          setHint(msg.payload.hint);
         }
 
         if (msg.payload.powerup_type === "fifty") {
-          setRemovedOptions(msg.payload.removed_options)
+          setRemovedOptions(msg.payload.removed_options.label);
+          console.log(removedOptions);
         }
 
         if (msg.payload.powerup_type === "skip") {
-          handleNextQuestion()
+          handleNextQuestion();
         }
       }
     }
@@ -195,7 +196,6 @@ function SoloGamePage() {
 
   // REPONSE CHECK
   const handleValidateAnswer = async () => {
-    console.log(nextPowerupId)
     let playerAnswer: string | number = 0
     let id: number = question.id
 
@@ -395,7 +395,7 @@ function SoloGamePage() {
   }
   let question_count = Number(question_count_str) || 0;
 
-  const maxPowerupSlots = 3;
+  const maxPowerupSlots = 2;
   const displayedPowerups = [
     ...powerups,
     ...Array(maxPowerupSlots - powerups.length).fill(null).map((_, i) => ({
@@ -537,7 +537,7 @@ function SoloGamePage() {
                 />
                 {!showAnswer && hint && (
                   <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                    💡 Indice : {hint}
+                    Indice : {hint}
                   </p>
                 )}
                 {showAnswer && !isCorrect && (
