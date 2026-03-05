@@ -52,6 +52,7 @@ interface AnswerResult {
 }
 
 const STORAGE_KEY = 'soloGameState:v1'
+const MAX_SLOTS = 2
 
 function SoloGamePage() {
   const navigate = useNavigate()
@@ -66,11 +67,11 @@ function SoloGamePage() {
   const [showAnswer, setShowAnswer] = useState(false)
   const [isCorrect, setIsCorrect] = useState(false)
   const [rightAnswer, setRightAnswer] = useState<string | number>()
-  const [powerups, setPowerups] = useState<any[]>([])
   const [ws, setWs] = useState<WebSocket | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [removedOptions, setRemovedOptions] = useState<removedOption[]>([])
-
+  const [powerups, setPowerups] = useState<(string | null)[]>(Array(MAX_SLOTS).fill(null))
+  
   useEffect(() => {
     const abortController = new AbortController()
     
@@ -143,28 +144,45 @@ function SoloGamePage() {
       console.log(msg);
 
       if (msg.type === "powerups_granted") {
-        setPowerups(prev => [
-          ...prev, 
-          ...msg.payload.powerups.map((p: any, index: number) => ({
-            ...p,
-            disabled: false
-          }))
-        ])
+        const newTypes = msg.payload.powerups.map((p: any) => p.powerup_type)
+
+        setPowerups(prev => {
+          const updated = [...prev]
+
+          newTypes.forEach(type => {
+            const emptyIndex = updated.findIndex(p => p === null)
+            if (emptyIndex !== -1) {
+              updated[emptyIndex] = type
+            }
+          })
+
+          return updated
+        })
       }
 
       if (msg.type === "powerup_used") {
         if (!msg.payload.ok) return
 
-        if (msg.payload.powerup_type === "hint") {
+        const usedType = msg.payload.powerup_type
+
+        setPowerups(prev => {
+          const updated = [...prev]
+          const index = updated.findIndex(p => p === usedType)
+          if (index !== -1) {
+            updated[index] = null
+          }
+          return updated
+        })
+
+        if (usedType === "hint") {
           setHint(msg.payload.hint);
         }
-        if (msg.payload.powerup_type === "fifty") {
+        if (usedType === "fifty") {
           setRemovedOptions(msg.payload.removed_options);
-          console.log("my removed options : ",removedOptions);
           console.log("his options :", msg.payload.removed_options);
           
         }
-        if (msg.payload.powerup_type === "skip") {
+        if (usedType === "skip") {
           handleNextQuestion();
         }
       }
@@ -398,15 +416,6 @@ function SoloGamePage() {
   }
   let question_count = Number(question_count_str) || 0;
 
-  const maxPowerupSlots = 2;
-  const displayedPowerups = [
-    ...powerups,
-    ...Array(maxPowerupSlots - powerups.length).fill(null).map((_, i) => ({
-      powerup_type: 'Power-Up Slot',
-      disabled: true
-    }))
-  ];
-
   return (
     <main className="page">
       <div className="shell">
@@ -436,24 +445,29 @@ function SoloGamePage() {
         </div>
 
         {/* Power ups */}
-        {displayedPowerups.map(p => (
-          <button
-            key={p.id}
-            className="btn ghost"
-            disabled={p.disabled}
-            style={{ opacity: p.disabled ? 0.4 : 1, cursor: p.disabled ? 'not-allowed' : 'pointer', padding: 10 }}
-            onClick={() => {
-              if (!p.disabled) {
+        <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+          {powerups.map((p, index) => (
+            <button
+              key={index}
+              className="btn ghost"
+              disabled={!p}
+              style={{
+                opacity: p ? 1 : 0.4,
+                cursor: p ? "pointer" : "not-allowed"
+              }}
+              onClick={() => {
+                if (!p) return
+
                 ws?.send(JSON.stringify({
                   type: "powerup_use",
-                  payload: { powerupId: p.powerup_type }
-                }));
-              }
-            }}
-          >
-            {p.powerup_type}
-          </button>
-        ))}
+                  payload: { powerupId: p }
+                }))
+              }}
+            >
+              {p ?? "Powerup Slot"}
+            </button>
+          ))}
+        </div>
 
         {/* Zone de Titre */}
         <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
