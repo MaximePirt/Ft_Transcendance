@@ -117,6 +117,7 @@ function HomePage() {
 			} else {
 				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
 					method: "POST",
+					credentials: 'include',
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
 						email: email,
@@ -256,6 +257,7 @@ function HomePage() {
 				headers: {
 					"Content-Type": "application/json",
 				},
+				credentials: 'include',
 				body: JSON.stringify({
 					email: newUser.email,
 					username: newUser.username,
@@ -277,6 +279,7 @@ function HomePage() {
 						headers: {
 							"Content-Type": "application/json"
 						},
+						credentials: 'include',
 						body: JSON.stringify({
 							email: newUser.email,
 							username: newUser.username
