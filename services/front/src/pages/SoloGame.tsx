@@ -446,27 +446,32 @@ function SoloGamePage() {
 
         {/* Power ups */}
         <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
-          {powerups.map((p, index) => (
-            <button
-              key={index}
-              className="btn ghost"
-              disabled={!p}
-              style={{
-                opacity: p ? 1 : 0.4,
-                cursor: p ? "pointer" : "not-allowed"
-              }}
-              onClick={() => {
-                if (!p) return
+          {powerups.map((p, index) => {
 
-                ws?.send(JSON.stringify({
-                  type: "powerup_use",
-                  payload: { powerupId: p }
-                }))
-              }}
-            >
-              {p ?? "Powerup Slot"}
-            </button>
-          ))}
+            const isDisabled = !p ||
+            (p === "fifty" && question.type === "text") ||
+            (p === "hint" && question.type === "mcq")
+
+            return (
+              <button
+                key={index}
+                className="btn ghost"
+                disabled={isDisabled}
+                style={{
+                  opacity: isDisabled ? 1 : 0.4,
+                  cursor: isDisabled ? "pointer" : "not-allowed"
+                }}
+                onClick={() => {
+                  ws?.send(JSON.stringify({
+                    type: "powerup_use",
+                    payload: { powerupId: p }
+                  }))
+                }}
+              >
+                {p ?? "Powerup Slot"}
+              </button>
+            )
+          })};
         </div>
 
         {/* Zone de Titre */}
