@@ -132,8 +132,10 @@ function SoloGamePage() {
     const sessionIdStr = localStorage.getItem("sessionId")
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null
     if (!sessionId) return
-
-    const socket = new WebSocket(`ws://localhost:3002/ws/game-sessions/${sessionId}`)
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const socket = new WebSocket(
+      `${proto}//${window.location.host}/ws/quiz/game-sessions/${sessionId}`
+    );
     socket.onopen = () => {
       console.log("WebSocket connected")
     }
@@ -182,7 +184,16 @@ function SoloGamePage() {
           
         }
         if (usedType === "skip") {
-          handleNextQuestion();
+          if (msg.payload.correct_answer.type === "text") {
+            let answer: AnswerText = msg.payload.correct_answer
+            setRightAnswer(answer.answer[0])
+          }
+          else {
+            let answer: AnswerMCQ = msg.payload.correct_answer
+            setRightAnswer(answer.answer)
+          }
+          setIsCorrect(true)
+          setShowAnswer(true)
         }
       }
     }
@@ -195,7 +206,6 @@ function SoloGamePage() {
     return () => socket.close()
   }, [])
 
-  //  UPDATE LE LOCALSTORAGE A CHAQUE CHANGEMENT SUR LA PAGE
   useEffect(() => {
     if (loading || error || !question) return
 

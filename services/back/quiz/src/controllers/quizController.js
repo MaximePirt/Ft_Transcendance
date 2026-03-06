@@ -16,11 +16,8 @@ const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
  */
 
 async function createGameSession(sessionData, hostId) {
-	hostId = 1;
 	const { mode, topic = null,
 			question_count, max_players = 4, power_ups, is_solo } = sessionData;
-	// TODO: uncomment lines below in debug purpose, remove it in prod
-	// const power_ups = ["skip", "hint", "fifty"];
 
 	const powerupsJson = power_ups && Array.isArray(power_ups) ? JSON.stringify(power_ups) : null;
 
@@ -299,22 +296,8 @@ async function usePowerup(sessionId, userId, powerupId)
 				throw new Error("No timer found for this question and player");
 			quizModel.recordPlayerAnswer(sessionId, userId, question.id, "skip_powerup", time_taken, 1);
 			quizModel.updatePlayerScore(sessionId, userId, 1, time_taken);
-
-			if (quizModel.haveAllPlayersAnswered(sessionId, question.id)) {
-				sessionTimer.clearTimer(sessionId);
-				const { status, new_order } = quizModel.advanceSession(sessionId);
-				const players = quizModel.getPlayersBySession(sessionId);
-				wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
-				if (status === 'in_progress')
-				{
-					sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
-					const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
-					wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
-					await grantPowerupsForQuestion(session, session.current_question_order);
-				}
-				else if (status === 'completed')
-					wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
-			}
+			const answer = quizModel.getCorrectAnswerForQuestion(question.id, player.lang);
+			powerupPayload = { correct_answer: answer };
 			break;
 		}
 		case 'hint':
@@ -373,7 +356,7 @@ async function usePowerup(sessionId, userId, powerupId)
 		default:
 			throw new Error("Unknown powerup type");
 	}
-	quizModel.usePowerup(powerupId, userId);
+	quizModel.usePowerup(powerupId, userId, session.id);
 	const powerupsCount = await quizModel.countPowerups(sessionId, userId)
 	const updatedAvailable = await quizModel.getAvailablePowerupsForPlayer(sessionId, userId)
 

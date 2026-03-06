@@ -28,12 +28,12 @@ function Payload(username, id) {
 }
 
 function JWTgenerator(fastify, user) {
-	const payload = Object.create(Payload);
-	payload.username = user.username;
-	payload.id = user.id;
-	const token = fastify.jwt.sign({ payload });
-	return token;
+	return fastify.jwt.sign({
+		username: user.username,
+		id: user.id
+	});
 }
+
 
 function User(username, email, password, token) {
 	this.username = username;

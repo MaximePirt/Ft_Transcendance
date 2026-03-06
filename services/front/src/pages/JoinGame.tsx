@@ -116,20 +116,6 @@ if (error) {
 				<h1>Erreur</h1>
 				<p className="lede">{error}</p>
 				<div className="actions">
-					{isHost && (
-					<button 
-						className="btn primary" 
-						onClick={handleStartGame}
-						disabled={players.length < 2}
-						style={{
-						opacity: players.length < 2 ? 0.5 : 1,
-						cursor: players.length < 2 ? 'not-allowed' : 'pointer'
-						}}
-					>
-						{t("start_game")}
-						{players.length < 2 && ' (min. 2 joueurs)'}
-					</button>
-					)}
 					<button className="btn ghost" onClick={() => navigate('/quiz')}>
 					{t("leave_room")}
 					</button>
