@@ -141,7 +141,7 @@ function SoloGamePage() {
       console.log("WebSocket connected")
     }
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       const msg = JSON.parse(event.data)
       console.log(msg);
 
@@ -197,6 +197,65 @@ function SoloGamePage() {
           setShowAnswer(true)
         }
       }
+      else if (msg.type === "next_question") {
+        console.log("Received next_question event via WebSocket")
+        console.log("websocket :", msg)
+        const question_count_str = await localStorage.getItem("questionCount");
+        if (!question_count_str) {
+          throw new Error('No question count found in localStorage')
+        }
+        let question_count = Number(question_count_str) || 0;
+        const isLastQuestion = currentQuestionIndex === question_count - 1
+
+        if (isLastQuestion) {
+          console.log("Quiz terminé, score final:", score)
+          localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem("questionCount")
+          navigate("/quiz/end", { state: { score, total: question_count, mode: "solo" } })
+          return
+        }
+
+        setCurrentQuestionIndex(prev => {
+          const next = prev + 1
+          return next
+        })
+        console.log("Here is currentquestionIndex now", currentQuestionIndex)
+        setUserAnswer('')
+        setSelectedOption(null)
+        setShowAnswer(false)
+        setIsCorrect(false)
+        setHint(null)
+        setRemovedOptions([])
+        try {
+            const sessionIdStr = await localStorage.getItem("sessionId");
+            const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+            if (!sessionId) {
+              throw new Error('Invalid session ID')
+            }
+            const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
+            })
+            if (!response.ok) {
+              throw new Error('Failed to fetch question')
+            }
+
+            const { question } = await response.json()
+            const data: Question = question
+            setLoading(false)
+            setQuestion(data)
+          }
+          catch (err) {
+              if (err instanceof Error && err.name === 'AbortError') return
+              setError(err instanceof Error ? err.message : t('error_occurred'))
+              setLoading(false)
+          }
+        }
+        else if (msg.type === "session_completed" || msg.type === "session_ended") {
+
+          console.log("Quiz terminé, score final:", score)
+          localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem("questionCount")
+          navigate("/quiz/end", { state: { score, total: msg.payload.question_count, mode: "solo" } })
+        }
     }
 
     socket.onerror = (err) => {
@@ -306,13 +365,10 @@ function SoloGamePage() {
     }
     const question_count_str = await localStorage.getItem("questionCount");
     if (!question_count_str) {
-      //console.log('No question count found in localStorage')
       throw new Error('No question count found in localStorage')
     }
     let question_count = Number(question_count_str) || 0;
-    //console.log("Question count from localStorage:", question_count);
     const isLastQuestion = currentQuestionIndex === question_count - 1
-    //console.log(`Current question index: ${currentQuestionIndex}, Question count: ${question_count}, Is last question: ${isLastQuestion}`)
 
     if (isLastQuestion) {
       console.log("Quiz terminé, score final:", score)
@@ -332,9 +388,7 @@ function SoloGamePage() {
     try {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-        //console.log("Session ID from localStorage:", sessionId);
         if (!sessionId) {
-          //console.log('Invalid session ID in localStorage:', sessionIdStr)
           throw new Error('Invalid session ID')
         }
         const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
