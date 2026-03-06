@@ -136,6 +136,24 @@ function findUserStatsById(userId)
 	};
 }
 
+function findWinsLeaderboard(limit = 5) {
+	const safeLimit = Math.max(1, Math.min(Number(limit) || 5, 10));
+	return db.prepare(`
+		SELECT
+			u.id,
+			u.username,
+			SUM(CASE WHEN gp.is_winner = 1 THEN 1 ELSE 0 END) AS wins
+		FROM game_players gp
+		JOIN game_sessions gs ON gs.id = gp.game_session_id
+		JOIN users u ON u.id = gp.user_id
+		WHERE gs.status = 'completed' AND gs.is_solo = 0
+		GROUP BY u.id, u.username
+		HAVING wins > 0
+		ORDER BY wins DESC, u.username ASC
+		LIMIT ?
+	`).all(safeLimit);
+}
+
 module.exports = {
 	findAllUsers,
 	findUserById,
@@ -143,5 +161,6 @@ module.exports = {
 	updateUserById,
 	findUser,
 	findRecentMatchesByUserId,
-	findUserStatsById
+	findUserStatsById,
+	findWinsLeaderboard
 };
