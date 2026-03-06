@@ -296,6 +296,8 @@ async function usePowerup(sessionId, userId, powerupId)
 				throw new Error("No timer found for this question and player");
 			quizModel.recordPlayerAnswer(sessionId, userId, question.id, "skip_powerup", time_taken, 1);
 			quizModel.updatePlayerScore(sessionId, userId, 1, time_taken);
+			const answer = quizModel.getCorrectAnswerForQuestion(question.id, player.lang);
+			powerupPayload = { correct_answer: answer };
 			break;
 		}
 		case 'hint':
