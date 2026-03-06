@@ -133,8 +133,10 @@ function SoloGamePage() {
     const sessionIdStr = localStorage.getItem("sessionId")
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null
     if (!sessionId) return
-
-    const socket = new WebSocket(`ws://localhost:3002/ws/game-sessions/${sessionId}`)
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const socket = new WebSocket(
+      `${proto}//${window.location.host}/ws/quiz/game-sessions/${sessionId}`
+    );
     socket.onopen = () => {
       console.log("WebSocket connected")
     }
