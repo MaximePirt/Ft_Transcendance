@@ -1,7 +1,4 @@
-const authModel = require('../models/authModel');
-const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
-
+import { addNewUser, getUserName, getUserId, getUserModelEmail } from '../models/authModel.js'
 
 function User(username, email, password, token) {
 	this.username = username;
@@ -11,57 +8,54 @@ function User(username, email, password, token) {
 	this.id = 0;
 }
 
-const saltWorkFactor = 12;
-let facode = 0;
+async function signupUser(email, username, password) {
+	const response = addNewUser(username, email, password);
+	if (response === "MISSING_FIELDS") {
+		throw new Error("MISSING_FIELDS");
+	} else if (response === "INVALID_CREDENTIALS") {
+		throw new Error("INVALID_CREDENTIALS");
+	}
+	return response;
+}
 
-async function signupUser(request, reply) {
-	const user = Object.create(User);
-		user.username = await request.body.username;
-		user.email = await request.body.email;
-		const pass = await request.body.password;
-		user.password = await bcrypt.hash(request.body.password, saltWorkFactor);
-		try {
-			const transporter = nodemailer.createTransport({
-				host: 'smtp.ethereal.email',
-				port: 587,
-				auth: {
-					user: user.email,
-					pass: pass
-				}
-			});
-			
-			const response = await authModel.addNewUser(user);
-			if (response.ok) {
-				facode = Math.random() * (999999 - 100000) + 100000;
-				(async () => {
-					const info = await transporter.sendMail({
-						from: '"toto" <ft_trans@ethereal.email>',
-						to: user.email,
-						subject: "Your authentication code ✔",
-						html: `<b>Hello ${user.username}, here is your code: ${Math.round(facode)}</b>`
-					});
-					console.log("📨 Message sent:", user.email);
-					console.log("🔗 Message received:", nodemailer.getTestMessageUrl(info))
-				})();
-			} else {
-				const errmsg = await response.json();
-				return reply.code(404).send(errmsg);
-			}
-		} catch (error) {
-			console.error(error);
-		}
-		return reply.code(200).send({ok:true, message: "User registered, check your email for the code."});
+async function loginUser(email, password) {
+	const resp = await getUserId(email, password);
+
+	if (resp === "USER_NOT_FOUND")
+		throw new Error("INVALID_CREDENTIALS");
+	else {
+		return resp;
+	}
+}
+
+async function getUserByEmail(email) {
+	const user = getUserModelEmail(email);
+	if (user === "USER_NOT_FOUND") {
+		throw new Error("USER_NOT_FOUND");
+	} else {
+		return user;
+	}
+}
+
+async function getUsername(email) {
+	const username = getUserName(email);
+	if (!username)
+		throw new Error("INVALID_CREDENTIALS");
+	return username;
 }
 
 async function codeVerification(frontAuth) {
 	const code = Math.round(facode);
 	if (code != frontAuth)
-		return { ok:false, err: "Bad authentication code" };
-	return { ok:true, message: "Code verified successfully" };
+		return { ok: false, err: "Bad authentication code" };
+	return { ok: true, message: "Code verified successfully" };
 }
 
 
-module.exports = {
+export {
 	signupUser,
-	codeVerification
+	loginUser,
+	getUsername,
+	codeVerification,
+	getUserByEmail
 };
