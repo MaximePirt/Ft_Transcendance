@@ -1,12 +1,12 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
-async function sendExportMail(json: any) {
+async function sendExportMail(json: any, id: number) {
     const res = await fetch(`${API_BASE}/user/export-data/mail`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-            userId: 1,
+            userId: id,
             data: json,
         }),
     });
@@ -16,21 +16,21 @@ async function sendExportMail(json: any) {
     }
 }
 
-async function sendSignupMail() {
-    const res = await fetch(`${API_BASE}/user/signup/mail`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            userId: 1,
-            codeValidation: "125068",
-        }),
-    });
+// async function sendSignupMail() {
+//     const res = await fetch(`${API_BASE}/user/signup/mail`, {
+//         method: "POST",
+//         credentials: "include",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//             userId: 1,
+//             codeValidation: "125068",
+//         }),
+//     });
 
-    if (!res.ok) {
-        throw new Error("Erreur lors de l'envoi du mail");
-    }
-}
+//     if (!res.ok) {
+//         throw new Error("Erreur lors de l'envoi du mail");
+//     }
+// }
 
 async function getPlayerInfo() {
     const res = await fetch(`${API_BASE}/auth/me`, {
@@ -53,8 +53,8 @@ async function getPlayerInfo() {
     document.body.removeChild(link);
     URL.revokeObjectURL(href);
 
-    sendExportMail(me_user);
-    sendSignupMail();
+    sendExportMail(me_user, me_user.id);
+    //sendSignupMail();
 }
 
 const DataRequester = () => {

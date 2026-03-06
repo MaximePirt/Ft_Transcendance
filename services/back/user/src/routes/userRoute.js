@@ -10,8 +10,22 @@ const React = require("react");
 const { render } = require("@react-email/render");
 const { createZohoTransporter } = require("../services/userServices.js");
 const DataExportConfirmationEmail = require("../mails/dataExportConfirmationEmail.js");
+const AccountDeletionEmail = require("../mails/accountDeletionEmail.js");
 const SignupEmail = require("../mails/signupEmail.js");
 userController = require("../controllers/userController");
+
+const subjectExport = {
+	"fr": "Éxportation de vos données personnelles",
+	"en": "Export of your personal data",
+	"ar": "تصدير بياناتك الشخصية",
+};
+
+const subjectDelete = {
+	"fr": "Votre compte à été supprimé",
+	"en": "Your account has been deleted",
+	"ar": "تم حذف حسابك",
+};
+
 
 async function userRoutes(fastify, options) {
 	// Get informations
@@ -199,14 +213,15 @@ async function userRoutes(fastify, options) {
       			return reply.code(404).send({ error: "USER_NOT_FOUND" });
     		}
 
-			const html = await render(React.createElement(DataExportConfirmationEmail, { username: user.username }));
+			const lang = user.preferredLanguage;
+			const html = await render(React.createElement(DataExportConfirmationEmail, { username: user.username, lang: lang }));
 			const transporter = createZohoTransporter();
 
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: "tristan.olivier.p@gmail.com",
 				//to: user.email,
-				subject: "Export of your personal data",
+				subject: subjectExport[lang],
 				html,
 				attachments: [
 					{
@@ -215,6 +230,37 @@ async function userRoutes(fastify, options) {
 					contentType: "application/json",
 					},
 				],
+			});
+
+			return reply.send({ success: true });
+		} catch (err) {
+			console.error(err);
+			return reply.code(500).send({ error: "MAIL_FAILED" });
+		}
+	});
+
+	fastify.post("/delete-data/mail", async (request, reply) => {
+		try {
+			const { userId } = request.body;
+			if (!userId) {
+  				return reply.code(400).send({ error: "BAD_REQUEST" });
+			}
+
+			const user = await userController.getUserById(userId);
+		    if (!user) {
+      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
+    		}
+
+			const lang = user.preferredLanguage;
+			const html = await render(React.createElement(AccountDeletionEmail, { username: user.username, lang: lang }));
+			const transporter = createZohoTransporter();
+
+			await transporter.sendMail({
+				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
+				to: "tristan.olivier.p@gmail.com",
+				//to: user.email,
+				subject: subjectDelete[lang],
+				html,
 			});
 
 			return reply.send({ success: true });

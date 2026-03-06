@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
 import DataRequester from '../content/DataRequester'
+import DataDeleter from '../content/DataDeleter'
 import '../App.css'
 
 // @ts-ignore
@@ -1265,6 +1266,7 @@ useEffect(() => {
 					)}
 				</div>
 				<DataRequester />
+				<DataDeleter />
 			</div>
 		</main>
 	)
