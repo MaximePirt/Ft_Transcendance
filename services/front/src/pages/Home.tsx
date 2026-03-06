@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
 
-// @ts-ignore
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
 type LeaderboardPlayer = {
@@ -306,7 +305,7 @@ function HomePage() {
 	}
 	return (
 		<main className="page">
-			<LanguageSelector />
+			{!isAuthenticated && <LanguageSelector />}
 			<div className="login-bar">
 				{isAuthenticated ? (
 					<>
@@ -394,7 +393,7 @@ function HomePage() {
 				</aside>
 			</div>
 
-			<LanguageSelector />
+			{!isAuthenticated && <LanguageSelector />}
 			<div className="login-bar">
 				{isAuthenticated ? (
 					<>
