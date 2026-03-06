@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import '../App.css'
-import { log } from 'node:console'
 
 const exitbutton = [
   { id: 'musiques', symbol: '🚪', url: '/custom-assets/music-exit-icon.png' },
