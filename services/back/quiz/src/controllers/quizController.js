@@ -370,7 +370,7 @@ async function usePowerup(sessionId, userId, powerupId)
 		default:
 			throw new Error("Unknown powerup type");
 	}
-	quizModel.usePowerup(powerupId, userId);
+	quizModel.usePowerup(powerupId, userId, session.id);
 	const powerupsCount = await quizModel.countPowerups(sessionId, userId)
 	const updatedAvailable = await quizModel.getAvailablePowerupsForPlayer(sessionId, userId)
 

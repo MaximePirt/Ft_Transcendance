@@ -543,11 +543,11 @@ function getAvailablePowerupsForPlayer(sessionId, userId) {
 	return res;
 }
 
-function usePowerup(powerupId, userId) {
+function usePowerup(powerupId, userId, sessionId) {
 	const result = db.prepare(`
 		UPDATE game_powerups
 		SET used = 1, used_at = CURRENT_TIMESTAMP
-		WHERE id = ? AND user_id = ? AND used = 0
+		WHERE powerup_type = ? AND user_id = ? AND used = 0
 	`).run(powerupId, userId);
 
 	if (result.changes > 0) {
@@ -556,7 +556,7 @@ function usePowerup(powerupId, userId) {
 			UPDATE game_players
 			SET powerups_count = powerups_count - 1
 			WHERE game_session_id = ? AND user_id = ? AND powerups_count > 0
-		`).run(powerup.game_session_id, userId);
+		`).run(sessionId, userId);
 	}
 	return result.changes > 0;
 }
