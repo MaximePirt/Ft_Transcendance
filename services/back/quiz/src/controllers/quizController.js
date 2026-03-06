@@ -296,22 +296,6 @@ async function usePowerup(sessionId, userId, powerupId)
 				throw new Error("No timer found for this question and player");
 			quizModel.recordPlayerAnswer(sessionId, userId, question.id, "skip_powerup", time_taken, 1);
 			quizModel.updatePlayerScore(sessionId, userId, 1, time_taken);
-
-			if (quizModel.haveAllPlayersAnswered(sessionId, question.id)) {
-				sessionTimer.clearTimer(sessionId);
-				const { status, new_order } = quizModel.advanceSession(sessionId);
-				const players = quizModel.getPlayersBySession(sessionId);
-				wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
-				if (status === 'in_progress')
-				{
-					sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
-					const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
-					wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
-					await grantPowerupsForQuestion(session, session.current_question_order);
-				}
-				else if (status === 'completed')
-					wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
-			}
 			break;
 		}
 		case 'hint':

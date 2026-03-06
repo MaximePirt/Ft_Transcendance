@@ -185,7 +185,7 @@ function SoloGamePage() {
           
         }
         if (usedType === "skip") {
-          handleNextQuestion();
+          setShowAnswer(true)
         }
       }
     }
