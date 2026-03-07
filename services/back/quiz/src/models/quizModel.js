@@ -56,20 +56,17 @@ function getSessionByCode(sessionCode)
 		FROM game_sessions
 		WHERE code = ?
 	`).get(sessionCode);
-	console.log("Game session data retrieved:", data);
 	return data;
 }
 
 function getPlayersBySession(sessionId)
 {
-	console.log("Model : Fetching all players for game session ID:", sessionId);
 	const players = db.prepare(`
 		SELECT u.id, u.username, gp.joined_at, gp.answered_count, gp.correct_answers, gp.score, gp.is_active
 		FROM game_players gp
 		JOIN users u ON gp.user_id = u.id
 		WHERE gp.game_session_id = ? AND gp.is_active = 1
 	`).all(sessionId);
-	console.log("Players retrieved for session ID", sessionId, ":", players);
 	return players;
 }
 
@@ -113,12 +110,6 @@ function updateWinnerForSession(sessionId) {
 
 function generateQuestionPool(mode, questionCount, topicJson)
 {
-	console.log("Printing every possible slugs for debugging:");
-	const allCategories = db.prepare(`SELECT slug FROM categories`).all();
-	console.log(allCategories.map(c => c.slug));
-	console.log("Printing every category name now:");
-	const allCategoryNames = db.prepare(`SELECT name FROM category_translations WHERE lang = 'fr'`).all();
-	console.log(allCategoryNames.map(c => c.name));
 
 	console.log("Model: Generating question pool with mode:", mode, "question count:", questionCount, "topic:", topicJson);
 	let query = `

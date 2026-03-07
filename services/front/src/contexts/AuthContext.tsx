@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null)
 	const [isAuthReady, setIsAuthReady] = useState(false)
 
-	const applyPreferredLanguage = async (username: string, signal?: AbortSignal) => {
+	const applylang = async (username: string, signal?: AbortSignal) => {
 		try {
 			const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`, { signal })
 			if (!userIdResponse.ok) return
@@ -67,9 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			if (!response.ok) return
 			const userData = await response.json()
 
-			if (userData?.preferredLanguage && userData.preferredLanguage !== i18n.language) {
-				i18n.changeLanguage(userData.preferredLanguage)
-				localStorage.setItem('language', userData.preferredLanguage)
+			if (userData?.lang && userData.lang !== i18n.language) {
+				i18n.changeLanguage(userData.lang)
+				localStorage.setItem('language', userData.lang)
 			}
 
 			if (userData?.theme) {
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 					if (userData.username) {
 						setUser(userData)
 						localStorage.setItem('user', JSON.stringify(userData))
-						await applyPreferredLanguage(userData.username, abortController.signal)
+						await applylang(userData.username, abortController.signal)
 					}
 				} else if (meResponse.status === 401 || meResponse.status === 403) {
 					setUser(null)
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setUser(userData)
 		localStorage.setItem('user', JSON.stringify(userData))
 		setIsAuthReady(true)
-		await applyPreferredLanguage(username)
+		await applylang(username)
 		return true
 	}
 
