@@ -153,6 +153,14 @@ async function getWinsLeaderboard(limit = 5)
 	}));
 }
 
+async function deleteUser(userId) {
+	const res = await userModel.deleteUserById(userId);
+	if (!res || res.changes === 0)
+		throw new Error("User does not exit");
+	console.log("Controller log for delete : ",res);
+	return res;
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -163,5 +171,6 @@ module.exports = {
 	getRecentMatchesByUserId,
 	getUserStatsById,
 	getUserAchievementsById,
-	getWinsLeaderboard
+	getWinsLeaderboard,
+	deleteUser
 };

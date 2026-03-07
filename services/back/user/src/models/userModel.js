@@ -154,6 +154,11 @@ function findWinsLeaderboard(limit = 5) {
 	`).all(safeLimit);
 }
 
+function deleteUserById(userId) {
+	const stmt = db.prepare(`DELETE FROM users WHERE id = ?`).run(userId);
+	return (stmt);
+}
+
 module.exports = {
 	findAllUsers,
 	findUserById,
@@ -162,5 +167,6 @@ module.exports = {
 	findUser,
 	findRecentMatchesByUserId,
 	findUserStatsById,
-	findWinsLeaderboard
+	findWinsLeaderboard,
+	deleteUserById
 };

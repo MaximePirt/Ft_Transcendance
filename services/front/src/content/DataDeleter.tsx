@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
@@ -17,8 +19,46 @@ async function sendDeletionMail(id: number) {
     }
 }
 
+async function handleDeletion(id: number) {
+    const res = await fetch(`${API_BASE}/user/delete-user`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            userId: id,
+        }),
+    });
+
+    if (!res.ok) {
+        throw new Error("Erreur lors de la suppression du compte");
+    }
+}
+
 const DataDeleter = () => {
-    const [open, setOpen] = useState(false)
+    const [logoutError, setLogoutError] = useState('');
+    const [open, setOpen] = useState(false);
+    const navigate = useNavigate()
+    const { logout } = useAuth();
+
+
+    async function handleLogout() {
+        try {
+            const response = await fetch(`${API_BASE}/auth/logout`, {
+                method: "POST",
+                credentials: "include"
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                setLogoutError(data.error || "Something went wrong");
+                return;
+            } else
+                logout();
+        } catch (e) {
+            setLogoutError("Cannot connect to authentication server");
+            return;
+        }
+    }
 
     async function requestDeletion() {
         const res = await fetch(`${API_BASE}/auth/me`, {
@@ -27,7 +67,10 @@ const DataDeleter = () => {
         })
         
         const me_user = await res.json();
+        handleLogout();
+        navigate('/');
         sendDeletionMail(me_user.id);
+        handleDeletion(me_user.id);
         setOpen(false);
     }
 

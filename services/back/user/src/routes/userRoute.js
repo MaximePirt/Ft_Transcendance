@@ -245,8 +245,7 @@ async function userRoutes(fastify, options) {
 
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
-				to: "tristan.olivier.p@gmail.com",
-				//to: user.email,
+				to: user.email,
 				subject: subjectExport[lang],
 				html,
 				attachments: [
@@ -283,8 +282,7 @@ async function userRoutes(fastify, options) {
 
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
-				to: "tristan.olivier.p@gmail.com",
-				//to: user.email,
+				to: user.email,
 				subject: subjectDelete[lang],
 				html,
 			});
@@ -323,6 +321,20 @@ async function userRoutes(fastify, options) {
 		} catch (err) {
 			console.error(err);
 			return reply.code(500).send({ error: "MAIL_FAILED" });
+		}
+	});
+
+	fastify.delete("/delete-user", async (request, reply) => {
+		try {
+			const { userId } = request.body;
+			if (!userId)
+				return reply.code(400).send({ error: "BAD_REQUEST" });
+
+			await userController.deleteUser(userId);
+		}
+		catch (err) {
+			console.error(err);
+			return reply.code(500).send({ error: "USER_DELETE_FAILED" });
 		}
 	});
 }

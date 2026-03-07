@@ -1429,10 +1429,12 @@ function ProfilUser() {
 						</section>
 					)}
 				</div>
-				<label>
-				</label>
-				<DataRequester />
-				<DataDeleter />
+				{canEdit && (
+					<>
+						<DataRequester />
+						<DataDeleter />
+					</>
+				)}
 			</div>
 		</main>
 	)

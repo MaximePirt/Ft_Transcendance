@@ -59,7 +59,7 @@ export default async function authRoute(fastify, options) {
 	fastify.get("/me",
 		{ onRequest: [fastify.authenticate] },
 		async (req, reply) => {
-			const userId = req.user.payload.id;
+			const userId = req.user.id;
 			const r = await fetch(`${user_api_url}/${userId}`);
 			if (!r.ok) {
 				return reply.code(404).send({ error: "User not found" });
@@ -73,7 +73,7 @@ export default async function authRoute(fastify, options) {
 		{ onRequest: [fastify.authenticate] },
 		async (req, reply) => {
 			try {
-				const userId = req.user.payload.id;
+				const userId = req.user.id;
 				const offlineRes = await fetch(`${user_api_url}/${userId}`, {
 					method: "PATCH",
 					headers: {
@@ -198,7 +198,7 @@ export default async function authRoute(fastify, options) {
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: email,
 				//to: user.email,
-				subject: `Hello toto !`,
+				subject: `Hello back !`,
 				html,
 			})
 			return rep.send({ success: true })
