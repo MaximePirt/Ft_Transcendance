@@ -196,7 +196,7 @@ function ProfilUser() {
 	const navigate = useNavigate()
 	const { username: routeUsername } = useParams()
 	const { t, i18n } = useTranslation()
-	const { user, isAuthenticated, isAuthReady } = useAuth()
+	const { user, isAuthenticated, isAuthReady, updateUser } = useAuth()
 	const isPublicView = Boolean(routeUsername) && routeUsername !== user?.username
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
@@ -209,6 +209,9 @@ function ProfilUser() {
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
 	const [saveSuccess, setSaveSuccess] = useState(false)
+	const [usernameInput, setUsernameInput] = useState('')
+	const [usernameError, setUsernameError] = useState('')
+	const [usernameSuccess, setUsernameSuccess] = useState('')
 	const [avatarUrl, setAvatarUrl] = useState('')
 	const [selectedAvatarFileName, setSelectedAvatarFileName] = useState('')
 	const [avatarUploading, setAvatarUploading] = useState(false)
@@ -464,6 +467,7 @@ function ProfilUser() {
 				joinYear: new Date().getFullYear(),
 				favorites: ['cinema', 'music', 'computer_science'],
 			})
+			setUsernameInput(user.username)
 		}
 	}, [user, isPublicView])
 
@@ -625,9 +629,44 @@ function ProfilUser() {
 		setIsSaving(true)
 		setSaveError('')
 		setSaveSuccess(false)
+		setUsernameError('')
+		setUsernameSuccess('')
 		try {
-			const res = await saveProfileToServer()
-			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
+			const nextUsername = usernameInput.trim()
+			const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+			if (!usernameRegex.test(nextUsername)) {
+				setUsernameError(t('signup_error_username_format'))
+				return
+			}
+
+			const userResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(user.username)}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('save_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+
+			const response = await saveProfileToServer(id, nextUsername)
+			if (!response.ok) {
+				const payload = await response.json().catch(() => null)
+				const detail = payload?.error || payload?.message || '-'
+				if (response.status === 409) {
+					const conflictMessage = String(detail)
+					if (conflictMessage.toLowerCase().includes('username')) {
+						setUsernameError(conflictMessage)
+						return
+					}
+					throw new Error(conflictMessage)
+				}
+				throw new Error(t('save_error_api', { status: response.status, detail }))
+			}
+
+			if (nextUsername !== user.username) {
+				updateUser({ username: nextUsername })
+				setUserProfile((prev) => ({ ...prev, username: nextUsername }))
+				setUsernameSuccess(t('save_success'))
+			}
+
 			setSaveSuccess(true)
 		} catch (e) {
 			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
@@ -667,6 +706,7 @@ function ProfilUser() {
 			formData.append('file', file)
 			const uploadResponse = await fetch(`${API_BASE}/user/${id}/avatar`, {
 				method: 'PATCH',
+				credentials: 'include',
 				body: formData,
 			})
 			if (!uploadResponse.ok) {
@@ -704,6 +744,7 @@ function ProfilUser() {
 			const { id } = await userResponse.json()
 			const updateResponse = await fetch(`${API_BASE}/user/${id}`, {
 				method: 'PATCH',
+				credentials: 'include',
 				headers: {
 					'Content-Type': 'application/json',
 				},
@@ -724,25 +765,17 @@ function ProfilUser() {
 		}
 	}
 
-	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
-		if (!user) return { ok: false, error: t('save_error_not_authenticated') }
+	const saveProfileToServer = async (userId: number | string, usernameToSave: string): Promise<Response> => {
 		const langToSave = i18n.language
-		const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
-		if (!userResponse.ok) {
-			const text = await userResponse.text()
-			return {
-				ok: false,
-				error: t('save_error_user_id', { status: userResponse.status, detail: text || '-' }),
-			}
-		}
-		const { id } = await userResponse.json()
 
-		const response = await fetch(`${API_BASE}/user/${id}`, {
+		return fetch(`${API_BASE}/user/${userId}`, {
 			method: 'PATCH',
+			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
+				username: usernameToSave,
 				profileCardBgColor: bgColor,
 				profileCardStickers: JSON.stringify(stickers),
 				profileCardTitles: JSON.stringify(titles),
@@ -752,16 +785,6 @@ function ProfilUser() {
 				font: localStorage.getItem('font') || 'default',
 			})
 		})
-
-		if (!response.ok) {
-			const text = await response.text()
-			return {
-				ok: false,
-				error: t('save_error_api', { status: response.status, detail: text || '-' }),
-			}
-		}
-
-		return { ok: true }
 	}
 
 	type StickerPayload = { symbol: string; url?: string }
@@ -1148,6 +1171,24 @@ function ProfilUser() {
 					{canEdit && (
 						<section className="profile-card-controls">
 							<div className="panel-title">{t('profile_customize')}</div>
+							<div className="control-group">
+								<label className="control-label" htmlFor="profile-username-edit">
+									{t('username')}
+								</label>
+								<div className="control-row">
+									<input
+										id="profile-username-edit"
+										type="text"
+										value={usernameInput}
+										onChange={(e) => setUsernameInput(e.target.value)}
+										placeholder={t('username_placeholder')}
+										className="profile-desc-input"
+										disabled={isSaving}
+									/>
+								</div>
+								{usernameError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{usernameError}</p>}
+								{usernameSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{usernameSuccess}</p>}
+							</div>
 							<div className="control-group">
 								<label className="control-label" htmlFor="avatar-upload">
 									{t('profile_avatar_label')}

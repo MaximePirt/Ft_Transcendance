@@ -70,10 +70,12 @@ export default async function authRoute(fastify, options) {
 		async (req, reply) => {
 			try {
 				const userId = req.user.id;
+				const cookieHeader = req.headers.cookie;
 				const offlineRes = await fetch(`${user_api_url}/${userId}`, {
 					method: "PATCH",
 					headers: {
 						"Content-Type": "application/json",
+						...(cookieHeader ? { cookie: cookieHeader } : {}),
 					},
 					body: JSON.stringify({ onlineStatus: 0 }),
 				});

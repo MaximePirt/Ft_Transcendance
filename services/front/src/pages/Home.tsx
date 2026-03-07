@@ -54,6 +54,14 @@ function HomePage() {
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 	const [leaderboardError, setLeaderboardError] = useState(false)
 
+	const mapSignupError = (message?: string) => {
+		const normalized = String(message || '').toLowerCase()
+		if (normalized.includes('password != confirm password')) return t('signup_error_password_mismatch')
+		if (normalized.includes('username should count between 3 & 16')) return t('signup_error_username_format')
+		if (normalized.includes('password must be 12+ chars')) return t('signup_error_password_format')
+		return message || t('error_occurred')
+	}
+
 	useEffect(() => {
 		const warn = (e: BeforeUnloadEvent) => {
 			e.preventDefault()
@@ -226,7 +234,7 @@ function HomePage() {
 	const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setSignupError('')
-		const username_regex = /^[a-zA-Z0-9_]{3,}$/;
+		const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
 		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
@@ -243,14 +251,14 @@ function HomePage() {
 		setUserUsername(username);
 		// password !== username
 		if (password !== confirmPassword) {
-			setSignupError("Password != confirm password");
+			setSignupError(t('signup_error_password_mismatch'));
 			return
 		} else if (!username_regex.test(username)) {
 			console.log("coucou");
-			setSignupError('Username should count between 3 & 16 characters and contains not any special characters');
+			setSignupError(t('signup_error_username_format'));
 			return
 		} else if (!password_regex.test(password)) {
-			setSignupError('Password must be 12+ chars, include an uppercase, a number, and a special character.');
+			setSignupError(t('signup_error_password_format'));
 			return
 		}
 
@@ -271,7 +279,7 @@ function HomePage() {
 			const data = await response.json();
 
 			if (!response.ok) {
-				setSignupError(data.error);
+				setSignupError(mapSignupError(data.error));
 				console.log("data error: ", data.error);
 				return
 			} else {

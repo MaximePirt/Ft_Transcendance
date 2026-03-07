@@ -12,6 +12,7 @@ interface AuthContextType {
 	login: (email: string, password: string) => Promise<boolean>
 	signup: (email: string, username: string, password: string) => Promise<boolean>
 	logout: () => void
+	updateUser: (patch: Partial<User>) => void
 	isAuthenticated: boolean
 	isAuthReady: boolean
 }
@@ -231,8 +232,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		applyFont('default')
 	}
 
+	const updateUser = (patch: Partial<User>) => {
+		setUser((currentUser) => {
+			if (!currentUser) return currentUser
+			const nextUser = { ...currentUser, ...patch }
+			localStorage.setItem('user', JSON.stringify(nextUser))
+			return nextUser
+		})
+	}
+
 	return (
-		<AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, isAuthReady }}>
+		<AuthContext.Provider value={{ user, login, signup, logout, updateUser, isAuthenticated: !!user, isAuthReady }}>
 			{children}
 		</AuthContext.Provider>
 	)
