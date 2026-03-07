@@ -115,6 +115,8 @@ function HomePage() {
 				const data = await response.json();
 				setLoginError(data.error || "Something went wrong");
 			} else {
+				const signinData = await response.json().catch(() => null);
+				const signedUsername = signinData?.user?.username || '';
 				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
 					method: "POST",
 					credentials: 'include',
@@ -125,9 +127,10 @@ function HomePage() {
 				});
 
 				setUserEmail(email);
+				setUserUsername(signedUsername);
 				let data;
 				if (authMail.ok) {
-					if (await login(email, userUsername)) {
+					if (await login(email, signedUsername)) {
 						setShowLogin(false);
 						setCodeError('');
 						setShow2fa(true);
@@ -309,7 +312,7 @@ function HomePage() {
 	}
 	return (
 		<main className="page">
-			<LanguageSelector />
+			{!isAuthenticated && <LanguageSelector />}
 			<div className="login-bar">
 				{isAuthenticated ? (
 					<>
@@ -397,7 +400,7 @@ function HomePage() {
 				</aside>
 			</div>
 
-			<LanguageSelector />
+			{!isAuthenticated && <LanguageSelector />}
 			<div className="login-bar">
 				{isAuthenticated ? (
 					<>

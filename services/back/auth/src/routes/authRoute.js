@@ -148,17 +148,22 @@ export default async function authRoute(fastify, options) {
 			console.log("user: ", request.body);
 			const email = await request.body.email;
 			const password = await request.body.password;
-			const reqId = await loginUser(email, password);
-			const username = await getUsername(email);
+			const reqUser = await loginUser(email, password);
+			const resolvedUserId = Number(reqUser?.id);
+			const username = reqUser?.username || await getUsername(email);
 			const user = Object.create(User);
 			const codeFound = usersCode.find((e) => e.email === email);
+
+			if (!Number.isInteger(resolvedUserId) || resolvedUserId <= 0) {
+				return reply.code(500).send({ success: false, error: 'Invalid user id' });
+			}
 
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
 
 			user.email = await request.body.email;
 			user.username = username;
-			user.id = reqId;
+			user.id = resolvedUserId;
 			user.token = JWTgenerator(fastify, user);
 			reply.setCookie("token", user.token, {
 				httpOnly: true,
@@ -166,10 +171,18 @@ export default async function authRoute(fastify, options) {
 				secure: true,
 				path: "/",
 			});
+			return reply.code(200).send({
+				ok: true,
+				user: {
+					id: user.id,
+					username: user.username,
+					email: user.email,
+				},
+			});
 		} catch (e) {
 			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
-			return reply.code(errorInfo.code).send({
+			return reply.code(errorInfo.status).send({
 				success: false,
 				error: errorInfo.message
 			});
