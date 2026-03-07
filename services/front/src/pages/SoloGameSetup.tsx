@@ -37,8 +37,6 @@ function SoloGameSetup() {
   const [questionCount, setQuestionCount] = useState<number>(2);
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
-  localStorage.removeItem("sessionId")
-  localStorage.removeItem("questionCount")
   localStorage.removeItem(STORAGE_KEY);
 
 
@@ -90,36 +88,44 @@ function SoloGameSetup() {
   };
 
   const handleStartGame = async () => {
-    console.log("Theme List : ", themeList);
-    console.log("powerUps List : ", powerUps(t));
-    console.log("Selected Power-ups:", Array.from(selectedPowerUps));
     if (selectedThemes.size > 0) {
       let topic = Array.from(selectedThemes).filter((theme) => theme !== 'All');
       if (topic.includes('all')) {
         topic = [];
       }
-      console.log("Selected themes for API:", topic);
+
+      const payload = {
+        mode: "random",
+        topic,
+        question_count: questionCount,
+        is_solo: 1,
+        power_ups: Array.from(selectedPowerUps),
+      };
+
+      console.log("PAYLOAD SENT:", payload);
+
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mode: "random",
-          topic: topic,
-          question_count: questionCount,
-          is_solo: 1,
-          power_ups: Array.from(selectedPowerUps),
-        }),
+        body: JSON.stringify(payload),
       });
+
       const data = await session.json();
-      console.log("API RESPONSE:", data);
       // if (!session.ok) {
       //   throw new Error("Session couldn't start");
       // }
       console.log("stocking : Session ID:", data.sessionId);
+
       localStorage.setItem("sessionId", String(data.sessionId));
       localStorage.setItem("questionCount", String(questionCount));
-      navigate('/quiz/solo', { state: { themes: Array.from(selectedThemes) } });
+
+      navigate('/quiz/solo', { state: {
+        sessionId: data.sessionId,
+        questionCount,
+        themes: Array.from(selectedThemes),
+        powerups: Array.from(selectedPowerUps),
+      }, });
     }
   }
 

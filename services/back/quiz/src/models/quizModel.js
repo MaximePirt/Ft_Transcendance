@@ -192,7 +192,7 @@ function findUserInSession(sessionId, userId)
 {
 	console.log("Model: Checking if user ID:", userId, "is in game session ID:", sessionId);
 	const player = db.prepare(`
-		SELECT u.id, u.lang,
+		SELECT u.id, u.lang, u.username,
 			gp.score, gp.answered_count, gp.correct_answers, gp.is_active
 		FROM users u
 		JOIN game_players gp ON gp.user_id = u.id

@@ -17,7 +17,7 @@ const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
 
 async function createGameSession(sessionData, hostId) {
 	const { mode, topic = null,
-			question_count, max_players = 4, power_ups, is_solo } = sessionData;
+			question_count, max_players = 4, power_ups = [], is_solo } = sessionData;
 
 	const powerupsJson = power_ups && Array.isArray(power_ups) ? JSON.stringify(power_ups) : null;
 
@@ -231,8 +231,7 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 }
 
 async function grantPowerupsForQuestion(session, questionOrder) {
-    console.log("==========================================\n\n");
-    const sessionId = session.id;
+    const sessionId = Number(session.id);
     const enabledPowerups = JSON.parse(session.power_ups || '[]');
     if (enabledPowerups.length === 0)
     {
@@ -261,7 +260,6 @@ async function grantPowerupsForQuestion(session, questionOrder) {
         wsHub.broadcast(sessionId, {type: 'powerups_granted', 
             payload: { sessionId, questionOrder, powerups: grantedPowerups }});
     }
-    console.log("==========================================\n\n");
 }
 
 
@@ -380,7 +378,7 @@ async function leaveGameSession(sessionId, userId)
 		return ;
 	console.log("User ID", userId, "is leaving game session ID:", sessionId);
 	quizModel.setPlayerActive(sessionId, userId, false);
-	wsHub.broadcast(sessionId, { type: 'player_left', payload: { sessionId, userId } });
+	wsHub.broadcast(session.id, { type: 'player_left', payload: { userId, player_name: player.username } });
 	if (session.host_id === userId)
 	{
 		const nextHost = quizModel.getNextActivePlayer(sessionId, userId);
@@ -408,6 +406,7 @@ async function leaveGameSession(sessionId, userId)
 			const { status, new_order } = quizModel.advanceSession(sessionId);
 			if (status === 'in_progress')
 			{
+				wsHub.broadcast(sessionId, { type: 'next_question', payload: { sessionId } });
 				sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
 				const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
 				wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
@@ -433,6 +432,7 @@ async function getNextQuestion(userId, sessionId)
 		wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
 		if (status === 'in_progress')
 		{
+			wsHub.broadcast(sessionId, { type: 'next_question', payload: { sessionId } });
 			sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
 			const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
 			wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});

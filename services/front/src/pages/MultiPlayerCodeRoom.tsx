@@ -17,7 +17,7 @@ function MultiPlayerCodeRoom() {
 	const { roomCode } = useParams()
 	const [code, setCode] = useState<string>('')
 	const [isHost, setIsHost] = useState(false)
-
+	const [ws, setWs] = useState<WebSocket | null>(null)
 	const [players, setPlayers] = useState<Player[]>([])
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -112,6 +112,50 @@ async function handleLeaveRoom() {
 	navigate('/quiz')
 }
 
+useEffect(() => {
+	const sessionIdStr = localStorage.getItem("sessionId")
+	const sessionId = sessionIdStr ? Number(sessionIdStr) : null
+	if (!sessionId) return
+	const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+	const socket = new WebSocket(
+		`${proto}//${window.location.host}/ws/quiz/game-sessions/${sessionId}`
+	);
+	socket.onopen = () => {
+		console.log("WebSocket connected")
+	}
+
+	socket.onmessage = async (event) => {
+		const msg = JSON.parse(event.data)
+		if (msg.type === "player_joined") {
+			const newPlayer = {
+				name: msg.payload.player_name,
+				joined_at: new Date().toISOString(),
+			}
+			setPlayers((prev) => [...prev, newPlayer])
+			console.log(`Player joined: ${newPlayer.name}`)
+		}
+		else if (msg.type === "player_left") {
+			const newPlayer = {
+				name: msg.payload.player_name,
+				joined_at: new Date().toISOString(),
+			}
+			setPlayers((prev) => prev.filter((p) => p.name !== newPlayer.name))
+			console.log(`Player left: ${newPlayer.name}`)
+		}
+		else if (msg.type === "game_started") {
+			console.log("Session started, navigating to game")
+			navigate('/quiz/solo', { state: { sessionId, isHost } })
+		}
+	}
+
+	socket.onerror = (err) => {
+		console.error("WebSocket error", err)
+	}
+
+	setWs(socket)
+	return () => socket.close()
+}, [])
+
 
 useEffect(() => {
 	; (async () => {
@@ -167,6 +211,8 @@ useEffect(() => {
 		if (session.host_id === user?.id) {
 			setIsHost(true)
 		}
+		localStorage.setItem("sessionId", session.id.toString());
+		localStorage.setItem("questionCount", session.question_count.toString());
 		setPlayers(session.players.map((p: any) => ({ name: p.username, joined_at: p.joined_at })))
 	}
 	catch(err)

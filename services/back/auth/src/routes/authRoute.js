@@ -22,10 +22,6 @@ if (!user_api_url) {
 	process.exit(1);
 }
 
-function Payload(username, id) {
-	this.username = username;
-	this.id = id;
-}
 
 function JWTgenerator(fastify, user) {
 	return fastify.jwt.sign({
@@ -59,8 +55,8 @@ export default async function authRoute(fastify, options) {
 	fastify.get("/me",
 		{ onRequest: [fastify.authenticate] },
 		async (req, reply) => {
-			const userId = req.user.payload.id;
-			const r = await fetch(`${user_api_url}/${userId}`);
+			const userId = req.user.id;
+			const r = await fetch(`${user_api_url}/users/${userId}`);
 			if (!r.ok) {
 				return reply.code(404).send({ error: "User not found" });
 			}
@@ -73,7 +69,7 @@ export default async function authRoute(fastify, options) {
 		{ onRequest: [fastify.authenticate] },
 		async (req, reply) => {
 			try {
-				const userId = req.user.payload.id;
+				const userId = req.user.id;
 				const offlineRes = await fetch(`${user_api_url}/${userId}`, {
 					method: "PATCH",
 					headers: {
