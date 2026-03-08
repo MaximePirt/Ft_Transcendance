@@ -153,6 +153,22 @@ async function getWinsLeaderboard(limit = 5)
 	}));
 }
 
+async function deleteUser(userId) {
+	const res = await userModel.deleteUserById(userId);
+	if (!res || res.changes === 0)
+		throw new Error("User does not exist");
+	console.log("Controller log for delete : ",res);
+	return res;
+}
+
+async function isUserInAGame(userId) {
+	const user = await userModel.findUserInAGame(userId);
+	if (!user) {
+		return false;
+	}
+	return true;
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -163,5 +179,7 @@ module.exports = {
 	getRecentMatchesByUserId,
 	getUserStatsById,
 	getUserAchievementsById,
-	getWinsLeaderboard
+	getWinsLeaderboard,
+	deleteUser,
+	isUserInAGame
 };
