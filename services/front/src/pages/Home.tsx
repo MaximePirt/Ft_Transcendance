@@ -55,14 +55,6 @@ function HomePage() {
 	const [leaderboardError, setLeaderboardError] = useState(false)
 
 	useEffect(() => {
-		const warn = (e: BeforeUnloadEvent) => {
-			e.preventDefault()
-			handleLogout();
-		}
-		window.addEventListener('beforeunload', warn)
-		return () => window.removeEventListener('beforeunload', warn)
-	}, [])
-	useEffect(() => {
 		const abortController = new AbortController()
 
 		const loadLeaderboard = async () => {
@@ -110,35 +102,16 @@ function HomePage() {
 					email: email,
 					password: password
 				})
-			})
+			});
 			if (!response.ok) {
 				const data = await response.json();
 				setLoginError(data.error || "Something went wrong");
 			} else {
-				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
-					method: "POST",
-					credentials: 'include',
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						email: email,
-					})
-				});
-
 				setUserEmail(email);
-				let data;
-				if (authMail.ok) {
-					if (await login(email, userUsername)) {
-						setShowLogin(false);
-						setCodeError('');
-						setShow2fa(true);
-					} else {
-						data = await authMail.json();
-						setLoginError(data.error || "Something went wrong");
-
-					}
-				} else {
-					data = await authMail.json();
-					setLoginError(data.error || "Something went wrong");
+				if (await login(email, userUsername)) {
+					setShowLogin(false);
+					setCodeError('');
+					setShow2fa(true);
 				}
 			}
 		} catch (e) {
@@ -149,14 +122,12 @@ function HomePage() {
 
 	const handleAuthCode = async () => {
 		try {
-			if (!code)
-				alert('enter auth code please');
-			console.log("code: ", code, "username: ", userUsername, "email: ", userEmail);
 			const send = await fetch(`${API_BASE}/auth/verify-2fa`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
 				},
+				credentials: 'include',
 				body: JSON.stringify({
 					code: code,
 					email: userEmail,
@@ -164,16 +135,13 @@ function HomePage() {
 				})
 			});
 
-			const data = await send.json();
-
 			if (send.ok) {
 				setUserUsername('');
 				setUserEmail('');
-				console.log("ok")
 				setShow2fa(false);
 			} else {
-				console.error("error")
-				setCodeError("Something went wrong");
+				const err = await send.json();
+				setCodeError(err);
 			}
 		} catch (e) {
 			setCodeError("Cannot connect to authentication server");
@@ -223,6 +191,7 @@ function HomePage() {
 	const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setSignupError('')
+		const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		const username_regex = /^[a-zA-Z0-9_]{3,}$/;
 		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
 		const form = e.currentTarget
@@ -242,8 +211,10 @@ function HomePage() {
 		if (password !== confirmPassword) {
 			setSignupError("Password != confirm password");
 			return
+		} else if (!email_regex.test(email)) {
+			setSignupError("Bad email format");
+			return
 		} else if (!username_regex.test(username)) {
-			console.log("coucou");
 			setSignupError('Username should count between 3 & 16 characters and contains not any special characters');
 			return
 		} else if (!password_regex.test(password)) {
@@ -274,32 +245,14 @@ function HomePage() {
 			} else {
 				const success = await signup(email, username, password)
 				if (success) {
-					const authMail = await fetch(`${API_BASE}/auth/signup/mail`, {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json"
-						},
-						credentials: 'include',
-						body: JSON.stringify({
-							email: newUser.email,
-							username: newUser.username
-						})
-					});
-
-					const data = await authMail.json();
-
-					if (authMail.ok) {
-						if (await login(email, username)) {
-							setUserUsername(username);
-							setUserEmail(email);
-							setCodeError('');
-							setShowSignup(false);
-							setShow2fa(true);
-						} else
-							setSignupError(data.error || "Something went wrong");
-					} else {
+					if (await login(email, username)) {
+						setUserUsername(username);
+						setUserEmail(email);
+						setCodeError('');
+						setShowSignup(false);
+						setShow2fa(true);
+					} else
 						setSignupError(data.error || "Something went wrong");
-					}
 				}
 			}
 		} catch (e) {

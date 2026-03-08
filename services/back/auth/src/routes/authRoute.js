@@ -1,4 +1,4 @@
-import { signupUser, loginUser, getUsername, codeVerification } from '../controllers/authController.js'
+import { signupUser, loginUser, getUsername, codeVerification, getUserId } from '../controllers/authController.js'
 import { createZohoTransporter } from '../services/authServices.js'
 import React from "react";
 import { render } from "@react-email/render";
@@ -10,18 +10,17 @@ import bcrypt from 'bcryptjs';
 const ERROR_CODES = {
 	MISSING_FIELDS: { status: 400, message: 'Email and password are required' },
 	PASSWORD_TOO_SHORT: { status: 400, message: 'Password must be at least 12 characters' },
-	EMAIL_EXISTS: { status: 409, message: 'Email already exists' },
+	EMAIL_EXISTS: { status: 409, message: 'Email or username already exists' },
 	INVALID_CREDENTIALS: { status: 401, message: 'Invalid email or password' },
 	DATABASE_ERROR: { status: 500, message: 'Internal server error' },
 	DEFAULT: { status: 500, message: 'An unexpected error occurred' }
 }
 
-const user_api_url = process.env.USER_API_URL || false;
+const user_api_url = process.env.AUTH_API_URL || false;
 if (!user_api_url) {
-	console.error("USER_API_URL environment variable is not set.");
+	console.error("AUTH_API_URL environment variable is not set.");
 	process.exit(1);
 }
-
 
 function JWTgenerator(fastify, user) {
 	return fastify.jwt.sign({
@@ -29,7 +28,6 @@ function JWTgenerator(fastify, user) {
 		id: user.id
 	});
 }
-
 
 function User(username, email, password, token) {
 	this.username = username;
@@ -105,6 +103,7 @@ export default async function authRoute(fastify, options) {
 	let usersCode = [];
 	fastify.post('/signup', async function (request, reply) {
 		try {
+			const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 			const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
 			const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
 			const email = await request.body.email;
@@ -116,27 +115,24 @@ export default async function authRoute(fastify, options) {
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
 
-			console.log("username: ", username, " email: ", email, " password: ", hashPass);
 			if (!password_regex.test(password))
 				return reply.code(401).send({ success: false, error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
 			else if (!username_regex.test(username))
 				return reply.code(401).send({ success: false, error: 'Username should count between 3 & 16 characters and contains not any special characters' });
+			else if (!email_regex.test(email))
+				return reply.code(401).send({ success: false, error: 'Bad email format' });
 			const resId = await signupUser(email, username, hashPass);
 			const user = Object.create(User);
 			user.username = await request.body.username;
 			user.id = resId;
 			user.token = JWTgenerator(fastify, user);
-			reply.setCookie("token", user.token, {
-				httpOnly: true,
-				signed: false,
-				secure: true,
-				path: "/",
-			});
+			signUpMail(email, username);
 			return reply.code(200).send({ ok: true, message: "Signup successful" });
 		} catch (e) {
-			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+			console.error(e.message);
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
 
-			return rep.code(errorInfo.status).send({
+			return reply.code(errorInfo.status).send({
 				success: false,
 				error: errorInfo.message
 			})
@@ -145,7 +141,6 @@ export default async function authRoute(fastify, options) {
 
 	fastify.post("/signin", async function (request, reply) {
 		try {
-			console.log("user: ", request.body);
 			const email = await request.body.email;
 			const password = await request.body.password;
 			const reqId = await loginUser(email, password);
@@ -160,28 +155,22 @@ export default async function authRoute(fastify, options) {
 			user.username = username;
 			user.id = reqId;
 			user.token = JWTgenerator(fastify, user);
-			reply.setCookie("token", user.token, {
-				httpOnly: true,
-				signed: false,
-				secure: true,
-				path: "/",
-			});
+			signInMail(email, username);
+			return reply.code(200).send({ success: true });
 		} catch (e) {
 			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
-			return reply.code(errorInfo.code).send({
+			return reply.code(errorInfo.status).send({
 				success: false,
 				error: errorInfo.message
 			});
 		}
 	});
 
-	fastify.post("/signin/mail", async function (req, rep) {
+	async function signInMail(email, username) {
 		try {
 			const FIFTEEN_MIN = 15 * 60 * 1000;
 			const transporter = createZohoTransporter();
-			const email = await req.body.email;
-			const user = await getUserByEmail(email);
 			const codeValue = Math.floor(100000 + Math.random() * 900000);
 
 			usersCode.push({
@@ -189,34 +178,24 @@ export default async function authRoute(fastify, options) {
 				code: codeValue.toString(),
 				expireAt: Date.now() + FIFTEEN_MIN
 			});
-			const html = await render(React.createElement(SigninEmail, { username: user.username, code: codeValue }));
+			const html = await render(React.createElement(SigninEmail, { username: username, code: codeValue }));
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: email,
 				//to: user.email,
-				subject: `Hello toto !`,
+				subject: `Hello ${username} !`,
 				html,
 			})
-			return rep.send({ success: true })
 		} catch (e) {
-			console.error('signin/email error: ', e.message);
-			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
-
-			return rep.code(errorInfo.status).send({
-				success: false,
-				error: errorInfo.message
-			})
+			throw new Error("DEFAULT");
 		}
-	});
+	}
 
-	fastify.post("/signup/mail", async (request, reply) => {
+	async function signUpMail(email, username) {
 		try {
 			const FIFTEEN_MIN = 15 * 60 * 1000;
 			const codeValue = Math.floor(100000 + Math.random() * 900000);
-			const username = await request.body.username;
-			const email = await request.body.email;
 
-			console.log("body user: ", await request.body)
 			usersCode.push({
 				email: email,
 				code: codeValue.toString(),
@@ -232,18 +211,10 @@ export default async function authRoute(fastify, options) {
 				subject: `Welcome, ${username} !`,
 				html,
 			});
-
-			return reply.send({ success: true });
 		} catch (err) {
-			console.error("ERROR ", err);
-			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
-
-			return rep.code(errorInfo.status).send({
-				success: false,
-				error: errorInfo.message
-			})
+			throw new Error("DEFAULT");
 		}
-	});
+	}
 
 	fastify.post("/send", async (req, rep) => {
 		try {
@@ -287,23 +258,35 @@ export default async function authRoute(fastify, options) {
 		const code = await req.body.code;
 		const username = await req.body.username;
 		const email = await req.body.email;
+		const userId = await getUserId(email);
 		const codeFound = usersCode.find((e) => e.email === email);
+		const user = Object.create(User);
 
-		console.log("email: ", email);
-		console.log("code: ", code);
-		console.log("code found: ", codeFound.code);
+		console.log(req.body);
 		if (Date.now() > codeFound.expireAt) {
 			console.error("error: code expired");
 			usersCode = usersCode.filter((user) => user.email !== email);
-			return rep.code({
-				error: "The code has expired. Please request a new one."
+			return rep.code(401).send({
+				error: "The code has expired. Please request a new one.",
+				success: false
 			});
+		} else {
+			user.email = email;
+			user.username = username;
+			user.id = userId;
+			user.token = JWTgenerator(fastify, user);
 		}
 
 		if (codeFound && codeFound.code === code.toString()) {
 			console.log("OK: valid authentication code");
 			usersCode = usersCode.filter((user) => user.email !== email);
-			return rep.send({ success: true });
+			rep.setCookie("token", user.token, {
+				httpOnly: true,
+				signed: false,
+				secure: true,
+				path: "/",
+			});
+			return rep.code(200).send({ success: true });
 		} else {
 			console.log("error: bad code")
 			return rep.code(401).send({ success: false, error: "invalid 6-digits code" });

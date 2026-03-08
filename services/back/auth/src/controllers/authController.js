@@ -1,19 +1,11 @@
-import { addNewUser, getUserName, getUserId, getUserModelEmail } from '../models/authModel.js'
-
-function User(username, email, password, token) {
-	this.username = username;
-	this.email = email;
-	this.password = password;
-	this.token = token;
-	this.id = 0;
-}
+import { addNewUser, getUserName, getModelUserId, getUserModelEmail } from '../models/authModel.js'
 
 async function signupUser(email, username, password) {
 	const response = addNewUser(username, email, password);
-	if (response === "MISSING_FIELDS") {
-		throw new Error("MISSING_FIELDS");
-	} else if (response === "INVALID_CREDENTIALS") {
-		throw new Error("INVALID_CREDENTIALS");
+	if (response === "EMAIL_EXISTS") {
+		throw new Error("EMAIL_EXISTS");
+	} else if (response === "DEFAULT") {
+		throw new Error("DEFAULT");
 	}
 	return response;
 }
@@ -37,9 +29,15 @@ async function getUserByEmail(email) {
 	}
 }
 
+async function getUserId(email) {
+	const resp = getModelUserId(email);
+	if (resp === "DEFAULT")
+		throw new Error("DEFAULT");
+}
+
 async function getUsername(email) {
 	const username = getUserName(email);
-	if (!username)
+	if (username === "INVALID_CREDENTIALS")
 		throw new Error("INVALID_CREDENTIALS");
 	return username;
 }
@@ -57,5 +55,6 @@ export {
 	loginUser,
 	getUsername,
 	codeVerification,
-	getUserByEmail
+	getUserByEmail,
+	getUserId
 };
