@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import '../App.css'
 
@@ -50,12 +50,22 @@ interface AnswerResult {
 		total_answered: number
 }
 
+interface GameState {
+  sessionId: number
+  questionCount: number
+  themes: string[]
+  powerups: string[] | null
+}
+
 const STORAGE_KEY = 'soloGameState:v1'
 const MAX_SLOTS = 2
 
 function SoloGamePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
+  const routeState = location.state as GameState | null;
+
   const [question, setQuestion] = useState<Question>()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -100,10 +110,8 @@ function SoloGamePage() {
       try {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-        if (!sessionId) {
-          //console.log('Invalid session ID in localStorage:', sessionIdStr)
+        if (!sessionId)
           throw new Error('Invalid session ID')
-        }
         const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
           signal: abortController.signal,
         })
@@ -131,7 +139,8 @@ function SoloGamePage() {
     useEffect(() => {
     const sessionIdStr = localStorage.getItem("sessionId")
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null
-    if (!sessionId) return
+    if (!sessionId)
+      return
     const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
     const socket = new WebSocket(
       `${proto}//${window.location.host}/ws/quiz/game-sessions/${sessionId}`
@@ -140,9 +149,8 @@ function SoloGamePage() {
       console.log("WebSocket connected")
     }
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       const msg = JSON.parse(event.data)
-      console.log(msg);
 
       if (msg.type === "powerups_granted") {
         const newTypes = msg.payload.powerups.map((p: any) => p.powerup_type)
@@ -180,8 +188,6 @@ function SoloGamePage() {
         }
         if (usedType === "fifty") {
           setRemovedOptions(msg.payload.removed_options);
-          console.log("his options :", msg.payload.removed_options);
-          
         }
         if (usedType === "skip") {
           if (msg.payload.correct_answer.type === "text") {
@@ -196,6 +202,61 @@ function SoloGamePage() {
           setShowAnswer(true)
         }
       }
+      else if (msg.type === "next_question") {
+        const question_count_str = await localStorage.getItem("questionCount");
+        if (!question_count_str) {
+          throw new Error('No question count found in localStorage')
+        }
+        let question_count = Number(question_count_str) || 0;
+        const isLastQuestion = currentQuestionIndex === question_count - 1
+
+        if (isLastQuestion) {
+          console.log("Quiz terminé, score final:", score)
+          localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem("questionCount")
+          navigate("/quiz/end", { state: { score, total: question_count, mode: "solo" } })
+          return
+        }
+
+        setCurrentQuestionIndex(prev => {
+          const next = prev + 1
+          return next
+        })
+        setUserAnswer('')
+        setSelectedOption(null)
+        setShowAnswer(false)
+        setIsCorrect(false)
+        setHint(null)
+        setRemovedOptions([])
+        try {
+            const sessionIdStr = await localStorage.getItem("sessionId");
+            const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+            if (!sessionId)
+              throw new Error('Invalid session ID')
+            const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
+            })
+            if (!response.ok) {
+              throw new Error('Failed to fetch question')
+            }
+
+            const { question } = await response.json()
+            const data: Question = question
+            setLoading(false)
+            setQuestion(data)
+          }
+          catch (err) {
+              if (err instanceof Error && err.name === 'AbortError') return
+              setError(err instanceof Error ? err.message : t('error_occurred'))
+              setLoading(false)
+          }
+        }
+        else if (msg.type === "session_completed" || msg.type === "session_ended") {
+
+          console.log("Quiz terminé, score final:", score)
+          localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem("questionCount")
+          navigate("/quiz/end", { state: { score, total: msg.payload.question_count, mode: "solo" } })
+        }
     }
 
     socket.onerror = (err) => {
@@ -224,6 +285,27 @@ function SoloGamePage() {
     }
   }, [question, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
 
+  useEffect(() => {
+  if (!routeState) return;
+
+  const initialGameState = {
+    sessionId: routeState.sessionId,
+    questionCount: routeState.questionCount,
+    themes: routeState.themes,
+    powerups: routeState.powerups,
+    questions: null,
+    currentQuestionIndex: 0,
+    userAnswers: "",
+    selectedOptions: null,
+    scores: 0,
+    mode: "solo",
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(initialGameState));
+}, [routeState]);
+
+
+
   // REPONSE CHECK
   const handleValidateAnswer = async () => {
     let playerAnswer: string | number = 0
@@ -243,11 +325,9 @@ function SoloGamePage() {
     try {
       const sessionIdStr = await localStorage.getItem("sessionId");
       const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-      //console.log("Session ID from localStorage:", sessionId);
-      if (!sessionId) {
-        //console.log('Invalid session ID in localStorage:', sessionIdStr)
+      console.log("Session ID from localStorage:", sessionIdStr);
+      if (!sessionId)
         throw new Error('Invalid session ID')
-      }
       const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/answer`, {
         method: 'POST',
         credentials: 'include',
@@ -289,11 +369,8 @@ function SoloGamePage() {
 
     const sessionIdStr = await localStorage.getItem("sessionId");
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-    //console.log("Session ID from localStorage:", sessionId);
-    if (!sessionId) {
-      //console.log('Invalid session ID in localStorage:', sessionIdStr)
+    if (!sessionId)
       throw new Error('Invalid session ID')
-    }
     const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
       method: 'GET',
       credentials: 'include',
@@ -305,13 +382,10 @@ function SoloGamePage() {
     }
     const question_count_str = await localStorage.getItem("questionCount");
     if (!question_count_str) {
-      //console.log('No question count found in localStorage')
       throw new Error('No question count found in localStorage')
     }
     let question_count = Number(question_count_str) || 0;
-    //console.log("Question count from localStorage:", question_count);
     const isLastQuestion = currentQuestionIndex === question_count - 1
-    //console.log(`Current question index: ${currentQuestionIndex}, Question count: ${question_count}, Is last question: ${isLastQuestion}`)
 
     if (isLastQuestion) {
       console.log("Quiz terminé, score final:", score)
@@ -331,11 +405,8 @@ function SoloGamePage() {
     try {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-        //console.log("Session ID from localStorage:", sessionId);
-        if (!sessionId) {
-          //console.log('Invalid session ID in localStorage:', sessionIdStr)
+        if (!sessionId)
           throw new Error('Invalid session ID')
-        }
         const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
           signal: abortController.signal,
         })

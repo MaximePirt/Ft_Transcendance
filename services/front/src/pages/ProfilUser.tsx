@@ -698,6 +698,7 @@ function ProfilUser() {
 			}
 		}
 		const { id } = await userResponse.json()
+		console.log("Saving profile with data:", { bgColor, stickers, titles, description, langToSave })
 
 		const response = await fetch(`${API_BASE}/user/${id}`, {
 			method: 'PATCH',
@@ -709,7 +710,7 @@ function ProfilUser() {
 				profileCardStickers: JSON.stringify(stickers),
 				profileCardTitles: JSON.stringify(titles),
 				profileCardDescription: description,
-				preferredLanguage: langToSave,
+				lang: langToSave,
 				theme: localStorage.getItem('theme') || 'default',
 				font: localStorage.getItem('font') || 'default',
 			})

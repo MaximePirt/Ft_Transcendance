@@ -1,12 +1,14 @@
 const rooms = new Map();
 
 function add(sessionId, socket) {
+	sessionId = Number(sessionId);
 	if (!rooms.has(sessionId))
 		rooms.set(sessionId, new Set());
 	rooms.get(sessionId).add(socket);
 }
 
 function remove(sessionId, socket) {
+	sessionId = Number(sessionId);
 	const set = rooms.get(sessionId);
 	if (!set)
 		return;
@@ -16,6 +18,7 @@ function remove(sessionId, socket) {
 }
 
 function broadcast(sessionId, event) {
+	sessionId = Number(sessionId);
 	const set = rooms.get(sessionId);
 	if (!set)
 		return;

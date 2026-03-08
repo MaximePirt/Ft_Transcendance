@@ -38,6 +38,254 @@
                     ],
                     "difficulté": "medium"
                 }
+            ],
+            "Sports": [
+                {
+                    "id": "sports.fifa2018.winner",
+                    "question": "Which country won the 2018 FIFA World Cup?",
+                    "type": "qcm",
+                    "réponse": "France",
+                    "options": [
+                        "Brésil",
+                        "Allemagne",
+                        "France",
+                        "Argentine"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "sports.olympics.100m_record",
+                    "question": "Who holds the world record for the 100 meters?",
+                    "type": "texte",
+                    "réponse": "Usain Bolt",
+                    "variantes": [
+                        "Bolt",
+                        "Usain",
+                        "Usain St. Leo Bolt"
+                    ],
+                    "difficulté": "easy"
+                }
+            ],
+            "Cinéma": [
+                {
+                    "id": "cinema.titanic.lead_actor",
+                    "question": "Who is the lead actor in the movie 'Titanic'?",
+                    "type": "qcm",
+                    "réponse": "Leonardo DiCaprio",
+                    "options": [
+                        "Brad Pitt",
+                        "Johnny Depp",
+                        "Leonardo DiCaprio",
+                        "Tom Cruise"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "cinema.lalaland.director",
+                    "question": "Who is the director of the movie 'La La Land'?",
+                    "type": "qcm",
+                    "réponse": "Damien Chazelle",
+                    "options": [
+                        "Steven Spielberg",
+                        "Christopher Nolan",
+                        "Damien Chazelle",
+                        "Quentin Tarantino"
+                    ],
+                    "difficulté": "medium"
+                },
+                {
+                    "id": "cinema.matrix.lead_actor",
+                    "question": "In which 1999 science fiction film does Keanu Reeves play a computer hacker named Neo?",
+                    "type": "qcm",
+                    "réponse": "The Matrix",
+                    "options": [
+                        "Inception",
+                        "The Matrix",
+                        "Blade Runner",
+                        "Minority Report"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "cinema.oscar.best_animated_film_2020",
+                    "question": "Which film won the Oscar for Best Animated Feature in 2020?",
+                    "type": "qcm",
+                    "réponse": "Toy Story 4",
+                    "options": [
+                        "Frozen II",
+                        "How to Train Your Dragon: The Hidden World",
+                        "Toy Story 4",
+                        "Klaus"
+                    ],
+                    "difficulté": "medium"
+                },
+                {
+                    "id": "cinema.psychose.films",
+                    "question": "Which director is known for his suspense films such as 'Psycho' and 'The Birds'?",
+                    "type": "texte",
+                    "réponse": "Alfred Hitchcock",
+                    "variantes": [
+                        "Hitchcock",
+                        "Alfred H.",
+                        "Sir Alfred Hitchcock"
+                    ],
+                    "difficulté": "medium"
+                },
+                {
+                    "id": "cinema.burton.victor",
+                    "question": "Which Tim Burton film features a young boy named Victor who finds himself in the world of the dead?",
+                    "type": "qcm",
+                    "réponse": "Les Noces Funèbres",
+                    "options": [
+                        "L'Étrange Noël de Monsieur Jack",
+                        "Les Noces Funèbres",
+                        "Charlie et la Chocolaterie",
+                        "Alice au Pays des Merveilles"
+                    ],
+                    "difficulté": "hard"
+                }
+            ],
+            "JeuxVidéo": [
+                {
+                    "id": "games.esport.first_game",
+                    "question": "What is the first game in which esports appeared?",
+                    "type": "texte",
+                    "réponse": "The Intergalactic Space War",
+                    "variantes": [
+                        "Space War",
+                        "The Space War",
+                        "Intergalactic Space War"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "games.esport.game_awards_2025",
+                    "question": "Which game won the Game Award for Esports Game of the Year in 2025?",
+                    "type": "qcm",
+                    "réponse": "Counter-Strike 2",
+                    "options": [
+                        "Dota 2",
+                        "Counter-Strike 2",
+                        "Fortnite",
+                        "League of Legends"
+                    ],
+                    "difficulté": "medium"
+                },
+                {
+                    "id": "games.league_of_legends.headquarters_country",
+                    "question": "In which country is the headquarters of Riot Games, the developer of League of Legends, located?",
+                    "type": "texte",
+                    "réponse": "États-Unis",
+                    "variantes": [
+                        "USA",
+                        "Amérique",
+                        "United States"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "games.quantic_dream.first_international_game",
+                    "question": "What is the first French game created by Quantic Dream to be recognized internationally?",
+                    "type": "qcm",
+                    "réponse": "Omikron: The Nomad Soul",
+                    "options": [
+                        "Fahrenheit",
+                        "Heavy Rain",
+                        "Omikron: The Nomad Soul",
+                        "Detroit: Become Human"
+                    ],
+                    "difficulté": "hard"
+
+                },
+                {
+                    "id": "games.battle_royale.popular_game",
+                    "question": "Which video game popularized the Battle Royale genre?",
+                    "type": "qcm",
+                    "réponse": "PlayerUnknown's Battlegrounds (PUBG)",
+                    "options": [
+                        "Fortnite",
+                        "Apex Legends",
+                        "PlayerUnknown's Battlegrounds (PUBG)",
+                        "Call of Duty: Warzone"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "games.legend_of_zelda.main_character",
+                    "question": "What is the name of the main protagonist in the 'The Legend of Zelda' video game series?",
+                    "type": "texte",
+                    "réponse": "Link",
+                    "variantes": [
+                        "Laink",
+                        "Linque"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "games.minecraft.creeper_inspiration",
+                    "question": "Which animal inspired the creation of the creeper in Minecraft?",
+                    "type": "texte",
+                    "réponse": "Cochon",
+                    "variantes": [
+                        "Pig",
+                        "Pork"
+                    ],
+                    "difficulté": "easy"
+                }
+            ],
+            "Echec": [
+                {
+                    "id": "chess.longest_reign_world_champion",
+                    "question": "Which of these chess players holds the record for the longest uninterrupted reign as official world champion (27 years)?",
+                    "type": "qcm",
+                    "réponse": "Emanuel Lasker",
+                    "options": [
+                        "Garry Kasparov",
+                        "Emanuel Lasker",
+                        "Anatoly Karpov",
+                        "Magnus Carlsen"
+                    ],
+                    "difficulté": "easy"
+                }
+            ],
+            "Informatique": [
+                {
+                    "id": "informatics.ios_primary_language",
+                    "question": "What programming language is primarily used for developing iOS applications?",
+                    "type": "qcm",
+                    "réponse": "Swift",
+                    "options": [
+                        "Java",
+                        "Kotlin",
+                        "Swift",
+                        "Objective-C"
+                    ],
+                    "difficulté": "medium"
+                },
+                {
+                    "id": "informatics.internet_security_protocol",
+                    "question": "What protocol is used to secure communications on the internet by encrypting data exchanged between the browser and the web server?",
+                    "type": "qcm",
+                    "réponse": "HTTPS",
+                    "options": [
+                        "HTTP",
+                        "FTP",
+                        "SMTP",
+                        "HTTPS"
+                    ],
+                    "difficulté": "easy"
+                },
+                {
+                    "id": "informatics.linux_kernel",
+                    "question": "What is the name of the most widely used open-source operating system kernel in the world?",
+                    "type": "texte",
+                    "réponse": "Linux",
+                    "variantes": [
+                        "Linux Kernel",
+                        "GNU/Linux"
+                    ],
+                    "difficulté": "easy"
+                }
             ]
         }
     ]

@@ -35,7 +35,7 @@ async function quizRoutes(fastify, options) {
 	 */
 	fastify.get('/game-sessions/:id', {preHandler: fastify.authenticate, schema: schemas.GameSessionId},
 	async (request, reply) => {
-		const sessionId = request.params.id;
+		const sessionId = Number(request.params.id);
 		const sessionData = await quizController.getGameSessionData(sessionId);
 		if (!sessionData) {
 			return reply.code(404).send({ status: 'Game session not found' });
@@ -62,7 +62,6 @@ async function quizRoutes(fastify, options) {
 	fastify.post('/game-sessions/join', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
 		const userId = request.user.id;
-		// const userId = 2;
 		console.log("User ID", userId, "is trying to join game session with code:", request.body.code);
 		const { code } = request.body;
 		try {
@@ -91,7 +90,6 @@ async function quizRoutes(fastify, options) {
 	async (request, reply) => {
 		const userId = request.user.id;
 		console.log("User ID", userId, "is trying to join game session with code:", request.body.code);
-		// const userId = 1;
 		const { code } = request.body;
 		try {
 			const res = await quizController.joinGameSession(userId, code);
@@ -132,7 +130,6 @@ async function quizRoutes(fastify, options) {
 	async (request, reply) => {
 		const userId = request.user.id;
 		console.log("User ID", userId, "is trying to start game session with code:", request.body.code);
-		// const userId = 1;
 		const { code } = request.body;
 		try {
 			const res = await quizController.startGameSession(userId, code);
@@ -157,8 +154,7 @@ async function quizRoutes(fastify, options) {
 	async (request, reply) => {
 		const userId = request.user.id;
 		console.log("User ID", userId, "is requesting current question for game session ID:", request.params.id);
-		// const userId = 1;
-		const sessionId = request.params.id;
+		const sessionId = Number(request.params.id);
 
 		try {
 			const {question, remaining_ms, status} = await quizController.getCurrentQuestion(userId, sessionId);
@@ -178,9 +174,7 @@ async function quizRoutes(fastify, options) {
 	fastify.get(`/game-sessions/:id/next-question`, {preHandler: fastify.authenticate},
 	async (request, reply) => {
 		const userId = request.user.id;
-		// const userId = 1;
-		console.log("User ID", userId, "is requesting next question for game session ID:", request.params.id);
-		const sessionId = request.params.id;
+		const sessionId = Number(request.params.id);
 
 		try {
 			const {question, remaining_ms, status} = await quizController.getNextQuestion(userId, sessionId);
@@ -206,7 +200,6 @@ async function quizRoutes(fastify, options) {
 	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate},
 	async (request, reply) => {
 		const userId = Number(request.user.id);
-		// const userId = 1;
 		const sessionId = Number(request.params.id);
 		const { question_id, answer} = request.body;
 
@@ -230,7 +223,6 @@ async function quizRoutes(fastify, options) {
 	async (request, reply) => {
 		const userId = Number(request.user.id);
 		console.log("User ID", userId, "is trying to leave game session with ID:", request.params.id);
-		// const userId = 1;
 		const session = Number(request.params.id);
 		try {
 			await quizController.leaveGameSession(session, userId);

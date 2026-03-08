@@ -39,6 +39,7 @@ function JoinGame() {
       const res = await fetch('https://localhost/api/quiz/game-sessions/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ code: roomCode.trim() })
       })
       .then(res => {

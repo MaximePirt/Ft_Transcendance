@@ -174,7 +174,7 @@ async function userRoutes(fastify, options) {
 	});
 
 	fastify.patch("/:id", async (request, reply) => {
-		const userId = request.params.id;
+		const userId = Number(request.params.id);
 		const updateData = request.body;
 		try {
 			const updatedUser = await userController.updateUser(userId, updateData);
@@ -189,7 +189,7 @@ async function userRoutes(fastify, options) {
 	});
 
 	fastify.patch("/:id/avatar", async (request, reply) => {
-		const userId = request.params.id;
+		const userId = Number(request.params.id);
 		const data = await request.file();
 		if (!data)
 			return reply.code(400).send({ error: "No file uploaded" });

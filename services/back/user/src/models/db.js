@@ -24,7 +24,7 @@ try {
   ensureUserColumn('profileCardStickers', "TEXT DEFAULT '[]'", '[]');
   ensureUserColumn('profileCardTitles', "TEXT DEFAULT '[\"cinema\",\"quiz_master\"]'", '["cinema","quiz_master"]');
   ensureUserColumn('profileCardDescription', "TEXT DEFAULT ''", '');
-  ensureUserColumn('preferredLanguage', "TEXT DEFAULT 'en'", 'en');
+  ensureUserColumn('lang', "TEXT DEFAULT 'en'", 'en');
   ensureUserColumn('theme', "TEXT DEFAULT 'default'", 'default');
   ensureUserColumn('font', "TEXT DEFAULT 'default'", 'default');
   db.prepare("UPDATE users SET avatarUrl = ? WHERE avatarUrl IS NULL OR avatarUrl = ''").run('/avatar/Default.png');

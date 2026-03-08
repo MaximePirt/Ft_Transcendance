@@ -39,8 +39,6 @@ function SoloGameSetup() {
   const [questionCount, setQuestionCount] = useState<number>(2);
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
-  localStorage.removeItem("sessionId")
-  localStorage.removeItem("questionCount")
 
 
 
@@ -101,6 +99,10 @@ function SoloGameSetup() {
       }
       console.log("Selected themes for API:", topic);
       console.log("Player Count:", playerCount);
+      localStorage.removeItem("sessionId");
+      localStorage.removeItem("questionCount");
+      localStorage.removeItem("maxPlayers");
+      localStorage.removeItem("sessionCode");
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
         method: 'POST',
         credentials: 'include',
@@ -121,7 +123,7 @@ function SoloGameSetup() {
       localStorage.setItem("sessionCode", String(data.sessionCode));
       localStorage.setItem("maxPlayers", String(playerCount));
       localStorage.setItem("questionCount", String(questionCount));
-      navigate('/quiz/multi', { state: { themes: Array.from(selectedThemes), questionCount, playerCount, powerUps: Array.from(selectedPowerUps) } });
+      navigate('/quiz/multi', { state: { themes: Array.from(selectedThemes), questionCount, playerCount, powerUps: Array.from(selectedPowerUps), sessionId: data.sessionId } });
     }
   }
 
