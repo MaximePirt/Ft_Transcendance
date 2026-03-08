@@ -154,6 +154,25 @@ function findWinsLeaderboard(limit = 5) {
 	`).all(safeLimit);
 }
 
+function deleteUserById(userId) {
+	const stmt = db.prepare(`DELETE FROM users WHERE id = ?`).run(userId);
+	return (stmt);
+}
+
+function findUserInAGame(userId) {
+	const stmt = db.prepare(`
+		SELECT 1
+		FROM game_players gp
+		JOIN game_sessions gs ON gs.id = gp.game_session_id
+		WHERE gp.user_id = ?
+		AND gs.status IN ('waiting', 'in_progress')
+		AND gp.is_active = 1
+		LIMIT 1
+	`).get(userId)
+
+	return (stmt);
+}
+
 module.exports = {
 	findAllUsers,
 	findUserById,
@@ -162,5 +181,7 @@ module.exports = {
 	findUser,
 	findRecentMatchesByUserId,
 	findUserStatsById,
-	findWinsLeaderboard
+	findWinsLeaderboard,
+	deleteUserById,
+	findUserInAGame
 };

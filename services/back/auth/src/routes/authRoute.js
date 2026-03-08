@@ -194,7 +194,7 @@ export default async function authRoute(fastify, options) {
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: email,
 				//to: user.email,
-				subject: `Hello toto !`,
+				subject: `Hello back !`,
 				html,
 			})
 			return rep.send({ success: true })
