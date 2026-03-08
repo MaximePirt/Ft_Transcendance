@@ -206,6 +206,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		localStorage.removeItem('user')
 		localStorage.setItem('theme', 'default')
 		localStorage.setItem('font', 'default')
+		localStorage.setItem('auth-event', Date.now().toString())
 		applyTheme('default')
 		applyFont('default')
 	}

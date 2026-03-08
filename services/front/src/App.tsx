@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import type { ReactElement } from 'react'
+import { type ReactElement } from 'react'
 import HomePage from './pages/Home'
 import QuizPage from './pages/Quiz'
 import SoloGameSetup from './pages/SoloGameSetup'
@@ -11,6 +11,7 @@ import ProfilUser from './pages/ProfilUser'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import ThemeRetriever from './content/ThemeRetriever'
 import EndGame from './pages/EndGame'
+import LogoutEventListenerHandler from './content/LogoutEventListenerHandler'
 
 function RequireAuth({ children }: { children: ReactElement }) {
 	const { isAuthenticated, isAuthReady } = useAuth()
@@ -28,6 +29,7 @@ function App() {
 	return (
 		<AuthProvider>
 			<ThemeRetriever />
+			<LogoutEventListenerHandler />
 			<Routes>
 				<Route path="/" element={<HomePage />} />
 				<Route path="/quiz" element={<RequireAuth><QuizPage /></RequireAuth>} />

@@ -159,6 +159,20 @@ function deleteUserById(userId) {
 	return (stmt);
 }
 
+function findUserInAGame(userId) {
+	const stmt = db.prepare(`
+		SELECT 1
+		FROM game_players gp
+		JOIN game_sessions gs ON gs.id = gp.game_session_id
+		WHERE gp.user_id = ?
+		AND gs.status IN ('waiting', 'in_progress')
+		AND gp.is_active = 1
+		LIMIT 1
+	`).get(userId)
+
+	return (stmt);
+}
+
 module.exports = {
 	findAllUsers,
 	findUserById,
@@ -168,5 +182,6 @@ module.exports = {
 	findRecentMatchesByUserId,
 	findUserStatsById,
 	findWinsLeaderboard,
-	deleteUserById
+	deleteUserById,
+	findUserInAGame
 };

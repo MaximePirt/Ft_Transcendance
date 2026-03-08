@@ -6,22 +6,21 @@ async function logoutUser(
     setError: (msg: string) => void) {
 
     try {
-    const response = await fetch(`${API_BASE}/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-    });
+        const response = await fetch(`${API_BASE}/auth/logout`, {
+            method: "POST",
+            credentials: "include",
+        });
 
-    const data = await response.json();
+        const data = await response.json();
+        if (!response.ok) {
+            setError(data.error || "Something went wrong");
+            return;
+        }
 
-    if (!response.ok) {
-        setError(data.error || "Something went wrong");
-        return;
-    }
-
-    logout();
-    navigate("/");
+        logout();
+        navigate("/");
     } catch {
-    setError("Cannot connect to authentication server");
+        setError("Cannot connect to authentication server");
     }
 }
 

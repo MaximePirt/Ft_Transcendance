@@ -331,10 +331,26 @@ async function userRoutes(fastify, options) {
 				return reply.code(400).send({ error: "BAD_REQUEST" });
 
 			await userController.deleteUser(userId);
+			return reply.send({ success: true });
 		}
 		catch (err) {
 			console.error(err);
 			return reply.code(500).send({ error: "USER_DELETE_FAILED" });
+		}
+	});
+
+	fastify.get("/user-ingame/:id", async (request, reply) => {
+		try {
+			const userId = request.params.id;
+			if (!userId)
+				return reply.code(400).send({ error: "BAD_REQUEST" });
+
+			const isInGame = await userController.isUserInAGame(userId);
+			return reply.code(200).send({ ingame: isInGame });
+		}
+		catch (err) {
+			console.error(err);
+			return reply.code(500).send({ error: "AN_UNEXPECTED_ERROR_HAS_OCCURED" });
 		}
 	});
 }

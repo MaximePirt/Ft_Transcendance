@@ -37,29 +37,53 @@ async function handleDeletion(id: number) {
 
 const DataDeleter = () => {
     const [open, setOpen] = useState(false);
+    const [forbidden, setForbidden] = useState(false);
 
     const [logoutError, setLogoutError] = useState('');
     const navigate = useNavigate()
     const { logout } = useAuth();
 
+    async function openModal() {
+        setOpen(true);
+
+        const res = await fetch(`${API_BASE}/auth/me`, {
+            method: "GET",
+            credentials: "include",
+        })
+        const me_user = await res.json();
+
+        const isUserInGame = await fetch(`${API_BASE}/user/user-ingame/${me_user.id}`, {
+            method: "GET",
+            credentials: "include",
+        })
+        const json = await isUserInGame.json();
+        console.log("ISUSERINGAME PRINT :", json);
+        if (json.ingame)
+            setForbidden(true);
+        else
+            setForbidden(false);
+    }
+
     async function requestDeletion() {
+        if (forbidden) return ;
+
         const res = await fetch(`${API_BASE}/auth/me`, {
                 method: "GET",
                 credentials: "include",
         })
-        
+
         const me_user = await res.json();
-        logoutUser(logout, navigate, setLogoutError);
-        sendDeletionMail(me_user.id);
-        handleDeletion(me_user.id);
+        await logoutUser(logout, navigate, setLogoutError);
+        await sendDeletionMail(me_user.id);
+        await handleDeletion(me_user.id);
         setOpen(false);
     }
 
     return (
         <>
-            <button className="btn-data-delete" onClick={() => setOpen(true)}>DELETE ACCOUNT</button>
+            <button className="btn-data-delete" onClick={() => openModal()}>DELETE ACCOUNT</button>
 
-            {open && (
+            {open && !forbidden && (
             <div className="login-overlay" role="dialog" aria-modal="true">
                 <div className="login-card">
 
@@ -83,6 +107,27 @@ const DataDeleter = () => {
                         </button>
                     </div>
 
+                </div>
+            </div>
+            )}
+            {open && forbidden && (
+            <div className="login-overlay" role="dialog" aria-modal="true">
+                <div className="login-card">
+
+                    <div className="login-card__head">
+                        <button className="close" onClick={() => setOpen(false)}>
+                            x
+                        </button>
+                    </div>
+
+                    <div style={{textAlign:"center"}}>
+                        <h2>Your are currently in a game</h2>
+                        <h3>Finish it before you can proceed.</h3>
+
+                        <button className="btn danger" onClick={() => setOpen(false)}>
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
             )}
