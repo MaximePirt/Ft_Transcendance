@@ -431,6 +431,35 @@ function SoloGamePage() {
     }
   }
 
+  const leaveGame = async () => {
+    const abortController = new AbortController()
+
+    try {
+      const sessionIdStr = await localStorage.getItem("sessionId");
+      const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+      if (!sessionId)
+        throw new Error('Invalid session ID')
+      const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/players/me`, {
+        method: 'DELETE',
+        credentials: 'include',
+        signal: abortController.signal,
+      })
+      if (!response.ok) {
+        throw new Error('Failed to fetch question')
+      }
+      setLoading(false)
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem("questionCount")
+      navigate('/quiz')
+    } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : t('error_occurred'))
+        setLoading(false)
+      }
+    return () => abortController.abort()
+  }
+
+
   if (loading) {
     return (
       <main className="page">
@@ -508,8 +537,9 @@ function SoloGamePage() {
                 return exitBtn && (
                   <button
                     onClick={() => {
-                      localStorage.removeItem(STORAGE_KEY)
-                      navigate('/quiz')
+                      if (window.confirm("Êtes-vous sûr de vouloir quitter la partie ? Votre progression ne sera pas sauvegardée.")) {
+                        leaveGame()
+                      }
                     }}
                     title="Quitter la partie"
                   >
