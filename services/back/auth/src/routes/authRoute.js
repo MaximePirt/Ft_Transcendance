@@ -1,4 +1,4 @@
-import { signupUser, loginUser, getUsername, codeVerification, getUserId } from '../controllers/authController.js'
+import { signupUser, loginUser, getUsername, getUserId, getUserAuth } from '../controllers/authController.js'
 import { createZohoTransporter } from '../services/authServices.js'
 import React from "react";
 import { render } from "@react-email/render";
@@ -147,7 +147,7 @@ export default async function authRoute(fastify, options) {
 			const username = await getUsername(email);
 			const user = Object.create(User);
 			const codeFound = usersCode.find((e) => e.email === email);
-
+			const isAuth = await getUserAuth(email);
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
 
@@ -155,8 +155,17 @@ export default async function authRoute(fastify, options) {
 			user.username = username;
 			user.id = reqId;
 			user.token = JWTgenerator(fastify, user);
-			signInMail(email, username);
-			return reply.code(200).send({ success: true });
+			if (isAuth === 1)
+				signInMail(email, username);
+			else {
+				reply.setCookie("token", user.token, {
+					httpOnly: true,
+					signed: false,
+					secure: true,
+					path: "/",
+				});
+			}
+			return reply.code(200).send({ success: true, isAuth: isAuth ? 1 : 0 });
 		} catch (e) {
 			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
@@ -298,6 +307,19 @@ export default async function authRoute(fastify, options) {
 		rep.clearCookie('token', { path: '/' });
 
 		return rep.send({ message: 'Logged out successfully' });
+	})
+
+	fastify.post("/handleFA", async (req, rep) => {
+
+		try {
+			const value = await req.body.auth;
+			const email = await req.body.email;
+			const changeAuth = changeUserAuth(email, value);
+
+
+		} catch (e) {
+			console.error(e);
+		}
 	})
 
 	fastify.post('/code', async (req, reply) => {

@@ -148,37 +148,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		const candidateUsernames = rawIdentifier.includes('@')
 			? [rawIdentifier, rawIdentifier.split('@')[0]]
 			: [rawIdentifier]
-
-		// let signedIn = false
-		// for (const username of candidateUsernames) {
-		// 	const signinResponse = await fetch(`${API_BASE}/auth/signin`, {
-		// 		method: 'POST',
-		// 		headers: {
-		// 			'Content-Type': 'application/json',
-		// 		},
-		// 		credentials: 'include',
-		// 		body: JSON.stringify({ username, password }),
-		// 	})
-		// 	if (signinResponse.ok) {
-		// 		signedIn = true
-		// 		break
-		// 	}
-		// }
-		//
-		// if (!signedIn) {
-		// 	return false
-		// }
-
-		// const meResponse = await fetch(`${API_BASE}/auth/me`, {
-		// 	method: 'GET',
-		// 	credentials: 'include',
-		// })
-		//
-		// if (!meResponse.ok) {
-		// 	return false
-		// }
-
-		// const me = await meResponse.json()
 		const userData = {
 			email: email || rawIdentifier,
 			username: username || candidateUsernames[candidateUsernames.length - 1],

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
@@ -232,6 +232,21 @@ function ProfilUser() {
 	const correctAnswers = gameStats.correct
 	const accuracy = Number.isFinite(gameStats.accuracy) ? Math.round(gameStats.accuracy) : 0
 	const safeAccuracy = Math.max(0, Math.min(100, accuracy))
+	const [value, setValue] = useState(0);
+
+	const handleUserAuth = async () => {
+		try {
+			await fetch(`${API_BASE}/auth/handleFA`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ auth: value })
+			});
+		} catch (e) {
+			console.error(e);
+		}
+	}
 
 	const formatMatchDate = (dateValue?: string) => {
 		if (!dateValue) return '-'
@@ -1021,6 +1036,7 @@ function ProfilUser() {
 									)
 								})}
 							</div>
+							<label><input type="checkbox" onChange={(e) => { setValue(e.target.checked ? 1 : 0), handleUserAuth }} />2FA authentication</label>
 							{!canEdit && (
 								<>
 									<div className="actions" style={{ marginTop: '0.5rem' }}>

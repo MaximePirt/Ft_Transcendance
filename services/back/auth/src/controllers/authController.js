@@ -1,4 +1,4 @@
-import { addNewUser, getUserName, getModelUserId, getUserModelEmail } from '../models/authModel.js'
+import { addNewUser, getUserName, getModelUserId, getUserModelEmail, getUserModelAuth } from '../models/authModel.js'
 
 async function signupUser(email, username, password) {
 	const response = addNewUser(username, email, password);
@@ -42,19 +42,18 @@ async function getUsername(email) {
 	return username;
 }
 
-async function codeVerification(frontAuth) {
-	const code = Math.round(facode);
-	if (code != frontAuth)
-		return { ok: false, err: "Bad authentication code" };
-	return { ok: true, message: "Code verified successfully" };
+async function getUserAuth(email) {
+	const resp = getUserModelAuth(email);
+	if (resp === "USER_NOT_FOUND")
+		return "USER_NOT_FOUND";
+	return resp;
 }
-
 
 export {
 	signupUser,
 	loginUser,
 	getUsername,
-	codeVerification,
 	getUserByEmail,
-	getUserId
+	getUserId,
+	getUserAuth
 };

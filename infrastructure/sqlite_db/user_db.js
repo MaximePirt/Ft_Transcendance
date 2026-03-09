@@ -2,8 +2,8 @@ const Database = require("better-sqlite3");
 
 const dbPath = process.env.DB_PATH || false;
 if (!dbPath) {
-  console.error("Error: DB_PATH environment variable is not set.");
-  process.exit(1);
+	console.error("Error: DB_PATH environment variable is not set.");
+	process.exit(1);
 }
 
 console.log(`[user-db] Database path: ${dbPath}`);
@@ -31,7 +31,8 @@ CREATE TABLE IF NOT EXISTS users (
   profileCardTitles TEXT DEFAULT '["cinema","quiz_master"]',
   profileCardDescription TEXT DEFAULT '',
   theme TEXT DEFAULT 'default',
-  font TEXT DEFAULT 'default'
+  font TEXT DEFAULT 'default',
+  isAuth INTEGER NOT NULL DEFAULT 0 CHECK(isAuth IN (0, 1))
 );`;
 
 const createFriendsTable = `
@@ -50,26 +51,26 @@ CREATE TABLE IF NOT EXISTS friends (
 
 
 try {
-  console.log("Creating tables...");
-  db.exec(createUsersTable);
-  console.log("Table 'users' created (or already exists).");
-  db.exec(createFriendsTable);
-  console.log("Table 'friends' created (or already exists).");
+	console.log("Creating tables...");
+	db.exec(createUsersTable);
+	console.log("Table 'users' created (or already exists).");
+	db.exec(createFriendsTable);
+	console.log("Table 'friends' created (or already exists).");
 } catch (err) {
-  console.error("Error creating users or friends table:", err);
-  process.exit(1);
+	console.error("Error creating users or friends table:", err);
+	process.exit(1);
 }
 
 const ensureUserColumn = (name, definition, defaultValue) => {
-  const columns = db.prepare("PRAGMA table_info(users)").all();
-  const exists = columns.some((col) => col.name === name);
-  if (!exists) {
-    db.exec(`ALTER TABLE users ADD COLUMN ${name} ${definition}`);
-    if (defaultValue !== undefined) {
-      db.prepare(`UPDATE users SET ${name} = ? WHERE ${name} IS NULL`).run(defaultValue);
-    }
-    console.log(`Added missing column users.${name}`);
-  }
+	const columns = db.prepare("PRAGMA table_info(users)").all();
+	const exists = columns.some((col) => col.name === name);
+	if (!exists) {
+		db.exec(`ALTER TABLE users ADD COLUMN ${name} ${definition}`);
+		if (defaultValue !== undefined) {
+			db.prepare(`UPDATE users SET ${name} = ? WHERE ${name} IS NULL`).run(defaultValue);
+		}
+		console.log(`Added missing column users.${name}`);
+	}
 };
 
 ensureUserColumn('avatarUrl', "TEXT DEFAULT '/avatar/Default.png'", '/avatar/Default.png');
@@ -82,47 +83,47 @@ ensureUserColumn('theme', "TEXT DEFAULT 'default'", 'default');
 ensureUserColumn('font', "TEXT DEFAULT 'default'", 'default');
 
 const tables = db
-  .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-  .all();
+	.prepare("SELECT name FROM sqlite_master WHERE type='table'")
+	.all();
 console.log("Tables created:", tables);
 
 const insertUser = db.prepare(
-  "INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)"
+	"INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)"
 );
 
 console.log("Checking seed data...");
 const userCount = db.prepare('SELECT COUNT(*) as cnt FROM users').get().cnt;
 if (userCount === 0) {
-  console.log("Create fake data...");
-  const insertUser = db.prepare(
-    "INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)");
-  const users = [
-    [
-      "alice",
-      "alice@example.com",
-      "password123",
-      "/avatar/Default.png",
-    ],
-    [
-      "bob",
-      "bob@example.com",
-      "password456",
-      "/avatar/Default.png",
-    ],
-    [
-      "charlie",
-      "charlie@example.com",
-      "password789",
-      "/avatar/Default.png",
-    ],
-  ];
-  for (const user of users) {
-    insertUser.run(...user);
-  }
-    console.log("Fake users created.");
+	console.log("Create fake data...");
+	const insertUser = db.prepare(
+		"INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)");
+	const users = [
+		[
+			"alice",
+			"alice@example.com",
+			"password123",
+			"/avatar/Default.png",
+		],
+		[
+			"bob",
+			"bob@example.com",
+			"password456",
+			"/avatar/Default.png",
+		],
+		[
+			"charlie",
+			"charlie@example.com",
+			"password789",
+			"/avatar/Default.png",
+		],
+	];
+	for (const user of users) {
+		insertUser.run(...user);
+	}
+	console.log("Fake users created.");
 }
 else {
-  console.log("Seed data already exists. Skipping fake data creation.");
+	console.log("Seed data already exists. Skipping fake data creation.");
 }
 
 db.close();

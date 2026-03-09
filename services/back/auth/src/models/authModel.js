@@ -1,5 +1,4 @@
 import db from './db.js'
-import bcrypt from 'bcryptjs';
 
 function addNewUser(username, email, password) {
 	try {
@@ -45,14 +44,24 @@ function getUserModelEmail(email) {
 		`SELECT * FROM users WHERE email = ?`
 	).get(email);
 	if (!stmt)
-		throw new Error("USER_NOT_FOUND");
+		return "USER_NOT_FOUND";
 	return stmt;
 }
 
+function getUserModelAuth(email) {
+	const stmt = db.prepare(
+		`SELECT isAuth from users WHERE email = ?`
+	).get(email);
+	if (!stmt)
+		return "USER_NOT_FOUND";
+	console.log(stmt.isAuth);
+	return stmt.isAuth;
+}
 
 export {
 	addNewUser,
 	getUserName,
 	getUserModelEmail,
-	getModelUserId
+	getModelUserId,
+	getUserModelAuth
 };

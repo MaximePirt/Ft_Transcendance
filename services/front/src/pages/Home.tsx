@@ -27,11 +27,7 @@ const SpaceZone = [
 	{ label: '\u00A0', value: ' ' }
 ]
 
-interface User {
-	email: string,
-	username: string,
-	password: string
-}
+export let isAuth: number;
 
 function HomePage() {
 	const navigate = useNavigate()
@@ -48,7 +44,7 @@ function HomePage() {
 	const [logoutError, setLogoutError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
-	const [AuthRequired, setAuthRequired] = useState('');
+	const [AuthRequired, setAuthRequired] = useState(false);
 	const API_BASE = import.meta.env.AUTH_API_URL || 'https://localhost/api'
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
@@ -103,15 +99,17 @@ function HomePage() {
 					password: password
 				})
 			});
+
+			const data = await response.json();
 			if (!response.ok) {
-				const data = await response.json();
 				setLoginError(data.error || "Something went wrong");
 			} else {
 				setUserEmail(email);
 				if (await login(email, userUsername)) {
 					setShowLogin(false);
 					setCodeError('');
-					setShow2fa(true);
+					if (data.isAuth === 1)
+						setShow2fa(true);
 				}
 			}
 		} catch (e) {
@@ -129,9 +127,9 @@ function HomePage() {
 				},
 				credentials: 'include',
 				body: JSON.stringify({
-					code: code,
 					email: userEmail,
-					username: userUsername
+					username: userUsername,
+					code: code
 				})
 			});
 
@@ -141,7 +139,7 @@ function HomePage() {
 				setShow2fa(false);
 			} else {
 				const err = await send.json();
-				setCodeError(err);
+				setCodeError(err.error);
 			}
 		} catch (e) {
 			setCodeError("Cannot connect to authentication server");
@@ -202,9 +200,9 @@ function HomePage() {
 		const newUser = {
 			email: email,
 			username: username,
-			password: password
+			password: password,
 		}
-
+		isAuth = 0;
 		setUserEmail(email);
 		setUserUsername(username);
 		// password !== username
@@ -350,7 +348,6 @@ function HomePage() {
 				</aside>
 			</div>
 
-			<LanguageSelector />
 			<div className="login-bar">
 				{isAuthenticated ? (
 					<>
