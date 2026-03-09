@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import i18n from '../i18n'
 
@@ -57,6 +57,8 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null)
 	const [isAuthReady, setIsAuthReady] = useState(false)
+	const presenceSocketRef = useRef<WebSocket | null>(null)
+	const lastActivitySentRef = useRef(0)
 
 	const applyPreferredLanguage = async (username: string, signal?: AbortSignal) => {
 		try {
@@ -143,6 +145,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		void bootstrapAuth()
 		return () => abortController.abort()
 	}, [])
+
+	useEffect(() => {
+		if (!user) {
+			if (presenceSocketRef.current) {
+				presenceSocketRef.current.close()
+				presenceSocketRef.current = null
+			}
+			return
+		}
+
+		let isDisposed = false
+		let reconnectTimer: number | null = null
+		let currentSocket: WebSocket | null = null
+
+		const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+
+		const sendActivity = (force = false) => {
+			if (!currentSocket || currentSocket.readyState !== WebSocket.OPEN) return
+			const now = Date.now()
+			if (!force && now - lastActivitySentRef.current < 3000) return
+			lastActivitySentRef.current = now
+			currentSocket.send(JSON.stringify({ type: 'activity' }))
+		}
+
+		const connect = () => {
+			if (isDisposed) return
+			const socket = new WebSocket(`${proto}//${window.location.host}/ws/user/friends`)
+			currentSocket = socket
+			presenceSocketRef.current = socket
+
+			socket.onopen = () => {
+				sendActivity(true)
+			}
+
+			socket.onclose = () => {
+				if (isDisposed) return
+				reconnectTimer = window.setTimeout(() => {
+					connect()
+				}, 1500)
+			}
+		}
+
+		connect()
+
+		const onActivity = () => sendActivity(false)
+		const onVisible = () => {
+			if (document.visibilityState === 'visible') sendActivity(true)
+		}
+
+		window.addEventListener('click', onActivity)
+		window.addEventListener('keydown', onActivity)
+		window.addEventListener('pointerdown', onActivity)
+		window.addEventListener('focus', onActivity)
+		document.addEventListener('visibilitychange', onVisible)
+
+		return () => {
+			isDisposed = true
+			if (reconnectTimer) window.clearTimeout(reconnectTimer)
+			window.removeEventListener('click', onActivity)
+			window.removeEventListener('keydown', onActivity)
+			window.removeEventListener('pointerdown', onActivity)
+			window.removeEventListener('focus', onActivity)
+			document.removeEventListener('visibilitychange', onVisible)
+
+			if (currentSocket) {
+				currentSocket.close()
+			}
+			if (presenceSocketRef.current === currentSocket) {
+				presenceSocketRef.current = null
+			}
+		}
+	}, [user])
 
 	const login = async (email: string, username: string): Promise<boolean> => {
 		const rawIdentifier = email.trim()

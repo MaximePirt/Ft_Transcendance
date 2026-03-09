@@ -202,6 +202,7 @@ function ProfilUser() {
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
 	const avatarInputRef = useRef<HTMLInputElement | null>(null)
+	const friendWsRef = useRef<WebSocket | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
@@ -580,12 +581,6 @@ function ProfilUser() {
 
 		void refreshFriends()
 
-		const refreshInterval = window.setInterval(() => {
-			if (document.visibilityState === 'visible') {
-				void refreshFriends()
-			}
-		}, 10000)
-
 		const onVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
 				void refreshFriends()
@@ -596,8 +591,62 @@ function ProfilUser() {
 
 		return () => {
 			abortController.abort()
-			window.clearInterval(refreshInterval)
 			document.removeEventListener('visibilitychange', onVisibilityChange)
+		}
+	}, [user, canEdit])
+
+	useEffect(() => {
+		if (!user || !canEdit) return
+		let isDisposed = false
+		let reconnectTimer: number | null = null
+		let currentSocket: WebSocket | null = null
+
+		const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+
+		const connect = () => {
+			if (isDisposed) return
+			const socket = new WebSocket(`${proto}//${window.location.host}/ws/user/friends`)
+			currentSocket = socket
+			friendWsRef.current = socket
+
+			socket.onopen = () => {
+				console.log('[Profile] Friends WebSocket connected')
+			}
+
+			socket.onmessage = async (event) => {
+				try {
+					const msg = JSON.parse(event.data)
+					if (msg?.type === 'friend_updated' || msg?.type === 'friend_request_received' || msg?.type === 'presence_updated') {
+						await Promise.all([loadFriends(user.username), loadFriendRequests()])
+					}
+				} catch (error) {
+					console.warn('[Profile] Friends WebSocket message error', error)
+				}
+			}
+
+			socket.onerror = (error) => {
+				console.error('[Profile] Friends WebSocket error', error)
+			}
+
+			socket.onclose = () => {
+				if (isDisposed) return
+				reconnectTimer = window.setTimeout(() => {
+					connect()
+				}, 1500)
+			}
+		}
+
+		connect()
+
+		return () => {
+			isDisposed = true
+			if (reconnectTimer) window.clearTimeout(reconnectTimer)
+			if (currentSocket) {
+				currentSocket.close()
+			}
+			if (friendWsRef.current === currentSocket) {
+				friendWsRef.current = null
+			}
 		}
 	}, [user, canEdit])
 

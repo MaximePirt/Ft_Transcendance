@@ -12,6 +12,16 @@ It listen on porte 3001
 
 const fastify = require("fastify")({ logger: true });
 const path = require("path");
+
+let websocketEnabled = false;
+try {
+  const websocketPlugin = require("@fastify/websocket");
+  fastify.register(websocketPlugin);
+  websocketEnabled = true;
+} catch (error) {
+  fastify.log.warn("@fastify/websocket not found, websocket routes disabled");
+}
+
 fastify.register(require("@fastify/multipart"));
 fastify.register(require("@fastify/static"), {
   root: path.join(__dirname, "..", "uploads"),
@@ -19,6 +29,9 @@ fastify.register(require("@fastify/static"), {
 });
 fastify.register(require("./routes/userRoute"));
 fastify.register(require("./routes/friendRoute"));
+if (websocketEnabled) {
+  fastify.register(require("./routes/wsRoute"));
+}
 
 
 fastify.register(require("@fastify/cors"), {
