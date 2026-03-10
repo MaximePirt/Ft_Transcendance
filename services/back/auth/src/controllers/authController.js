@@ -1,4 +1,4 @@
-import { addNewUser, getUserName, getModelUserId, getUserModelEmail, getUserModelAuth, changeUserModelAuth } from '../models/authModel.js'
+import { addNewUser, getUserName, getModelUserId, getUserModelEmail, getUserModelAuth, changeUserModelAuth, checkUserModel } from '../models/authModel.js'
 
 async function signupUser(email, username, password) {
 	const response = addNewUser(username, email, password);
@@ -18,6 +18,13 @@ async function loginUser(email, password) {
 	else {
 		return resp;
 	}
+}
+
+async function checkUser(email, username) {
+	const resp = checkUserModel(email, username);
+
+	if (resp === "EMAIL_EXISTS") throw new Error("EMAIL_EXISTS");
+	return;
 }
 
 async function getUserByEmail(email) {
@@ -63,5 +70,6 @@ export {
 	getUserByEmail,
 	getUserId,
 	getUserAuth,
-	changeUserAuth
+	changeUserAuth,
+	checkUser
 };

@@ -1,10 +1,9 @@
-import { signupUser, loginUser, getUsername, getUserId, getUserAuth } from '../controllers/authController.js'
+import { signupUser, loginUser, getUsername, getUserId, getUserAuth, checkUser } from '../controllers/authController.js'
 import { createZohoTransporter } from '../services/authServices.js'
 import React from "react";
 import { render } from "@react-email/render";
 import SigninEmail from "../mails/signinEmail.js";
 import SignupEmail from "../mails/signupEmail.js";
-import { getUserByEmail } from '../controllers/authController.js';
 import { changeUserAuth } from '../controllers/authController.js';
 import bcrypt from 'bcryptjs';
 
@@ -102,6 +101,7 @@ export default async function authRoute(fastify, options) {
 	);
 
 	let usersCode = [];
+	let users = new Map();
 	fastify.post('/signup', async function (request, reply) {
 		try {
 			const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -113,6 +113,7 @@ export default async function authRoute(fastify, options) {
 			const hashPass = await bcrypt.hash(password, 12);
 			const codeFound = usersCode.find((e) => e.email === email);
 
+			users.set(email, { email, username, password: hashPass });
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
 
@@ -122,13 +123,11 @@ export default async function authRoute(fastify, options) {
 				return reply.code(401).send({ success: false, error: 'Username should count between 3 & 16 characters and contains not any special characters' });
 			else if (!email_regex.test(email))
 				return reply.code(401).send({ success: false, error: 'Bad email format' });
-			const resId = await signupUser(email, username, hashPass);
-			const user = Object.create(User);
-			user.username = await request.body.username;
-			user.id = resId;
-			user.token = JWTgenerator(fastify, user);
 			signUpMail(email, username);
-			return reply.code(200).send({ ok: true, message: "Signup successful" });
+
+			if (!await checkUser(email, username))
+
+				return reply.code(200).send({ ok: true, message: "Signup successful" });
 		} catch (e) {
 			console.error(e.message);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
@@ -271,35 +270,54 @@ export default async function authRoute(fastify, options) {
 		const userId = await getUserId(email);
 		const codeFound = usersCode.find((e) => e.email === email);
 		const user = Object.create(User);
+		try {
+			if (!code)
+				return;
+			console.log(req.body);
+			if (Date.now() > codeFound.expireAt) {
+				console.error("error: code expired");
+				usersCode = usersCode.filter((user) => user.email !== email);
+				return rep.code(401).send({
+					error: "The code has expired. Please request a new one.",
+					success: false
+				});
+			}
 
-		console.log(req.body);
-		if (Date.now() > codeFound.expireAt) {
-			console.error("error: code expired");
-			usersCode = usersCode.filter((user) => user.email !== email);
-			return rep.code(401).send({
-				error: "The code has expired. Please request a new one.",
-				success: false
-			});
-		} else {
-			user.email = email;
-			user.username = username;
-			user.id = userId;
-			user.token = JWTgenerator(fastify, user);
-		}
+			if (codeFound && codeFound.code === code.toString()) {
+				console.log("OK: valid authentication code");
+				if (users.has(email)) {
+					const data = users.get(email);
+					console.log("users data: ", data);
+					const signUpId = signupUser(data.email, data.username, data.password);
+					user.id = signUpId;
+					users.delete(email);
+				} else {
+					user.id = userId;
+				}
+				user.email = email;
+				user.username = username;
+				user.token = JWTgenerator(fastify, user);
 
-		if (codeFound && codeFound.code === code.toString()) {
-			console.log("OK: valid authentication code");
-			usersCode = usersCode.filter((user) => user.email !== email);
-			rep.setCookie("token", user.token, {
-				httpOnly: true,
-				signed: false,
-				secure: true,
-				path: "/",
-			});
-			return rep.code(200).send({ success: true });
-		} else {
-			console.log("error: bad code")
-			return rep.code(401).send({ success: false, error: "invalid 6-digits code" });
+				usersCode = usersCode.filter((user) => user.email !== email);
+				rep.setCookie("token", user.token, {
+					httpOnly: true,
+					signed: false,
+					secure: true,
+					path: "/",
+				});
+				return rep.code(200).send({ success: true });
+			} else {
+				console.log("error: bad code")
+				return rep.code(401).send({ success: false, error: "invalid 6-digits code" });
+			}
+		} catch (e) {
+			console.error(e);
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+
+			return rep.code(errorInfo.status).send({
+				success: false,
+				error: errorInfo.message
+			})
 		}
 	})
 

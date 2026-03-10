@@ -17,6 +17,17 @@ function addNewUser(username, email, password) {
 	}
 }
 
+function checkUserModel(email, username) {
+	try {
+		const stmt = db.prepare(
+			"SELECT email, username, password FROM users WHERE email = ? OR username = ?"
+		).get(email, username);
+		if (stmt) throw new Error();
+	} catch (e) {
+		return "EMAIL_EXISTS";
+	}
+}
+
 function changeUserModelAuth(email, value) {
 	try {
 		db.prepare(
@@ -35,8 +46,7 @@ function getModelUserId(email) {
 		).get(email);
 		return stmt.id;
 	} catch (e) {
-		console.error(e);
-		return "DEFAULT";
+		return "USER_NOT_FOUND";
 	}
 }
 
@@ -75,5 +85,6 @@ export {
 	getUserModelEmail,
 	getModelUserId,
 	getUserModelAuth,
-	changeUserModelAuth
+	changeUserModelAuth,
+	checkUserModel
 };
