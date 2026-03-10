@@ -5,6 +5,7 @@ import { render } from "@react-email/render";
 import SigninEmail from "../mails/signinEmail.js";
 import SignupEmail from "../mails/signupEmail.js";
 import { getUserByEmail } from '../controllers/authController.js';
+import { changeUserAuth } from '../controllers/authController.js';
 import bcrypt from 'bcryptjs';
 
 const ERROR_CODES = {
@@ -314,11 +315,37 @@ export default async function authRoute(fastify, options) {
 		try {
 			const value = await req.body.auth;
 			const email = await req.body.email;
-			const changeAuth = changeUserAuth(email, value);
+			const changeAuth = await changeUserAuth(email, value);
 
-
+			console.log(await req.body);
+			if (changeAuth)
+				return rep.code(200).send({ success: true });
 		} catch (e) {
 			console.error(e);
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+
+			return rep.code(errorInfo.status).send({
+				success: false,
+				error: errorInfo.message
+			})
+		}
+	})
+
+	fastify.get("/getUserAuth", async (req, rep) => {
+		try {
+			const email = await req.query.email;
+			const value = await getUserAuth(email);
+
+			if (value)
+				return rep.code(200).send({ success: true, value: value });
+		} catch (e) {
+			console.error(e);
+			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+
+			return rep.code(errorInfo.status).send({
+				success: false,
+				error: errorInfo.message
+			})
 		}
 	})
 

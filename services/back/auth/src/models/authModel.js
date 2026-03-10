@@ -17,6 +17,17 @@ function addNewUser(username, email, password) {
 	}
 }
 
+function changeUserModelAuth(email, value) {
+	try {
+		db.prepare(
+			'UPDATE users SET isAuth = ? WHERE email = ?'
+		).run(value, email);
+	} catch (e) {
+		console.error(e);
+		return "DEFAULT";
+	}
+}
+
 function getModelUserId(email) {
 	try {
 		const stmt = db.prepare(
@@ -53,7 +64,7 @@ function getUserModelAuth(email) {
 		`SELECT isAuth from users WHERE email = ?`
 	).get(email);
 	if (!stmt)
-		return "USER_NOT_FOUND";
+		return "DEFAULT";
 	console.log(stmt.isAuth);
 	return stmt.isAuth;
 }
@@ -63,5 +74,6 @@ export {
 	getUserName,
 	getUserModelEmail,
 	getModelUserId,
-	getUserModelAuth
+	getUserModelAuth,
+	changeUserModelAuth
 };

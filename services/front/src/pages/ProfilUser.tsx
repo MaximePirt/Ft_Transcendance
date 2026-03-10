@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
@@ -234,14 +234,40 @@ function ProfilUser() {
 	const safeAccuracy = Math.max(0, Math.min(100, accuracy))
 	const [value, setValue] = useState(0);
 
-	const handleUserAuth = async () => {
+
+	useEffect(() => {
+		const fetchUserAuth = async () => {
+			if (!user?.email) return;
+			try {
+				const response = await fetch(`${API_BASE}/auth/getUserAuth?email=${encodeURIComponent(user.email)}`, {
+					method: "GET",
+					headers: { "Content-Type": "application/json" },
+				});
+				const data = await response.json();
+
+				if (response.ok) {
+					setValue(data.value);
+				}
+			} catch (e) {
+				console.error(e);
+			}
+		}
+		fetchUserAuth();
+	}, [user?.email]);
+
+	const handleUserAuth = async (e: ChangeEvent<HTMLInputElement>) => {
 		try {
+			const newValue = e.target.checked ? 1 : 0;
+			setValue(newValue);
 			await fetch(`${API_BASE}/auth/handleFA`, {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({ auth: value })
+				body: JSON.stringify({
+					auth: newValue,
+					email: user?.email
+				})
 			});
 		} catch (e) {
 			console.error(e);
@@ -1036,7 +1062,7 @@ function ProfilUser() {
 									)
 								})}
 							</div>
-							<label><input type="checkbox" onChange={(e) => { setValue(e.target.checked ? 1 : 0), handleUserAuth }} />2FA authentication</label>
+							<label><input type="checkbox" checked={value === 1} onChange={handleUserAuth} />2FA authentication</label>
 							{!canEdit && (
 								<>
 									<div className="actions" style={{ marginTop: '0.5rem' }}>
