@@ -90,6 +90,20 @@ function SoloGameSetup() {
     });
   };
 
+  async function getUserId() {
+    localStorage.removeItem("userId");
+    const response = await fetch(`https://localhost/api/user/me_id`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      console.error("Failed to fetch user ID")
+      return
+    }
+    const currentUserId = await response.json();
+    localStorage.setItem("userId", String(currentUserId.id));
+  }
+
   const handleStartGame = async () => {
     console.log("Theme List : ", themeList);
     console.log("powerUps List : ", powerUps(t));
@@ -126,6 +140,7 @@ function SoloGameSetup() {
       localStorage.setItem("sessionCode", String(data.sessionCode));
       localStorage.setItem("maxPlayers", String(playerCount));
       localStorage.setItem("questionCount", String(questionCount));
+      getUserId();
       navigate('/quiz/multi', { state: { themes: Array.from(selectedThemes), questionCount, playerCount, powerUps: Array.from(selectedPowerUps), sessionId: data.sessionId } });
     }
   }

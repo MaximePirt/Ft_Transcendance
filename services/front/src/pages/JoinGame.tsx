@@ -16,6 +16,19 @@ function JoinGame() {
 
   const STORAGE_KEY = 'soloGameState:v1'
 
+  async function getUserId() {
+    localStorage.removeItem("userId");
+    const response = await fetch(`https://localhost/api/user/me_id`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      console.error("Failed to fetch user ID")
+      return
+    }
+    const currentUserId = await response.json();
+    localStorage.setItem("userId", String(currentUserId.id));
+  }
 
   const handleJoin = async () => {
     if (roomCode.trim().length !== 6) {
@@ -50,6 +63,7 @@ function JoinGame() {
       })
       .then(res => {
         if (res.ok) {
+          getUserId();
           localStorage.setItem("sessionId", String(session.id));
           localStorage.setItem("sessionCode", String(roomCode));
           navigate(`/quiz/multi`)

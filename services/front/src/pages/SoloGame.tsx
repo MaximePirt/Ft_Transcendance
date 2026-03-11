@@ -153,9 +153,9 @@ function SoloGamePage() {
       const msg = JSON.parse(event.data)
 
       if (msg.type === "powerups_granted") {
-        console.log("Received powerups_granted message from server:", msg)
-        const newTypes = msg.payload.powerups.filter((p: any) => p.user_id === currentUserId).map((p: any) => p.powerup_type)
-        console.log("Received new powerups from server:[ ", newTypes, " ]")
+        const userIdStr = localStorage.getItem("userId")
+        const userId = userIdStr ? Number(userIdStr) : null
+        const newTypes = msg.payload.powerups.filter((p: any) => p.user_id === userId).map((p: any) => p.powerup_type)
 
         setPowerups(prev => {
           const updated = [...prev]
@@ -287,26 +287,6 @@ function SoloGamePage() {
       console.warn('[SoloGame] failed to persist state', err)
     }
   }, [question, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
-
-  async function getUserId() {
-    localStorage.removeItem("userId");
-    const response = await fetch(`https://localhost/api/user/me_id`, {
-      method: 'GET',
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      console.error("Failed to fetch user ID")
-      console.log("Response :", response)
-      console.log("Response status:", response.status)
-      return
-    }
-    console.log("Here is currentUserIdRaw:", response);
-    const currentUserId = await response.json();
-    console.log("Current user ID:", currentUserId.id);
-    localStorage.setItem("userId", String(currentUserId.id));
-  }
-
-  getUserId();
 
   useEffect(() => {
   if (!routeState) return;
