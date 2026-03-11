@@ -14,6 +14,9 @@ function JoinGame() {
   const { user, isAuthenticated, isAuthReady } = useAuth()
   
 
+  const STORAGE_KEY = 'soloGameState:v1'
+
+
   const handleJoin = async () => {
     if (roomCode.trim().length !== 6) {
       setError(t('code_error'))
@@ -30,6 +33,9 @@ function JoinGame() {
         navigate('/')
         return
       }
+      localStorage.removeItem("questionCount");
+      localStorage.removeItem("sessionId");
+      localStorage.removeItem(STORAGE_KEY);
       const checkcode = await fetch(`https://localhost/api/quiz/game-sessions/code/${roomCode}`)
       if (!checkcode.ok) {
         throw new Error('Game session not found')

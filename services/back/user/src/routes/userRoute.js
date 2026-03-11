@@ -55,12 +55,13 @@ async function userRoutes(fastify, options) {
 	})
 
 
-	fastify.get("/me_id", async (request, reply) => {
-		const username = request.headers.username;
-		if (!username) {
-			return reply.code(400).send({ error: "Username header is required" });
+	fastify.get("/me_id", {onRequest: [fastify.authenticate]}, async (request, reply) => {
+		const userId = request.user.id;
+		console.log("Authenticated user ID:", userId);
+		if (!userId) {
+			return reply.code(400).send({ error: "User ID is required" });
 		}
-		const user = await userController.getUserByUsername(username);
+		const user = await userController.getUserById(userId);
 		if (!user) {
 			return reply.code(404).send({ error: "User not found" });
 		}

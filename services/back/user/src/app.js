@@ -12,13 +12,27 @@ It listen on porte 3001
 
 const fastify = require("fastify")({ logger: true });
 const path = require("path");
-fastify.register(require("@fastify/multipart"));
-fastify.register(require("@fastify/static"), {
-  root: path.join(__dirname, "..", "uploads"),
-  prefix: "/uploads/",
+const fastifyJwt = require("@fastify/jwt");
+
+const jwt_secret = process.env.JWT_SECRET || false;
+if (!jwt_secret) {
+	console.error("JWT_SECRET environment variable is not set.");
+	process.exit(1);
+}
+
+fastify.register(require("@fastify/cookie"), {
+	secret: jwt_secret,
+	parseOptions: {}
 });
-fastify.register(require("./routes/userRoute"));
-fastify.register(require("./routes/friendRoute"));
+
+
+fastify.register(fastifyJwt, {
+  secret: jwt_secret,
+  cookie: {
+    cookieName: "token",
+    signed: false
+  }
+});
 
 
 fastify.register(require("@fastify/cors"), {
@@ -28,6 +42,16 @@ fastify.register(require("@fastify/cors"), {
 	allowedHeaders: ["Content-type", "Authorization"],
 });
 
+fastify.register(require("./plugins/auth"));
+
+fastify.register(require("@fastify/multipart"));
+fastify.register(require("@fastify/static"), {
+  root: path.join(__dirname, "..", "uploads"),
+  prefix: "/uploads/",
+});
+
+fastify.register(require("./routes/userRoute"));
+fastify.register(require("./routes/friendRoute"));
 
 
 const schedule = require("@fastify/schedule");

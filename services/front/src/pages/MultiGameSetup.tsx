@@ -25,6 +25,8 @@ const MIN_Q = 2;
 const MAX_Q = 10;
 const MIN_P = 2;
 const MAX_P = 8;
+const STORAGE_KEY = 'soloGameState:v1'
+
 
 function SoloGameSetup() {
   const navigate = useNavigate()
@@ -99,6 +101,7 @@ function SoloGameSetup() {
       }
       console.log("Selected themes for API:", topic);
       console.log("Player Count:", playerCount);
+      localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem("sessionId");
       localStorage.removeItem("questionCount");
       localStorage.removeItem("maxPlayers");
