@@ -34,6 +34,20 @@ fastify.register(fastifyJwt, {
   }
 });
 
+let websocketEnabled = false;
+try {
+  const websocketPlugin = require("@fastify/websocket");
+  fastify.register(websocketPlugin);
+  websocketEnabled = true;
+} catch (error) {
+  fastify.log.warn("@fastify/websocket not found, websocket routes disabled");
+}
+
+});
+if (websocketEnabled) {
+  fastify.register(require("./routes/wsRoute"));
+}
+
 
 fastify.register(require("@fastify/cors"), {
   origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://user_api:3001"],

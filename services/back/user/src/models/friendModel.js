@@ -47,6 +47,15 @@ const listPendingSent = db.prepare(`
   AND f.initiator_id = ?
 `);
 
+const listRelatedUsers = db.prepare(`
+  SELECT DISTINCT CASE
+    WHEN user_id = ? THEN friend_id
+    ELSE user_id
+  END AS id
+  FROM friends
+  WHERE user_id = ? OR friend_id = ?
+`);
+
 
 //	Functions
 
@@ -150,6 +159,13 @@ function getFriendshipStatus(userId, friendId) {
   return { ok: true, status: status.status, initiator_id: status.initiator_id };
 }
 
+function listRelatedUserIds(userId) {
+  return listRelatedUsers
+    .all(userId, userId, userId)
+    .map((row) => Number(row.id))
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
 module.exports = {
   addFriend,
   removeFriend,
@@ -157,4 +173,5 @@ module.exports = {
   listFriendRequestsReceived,
   listFriendRequestsSent,
   getFriendshipStatus,
+  listRelatedUserIds,
 };

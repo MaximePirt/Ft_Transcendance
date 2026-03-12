@@ -1,6 +1,7 @@
 // services/back/user/src/routes/friendRoute.js
 // TODO: Modificate cookies in a function instead of repeating code
 const friendController = require("../controllers/friendController");
+const friendWsHub = require("../ws/friendWsHub");
 
 const AUTH_URL = process.env.AUTH_API_URL || false;
 if (!AUTH_URL) {
@@ -68,6 +69,12 @@ async function friendRoutes(fastify, options) {
 				return reply.code(400).send({ ok: false, message: "Invalid userId or friendId" });
 			}
 			const res = await friendController.removeFriendHandler(meId, friendIdnum);
+			if (res?.ok) {
+				friendWsHub.notifyUsers([meId, friendIdnum], {
+					type: "friend_updated",
+					payload: { reason: "removed" },
+				});
+			}
 			return reply.code(res.statusCode).send(res);
 		} catch (error) {
 			request.log.error(error);
@@ -101,6 +108,18 @@ async function friendRoutes(fastify, options) {
 		}
 		console.log(`Adding friend ${friendId} to user ${meId}`);
 		const res = await friendController.addFriendHandler(meId, friendIdNum);
+		if (res?.ok && res?.created) {
+			friendWsHub.notifyUsers([friendIdNum], {
+				type: "friend_request_received",
+				payload: { fromUserId: Number(meId) },
+			});
+		}
+		if (res?.ok || res?.statusCode === 409) {
+			friendWsHub.notifyUsers([Number(meId), friendIdNum], {
+				type: "friend_updated",
+				payload: { reason: res?.created ? "request_sent" : "request_answered" },
+			});
+		}
 
 		console.log("Add Friend Response:", res);
 		return reply.code(res.statusCode || 200).send(res);
