@@ -283,7 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		setUser(userData)
 		localStorage.setItem('user', JSON.stringify(userData))
 		setIsAuthReady(true)
-		await applyPreferredLanguage(userData.username)
+		await applylang(userData.username)
 		return true
 	}
 
