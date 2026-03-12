@@ -79,33 +79,26 @@ This has helped clarify API design conventions, understand new key concepts such
 
 
 ### Team Information
-	◦ Assigned role(s): PO, PM, Tech Lead, Developers, etc.
-	◦ Brief description of their responsibilities.
+
 ##### Product Owner (PO)
-	tpipi
+The Product Owner is responsible for defining the product vision and ensuring that its development meets user needs and project expectations. They manage and prioritize the backlog, make decisions about which features to develop, and validate the work done to ensure it meets the set objectives. They also play a key role in communicating with stakeholders, ensuring that requirements, feedback, and priorities are clearly conveyed. As part of our project, we have chosen to entrust this responsibility to tpipi, who performs these tasks while also participating in the development of the application.
+
 
 ##### Product Manager (PM)
-	vgodart
+The Project Manager/Scrum Master plays a central role in organizing and coordinating the team. They ensure that the project runs smoothly by planning meetings, monitoring task progress, and ensuring that deadlines are met. They also facilitate communication between team members, identify potential risks or obstacles, and help implement solutions to maintain effective progress. As part of our project, we have chosen to entrust this responsibility to vgodart, who performs these tasks while also participating in the development of the application.
+
 
 ##### Technical Lead
-	mpierrot
+The Technical Lead/Architect is responsible for the technical vision of a project and the overall consistency of its architecture. They define structural choices, select the most appropriate technologies, and ensure compliance with best development practices in order to guarantee reliable, maintainable, and scalable code. They also play a key role in reviewing significant technical changes, anticipating risks related to performance, security, or scalability, and supporting the development team on the most complex technical decisions.
+As part of our project, we have chosen to entrust this responsibility to mpierrot, who carries out these tasks while also participating in the development of the application.
 
 ##### Developers
-	tpipi
-	vgodart
-	tdausque
-	mpierrot
+Developers are responsible for designing, developing, and integrating the various features of the project. They participate in writing code, reviewing code, testing implemented features, and documenting their work to ensure the quality, comprehensibility, and maintainability of the application. They also contribute to resolving technical issues and continuously improving the product. As part of our project, all members of the group play this role and actively participate in the development of the application.
 
 #### Project Management:
-Work was distributed by module, with each member taking ownership of a specific part of the project based on each personnal preferences, and working on their own dedicated Git branch.
+The work was organized by module, with each team member taking ownership of a specific part of the project according to their preferences and working on a dedicated Git branch. This approach helped clarify responsibilities, improve autonomy, and simplify parallel development.
 
-Weekly sync meetings (1 to 2 per week) were held via **Discord voice calls**
-to share progress, merge branches when needed, assign upcoming tasks,
-and set the next internal deadlines.
-We used discord as our main communication platform, organized into dedicated
-channels per module and type of work (backend, frontend, database, general, etc.)
-We also used Github Project as Kanban board for visual tracking of the project's
-progress, using issues as task tracking, linked directly to the Kanban board.
+To ensure effective coordination, weekly synchronization meetings were held once or twice a week through **Discord** voice calls. These meetings were used to share progress updates, merge branches when necessary, assign upcoming tasks, and define internal deadlines. Discord also served as the team’s main communication platform, with dedicated channels for each module and area of work, including backend, frontend, database, and general coordination. In addition, **GitHub Projects** was used as a *Kanban* board to visually track the project’s progress, while *GitHub Issues* were used for task management and directly linked to the board for better visibility and organization.
 
 
 #### Technical Stack:
@@ -114,6 +107,10 @@ progress, using issues as task tracking, linked directly to the Kanban board.
 	◦ Database system and why it was chosen.
 	◦ Any other significant technologies or libraries.
 	◦ Justification for major technical choices.
+As part of this project, the application was designed using modern technical architecture based on a frontend developed with React, integrating react-router-dom for navigation management, react-i18next for internationalization, and HTTP and WebSocket exchanges to ensure both traditional processing and real-time interactions.  The backend is based on Fastify and follows a microservices approach, with each API isolated in a separate Docker container to ensure better separation of responsibilities, easier maintenance, and greater scalability of the application as a whole.  This organization allows for a clear separation of different functional areas, such as quiz session management, response processing, secure authentication with JWT-tokens and cookie, and user-related features.
+The choice of this architecture meets several technical objectives. 
+On the one hand, the use of WebSocket allows for the efficient management of real-time events related to the progress of a game session, particularly for receiving server messages, managing power-ups, and synchronizing certain game states, such as friends requests. 
+On the other hand, the use of separate APIs deployed in separate containers promotes a modular approach, in line with the principles of distributed architectures.
 
 #### Database Schema:
 	◦ Visual representation or description of the database structure.
@@ -164,3 +161,11 @@ Création et gestion de sessions (code, mode, topic, nombre de questions, max pl
 	◦ Detailed breakdown of what each team member contributed.
 	◦ Specific features, modules, or components implemented by each person.
 	◦ Any challenges faced and how they were overcome.
+
+#### Pipi Tristan
+
+#### Godart Victor
+
+#### Dausque Thibault
+
+#### Pierrot Maxime
