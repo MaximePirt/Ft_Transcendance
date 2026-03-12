@@ -315,7 +315,7 @@ async function userRoutes(fastify, options) {
 				return reply.code(404).send({ error: "USER_NOT_FOUND" });
 			}
 
-			const lang = user.preferredLanguage;
+			const lang = user.lang;
 			const html = await render(React.createElement(DataExportConfirmationEmail, { username: user.username, lang: lang }));
 			const transporter = createZohoTransporter();
 
@@ -352,7 +352,7 @@ async function userRoutes(fastify, options) {
       			return reply.code(404).send({ error: "USER_NOT_FOUND" });
     		}
 
-			const lang = user.preferredLanguage;
+			const lang = user.lang;
 			const html = await render(React.createElement(AccountDeletionEmail, { username: user.username, lang: lang }));
 			const transporter = createZohoTransporter();
 
