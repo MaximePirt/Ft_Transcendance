@@ -14,6 +14,34 @@ const AccountDeletionEmail = require("../mails/accountDeletionEmail.js");
 const SignupEmail = require("../mails/signupEmail.js");
 userController = require("../controllers/userController");
 
+const AUTH_URL = process.env.AUTH_API_URL || false;
+if (!AUTH_URL) {
+	console.error("AUTH_API_URL environment variable is not set.");
+	process.exit(1);
+}
+
+const sanitizeUser = (user) => {
+	if (!user) return user;
+	const { password, ...safeUser } = user;
+	return safeUser;
+};
+
+const getAuthenticatedUserId = async (request) => {
+	const cookieHeader = request.headers.cookie;
+	if (!cookieHeader) return null;
+
+	const meResponse = await fetch(`${AUTH_URL}/me`, {
+		method: "GET",
+		headers: { cookie: cookieHeader },
+	});
+
+	if (!meResponse.ok) return null;
+	const me = await meResponse.json();
+	const meId = Number(me?.id);
+	if (!Number.isInteger(meId) || meId <= 0) return null;
+	return meId;
+};
+
 const subjectExport = {
 	"fr": "Éxportation de vos données personnelles",
 	"en": "Export of your personal data",
@@ -30,7 +58,8 @@ const subjectDelete = {
 async function userRoutes(fastify, options) {
 	// Get informations
 	fastify.get("/users", async (request, reply) => {
-		return await userController.getUsers();
+		const users = await userController.getUsers();
+		return Array.isArray(users) ? users.map(sanitizeUser) : [];
 	});
 
 	fastify.post("/signin", async (request, reply) => {
@@ -166,31 +195,64 @@ async function userRoutes(fastify, options) {
 		const res = await userController.getUserById(request.params.id);
 		if (!res)
 			return reply.code(404).send({ error: "User not found" });
-		return res;
+		return sanitizeUser(res);
 	});
 
 	fastify.get("/users/:id", async (request, reply) => {
 		const userId = request.params.id;
-		return await userController.getUserById(userId);
+		const user = await userController.getUserById(userId);
+		return sanitizeUser(user);
 	});
 
 	fastify.patch("/:id", async (request, reply) => {
-		const userId = Number(request.params.id);
+		const userId = request.params.id;
+		const userIdNumber = Number(userId);
+		if (!Number.isInteger(userIdNumber) || userIdNumber <= 0) {
+			return reply.code(400).send({ error: "Invalid user id" });
+		}
+
+		const requesterId = await getAuthenticatedUserId(request);
+		if (!requesterId) {
+			return reply.code(401).send({ error: "Unauthorized" });
+		}
+		if (requesterId !== userIdNumber) {
+			return reply.code(403).send({ error: "Forbidden" });
+		}
+
 		const updateData = request.body;
 		try {
 			const updatedUser = await userController.updateUser(userId, updateData);
 			if (!updatedUser) {
 				return reply.code(404).send({ error: "User not found" });
 			}
-			return updatedUser;
+			return sanitizeUser(updatedUser);
 		} catch (error) {
 			request.log.error(error);
+			if (String(error?.message).includes('Username already taken')) {
+				return reply.code(409).send({ error: 'Username already taken by another account' });
+			}
+			if (String(error?.message).includes('Email already taken')) {
+				return reply.code(409).send({ error: 'Email already taken by another account' });
+			}
 			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
 	fastify.patch("/:id/avatar", async (request, reply) => {
-		const userId = Number(request.params.id);
+		const userId = request.params.id;
+		const userIdNumber = Number(userId);
+		if (!Number.isInteger(userIdNumber) || userIdNumber <= 0) {
+			return reply.code(400).send({ error: "Invalid user id" });
+		}
+
+		const requesterId = await getAuthenticatedUserId(request);
+		if (!requesterId) {
+			return reply.code(401).send({ error: "Unauthorized" });
+		}
+		if (requesterId !== userIdNumber) {
+			return reply.code(403).send({ error: "Forbidden" });
+		}
+
 		const data = await request.file();
 		if (!data)
 			return reply.code(400).send({ error: "No file uploaded" });
@@ -224,8 +286,22 @@ async function userRoutes(fastify, options) {
 
 	fastify.put("/users/:id", async (request, reply) => {
 		const userId = request.params.id;
+		const userIdNumber = Number(userId);
+		if (!Number.isInteger(userIdNumber) || userIdNumber <= 0) {
+			return reply.code(400).send({ error: "Invalid user id" });
+		}
+
+		const requesterId = await getAuthenticatedUserId(request);
+		if (!requesterId) {
+			return reply.code(401).send({ error: "Unauthorized" });
+		}
+		if (requesterId !== userIdNumber) {
+			return reply.code(403).send({ error: "Forbidden" });
+		}
+
 		const userData = request.body;
-		return await userController.updateUser(userId, userData);
+		const updated = await userController.updateUser(userId, userData);
+		return sanitizeUser(updated);
 	});
 
 	fastify.post("/export-data/mail", async (request, reply) => {

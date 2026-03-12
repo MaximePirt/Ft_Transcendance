@@ -191,12 +191,13 @@ function ProfilUser() {
 	const navigate = useNavigate()
 	const { username: routeUsername } = useParams()
 	const { t, i18n } = useTranslation()
-	const { user, isAuthenticated, isAuthReady } = useAuth()
+	const { user, isAuthenticated, isAuthReady, updateUser } = useAuth()
 	const isPublicView = Boolean(routeUsername) && routeUsername !== user?.username
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
 	const avatarInputRef = useRef<HTMLInputElement | null>(null)
+	const friendWsRef = useRef<WebSocket | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
@@ -204,6 +205,9 @@ function ProfilUser() {
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
 	const [saveSuccess, setSaveSuccess] = useState(false)
+	const [usernameInput, setUsernameInput] = useState('')
+	const [usernameError, setUsernameError] = useState('')
+	const [usernameSuccess, setUsernameSuccess] = useState('')
 	const [avatarUrl, setAvatarUrl] = useState('')
 	const [selectedAvatarFileName, setSelectedAvatarFileName] = useState('')
 	const [avatarUploading, setAvatarUploading] = useState(false)
@@ -247,6 +251,16 @@ function ProfilUser() {
 		if (normalized.includes('already sent')) return t('profile_friend_request_already_sent')
 		if (normalized.includes('no auth cookie') || normalized.includes('unauthorized')) return t('save_error_not_authenticated')
 		return ''
+	}
+
+	const applyPresenceToSocialLists = (targetUserId: string, online: boolean) => {
+		const nextStatus: Friend['status'] = online ? 'online' : 'offline'
+		setFriends((current) => current.map((friend) => (
+			friend.id === targetUserId ? { ...friend, status: nextStatus } : friend
+		)))
+		setFriendRequests((current) => current.map((request) => (
+			request.id === targetUserId ? { ...request, status: nextStatus } : request
+		)))
 	}
 
 	const loadFriends = async (username: string, signal?: AbortSignal) => {
@@ -427,6 +441,7 @@ function ProfilUser() {
 				joinYear: new Date().getFullYear(),
 				favorites: ['cinema', 'music', 'computer_science'],
 			})
+			setUsernameInput(user.username)
 		}
 	}, [user, isPublicView])
 
@@ -539,12 +554,6 @@ function ProfilUser() {
 
 		void refreshFriends()
 
-		const refreshInterval = window.setInterval(() => {
-			if (document.visibilityState === 'visible') {
-				void refreshFriends()
-			}
-		}, 10000)
-
 		const onVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
 				void refreshFriends()
@@ -555,8 +564,69 @@ function ProfilUser() {
 
 		return () => {
 			abortController.abort()
-			window.clearInterval(refreshInterval)
 			document.removeEventListener('visibilitychange', onVisibilityChange)
+		}
+	}, [user, canEdit])
+
+	useEffect(() => {
+		if (!user || !canEdit) return
+		let isDisposed = false
+		let reconnectTimer: number | null = null
+		let currentSocket: WebSocket | null = null
+
+		const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+
+		const connect = () => {
+			if (isDisposed) return
+			const socket = new WebSocket(`${proto}//${window.location.host}/ws/user/friends`)
+			currentSocket = socket
+			friendWsRef.current = socket
+
+			socket.onopen = () => {
+				console.log('[Profile] Friends WebSocket connected')
+			}
+
+			socket.onmessage = async (event) => {
+				try {
+					const msg = JSON.parse(event.data)
+					if (msg?.type === 'presence_updated') {
+						const targetUserId = String(msg?.payload?.userId || '')
+						if (targetUserId) {
+							applyPresenceToSocialLists(targetUserId, Boolean(msg?.payload?.online))
+						}
+						return
+					}
+					if (msg?.type === 'friend_updated' || msg?.type === 'friend_request_received') {
+						await Promise.all([loadFriends(user.username), loadFriendRequests()])
+					}
+				} catch (error) {
+					console.warn('[Profile] Friends WebSocket message error', error)
+				}
+			}
+
+			socket.onerror = (error) => {
+				console.error('[Profile] Friends WebSocket error', error)
+			}
+
+			socket.onclose = () => {
+				if (isDisposed) return
+				reconnectTimer = window.setTimeout(() => {
+					connect()
+				}, 1500)
+			}
+		}
+
+		connect()
+
+		return () => {
+			isDisposed = true
+			if (reconnectTimer) window.clearTimeout(reconnectTimer)
+			if (currentSocket) {
+				currentSocket.close()
+			}
+			if (friendWsRef.current === currentSocket) {
+				friendWsRef.current = null
+			}
 		}
 	}, [user, canEdit])
 
@@ -587,9 +657,44 @@ function ProfilUser() {
 		setIsSaving(true)
 		setSaveError('')
 		setSaveSuccess(false)
+		setUsernameError('')
+		setUsernameSuccess('')
 		try {
-			const res = await saveProfileToServer()
-			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
+			const nextUsername = usernameInput.trim()
+			const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+			if (!usernameRegex.test(nextUsername)) {
+				setUsernameError(t('signup_error_username_format'))
+				return
+			}
+
+			const userResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(user.username)}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('save_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+
+			const response = await saveProfileToServer(id, nextUsername)
+			if (!response.ok) {
+				const payload = await response.json().catch(() => null)
+				const detail = payload?.error || payload?.message || '-'
+				if (response.status === 409) {
+					const conflictMessage = String(detail)
+					if (conflictMessage.toLowerCase().includes('username')) {
+						setUsernameError(conflictMessage)
+						return
+					}
+					throw new Error(conflictMessage)
+				}
+				throw new Error(t('save_error_api', { status: response.status, detail }))
+			}
+
+			if (nextUsername !== user.username) {
+				updateUser({ username: nextUsername })
+				setUserProfile((prev) => ({ ...prev, username: nextUsername }))
+				setUsernameSuccess(t('save_success'))
+			}
+
 			setSaveSuccess(true)
 		} catch (e) {
 			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
@@ -629,6 +734,7 @@ function ProfilUser() {
 			formData.append('file', file)
 			const uploadResponse = await fetch(`${API_BASE}/user/${id}/avatar`, {
 				method: 'PATCH',
+				credentials: 'include',
 				body: formData,
 			})
 			if (!uploadResponse.ok) {
@@ -666,6 +772,7 @@ function ProfilUser() {
 			const { id } = await userResponse.json()
 			const updateResponse = await fetch(`${API_BASE}/user/${id}`, {
 				method: 'PATCH',
+				credentials: 'include',
 				headers: {
 					'Content-Type': 'application/json',
 				},
@@ -686,26 +793,17 @@ function ProfilUser() {
 		}
 	}
 
-	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
-		if (!user) return { ok: false, error: t('save_error_not_authenticated') }
+	const saveProfileToServer = async (userId: number | string, usernameToSave: string): Promise<Response> => {
 		const langToSave = i18n.language
-		const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
-		if (!userResponse.ok) {
-			const text = await userResponse.text()
-			return {
-				ok: false,
-				error: t('save_error_user_id', { status: userResponse.status, detail: text || '-' }),
-			}
-		}
-		const { id } = await userResponse.json()
-		console.log("Saving profile with data:", { bgColor, stickers, titles, description, langToSave })
 
-		const response = await fetch(`${API_BASE}/user/${id}`, {
+		return fetch(`${API_BASE}/user/${userId}`, {
 			method: 'PATCH',
+			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
+				username: usernameToSave,
 				profileCardBgColor: bgColor,
 				profileCardStickers: JSON.stringify(stickers),
 				profileCardTitles: JSON.stringify(titles),
@@ -715,16 +813,6 @@ function ProfilUser() {
 				font: localStorage.getItem('font') || 'default',
 			})
 		})
-
-		if (!response.ok) {
-			const text = await response.text()
-			return {
-				ok: false,
-				error: t('save_error_api', { status: response.status, detail: text || '-' }),
-			}
-		}
-
-		return { ok: true }
 	}
 
 	type StickerPayload = { symbol: string; url?: string }
@@ -1090,6 +1178,24 @@ function ProfilUser() {
 					{canEdit && (
 						<section className="profile-card-controls">
 							<div className="panel-title">{t('profile_customize')}</div>
+							<div className="control-group">
+								<label className="control-label" htmlFor="profile-username-edit">
+									{t('username')}
+								</label>
+								<div className="control-row">
+									<input
+										id="profile-username-edit"
+										type="text"
+										value={usernameInput}
+										onChange={(e) => setUsernameInput(e.target.value)}
+										placeholder={t('username_placeholder')}
+										className="profile-desc-input"
+										disabled={isSaving}
+									/>
+								</div>
+								{usernameError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{usernameError}</p>}
+								{usernameSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{usernameSuccess}</p>}
+							</div>
 							<div className="control-group">
 								<label className="control-label" htmlFor="avatar-upload">
 									{t('profile_avatar_label')}
