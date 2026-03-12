@@ -260,6 +260,16 @@ function ProfilUser() {
 		return ''
 	}
 
+	const applyPresenceToSocialLists = (targetUserId: string, online: boolean) => {
+		const nextStatus: Friend['status'] = online ? 'online' : 'offline'
+		setFriends((current) => current.map((friend) => (
+			friend.id === targetUserId ? { ...friend, status: nextStatus } : friend
+		)))
+		setFriendRequests((current) => current.map((request) => (
+			request.id === targetUserId ? { ...request, status: nextStatus } : request
+		)))
+	}
+
 	const loadFriends = async (username: string, signal?: AbortSignal) => {
 		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
 		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
@@ -616,7 +626,14 @@ function ProfilUser() {
 			socket.onmessage = async (event) => {
 				try {
 					const msg = JSON.parse(event.data)
-					if (msg?.type === 'friend_updated' || msg?.type === 'friend_request_received' || msg?.type === 'presence_updated') {
+					if (msg?.type === 'presence_updated') {
+						const targetUserId = String(msg?.payload?.userId || '')
+						if (targetUserId) {
+							applyPresenceToSocialLists(targetUserId, Boolean(msg?.payload?.online))
+						}
+						return
+					}
+					if (msg?.type === 'friend_updated' || msg?.type === 'friend_request_received') {
 						await Promise.all([loadFriends(user.username), loadFriendRequests()])
 					}
 				} catch (error) {

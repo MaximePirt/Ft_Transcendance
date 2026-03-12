@@ -39,6 +39,42 @@ function User(username, email, password, token) {
 	this.id = 0;
 }
 
+async function performSignout(req, reply) {
+	try {
+		const userId = req.user.id;
+		const cookieHeader = req.headers.cookie;
+		const offlineRes = await fetch(`${user_api_url}/${userId}`, {
+			method: "PATCH",
+			headers: {
+				"Content-Type": "application/json",
+				...(cookieHeader ? { cookie: cookieHeader } : {}),
+			},
+			body: JSON.stringify({ onlineStatus: 0 }),
+		});
+
+		reply.clearCookie("token", {
+			path: "/",
+			httpOnly: true,
+			signed: false,
+			secure: true,
+		});
+
+		if (!offlineRes.ok) {
+			return reply.code(200).send({ ok: true, message: "Signed out, offline update failed" });
+		}
+
+		return reply.code(200).send({ ok: true, message: "Signed out" });
+	} catch (e) {
+		reply.clearCookie("token", {
+			path: "/",
+			httpOnly: true,
+			signed: false,
+			secure: true,
+		});
+		return reply.code(200).send({ ok: true, message: "Signed out" });
+	}
+}
+
 export default async function authRoute(fastify, options) {
 	console.log("Auth route loaded");
 	fastify.decorate("authenticate", async (request, reply) => {
@@ -68,39 +104,7 @@ export default async function authRoute(fastify, options) {
 	fastify.post("/signout",
 		{ onRequest: [fastify.authenticate] },
 		async (req, reply) => {
-			try {
-				const userId = req.user.id;
-				const cookieHeader = req.headers.cookie;
-				const offlineRes = await fetch(`${user_api_url}/${userId}`, {
-					method: "PATCH",
-					headers: {
-						"Content-Type": "application/json",
-						...(cookieHeader ? { cookie: cookieHeader } : {}),
-					},
-					body: JSON.stringify({ onlineStatus: 0 }),
-				});
-
-				reply.clearCookie("token", {
-					path: "/",
-					httpOnly: true,
-					signed: false,
-					secure: true,
-				});
-
-				if (!offlineRes.ok) {
-					return reply.code(200).send({ ok: true, message: "Signed out, offline update failed" });
-				}
-
-				return reply.code(200).send({ ok: true, message: "Signed out" });
-			} catch (e) {
-				reply.clearCookie("token", {
-					path: "/",
-					httpOnly: true,
-					signed: false,
-					secure: true,
-				});
-				return reply.code(200).send({ ok: true, message: "Signed out" });
-			}
+			return performSignout(req, reply);
 		}
 	);
 
@@ -326,10 +330,17 @@ export default async function authRoute(fastify, options) {
 	})
 
 	fastify.post("/logout", async (req, rep) => {
-		console.log("You've been Logged out")
-		rep.clearCookie('token', { path: '/' });
-
-		return rep.send({ message: 'Logged out successfully' });
+		try {
+			await fastify.authenticate(req, rep);
+			if (rep.sent) {
+				return;
+			}
+			console.log("You've been Logged out")
+			return performSignout(req, rep);
+		} catch (e) {
+			rep.clearCookie('token', { path: '/' });
+			return rep.send({ message: 'Logged out successfully' });
+		}
 	})
 
 	fastify.post('/code', async (req, reply) => {

@@ -27,12 +27,6 @@ const SpaceZone = [
 	{ label: '\u00A0', value: ' ' }
 ]
 
-interface User {
-	email: string,
-	username: string,
-	password: string
-}
-
 function HomePage() {
 	const navigate = useNavigate()
 	const { t } = useTranslation()
@@ -45,10 +39,8 @@ function HomePage() {
 	const [signupError, setSignupError] = useState('')
 	const [code, setCode] = useState('');
 	const [codeError, setCodeError] = useState('');
-	const [logoutError, setLogoutError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
-	const [AuthRequired, setAuthRequired] = useState('');
 	const API_BASE = import.meta.env.AUTH_API_URL || 'https://localhost/api'
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
@@ -62,14 +54,6 @@ function HomePage() {
 		return message || t('error_occurred')
 	}
 
-	useEffect(() => {
-		const warn = (e: BeforeUnloadEvent) => {
-			e.preventDefault()
-			handleLogout();
-		}
-		window.addEventListener('beforeunload', warn)
-		return () => window.removeEventListener('beforeunload', warn)
-	}, [])
 	useEffect(() => {
 		const abortController = new AbortController()
 
@@ -175,8 +159,6 @@ function HomePage() {
 				})
 			});
 
-			const data = await send.json();
-
 			if (send.ok) {
 				setUserUsername('');
 				setUserEmail('');
@@ -193,20 +175,9 @@ function HomePage() {
 
 	const handleLogout = async () => {
 		try {
-			const response = await fetch(`${API_BASE}/auth/logout`, {
-				method: "POST",
-				credentials: "include"
-			});
-
-			const data = await response.json();
-			if (!response.ok) {
-				setLogoutError(data.error || "Something went wrong");
-				return;
-			} else
-				logout();
+			await logout()
 		} catch (e) {
-			setLogoutError("Cannot connect to authentication server");
-			return;
+			console.error('Logout error:', e)
 		}
 	}
 
@@ -319,7 +290,7 @@ function HomePage() {
 		}
 	}
 	return (
-		<main className="page">
+		<main className="page home-page">
 			{!isAuthenticated && <LanguageSelector />}
 			<div className="login-bar">
 				{isAuthenticated ? (
@@ -328,7 +299,7 @@ function HomePage() {
 							<span className="login-welcome__text">
 								{t('welcome')}, {user?.username}!
 							</span>
-							<a className="login-welcome__logout" onClick={logout}>
+							<a className="login-welcome__logout" onClick={() => void handleLogout()}>
 								{t("logout")}
 							</a>
 						</div>
@@ -416,7 +387,7 @@ function HomePage() {
 							<span className="login-welcome__text">
 								{t('welcome')}, {user?.username}!
 							</span>
-							<a className="login-welcome__logout" onClick={handleLogout}>
+							<a className="login-welcome__logout" onClick={() => void handleLogout()}>
 								{t("logout")}
 							</a>
 						</div>

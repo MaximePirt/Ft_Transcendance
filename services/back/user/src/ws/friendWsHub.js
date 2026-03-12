@@ -20,7 +20,11 @@ function remove(userId, socket) {
   const sockets = USER_ROOMS.get(id);
   if (!sockets) return;
   sockets.delete(socket);
-  if (sockets.size === 0) USER_ROOMS.delete(id);
+  if (sockets.size === 0) {
+    USER_ROOMS.delete(id);
+    LAST_ACTIVITY.delete(id);
+    setUserOnlineStatus(id, false);
+  }
 }
 
 function notifyUsers(userIds, event) {

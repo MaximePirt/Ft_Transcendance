@@ -11,7 +11,7 @@ interface AuthContextType {
 	user: User | null
 	login: (email: string, password: string) => Promise<boolean>
 	signup: (email: string, username: string, password: string) => Promise<boolean>
-	logout: () => void
+	logout: () => Promise<void>
 	updateUser: (patch: Partial<User>) => void
 	isAuthenticated: boolean
 	isAuthReady: boolean
@@ -297,13 +297,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}
 	}
 
-	const logout = () => {
+	const logout = async () => {
 		setUser(null)
 		localStorage.removeItem('user')
 		localStorage.setItem('theme', 'default')
 		localStorage.setItem('font', 'default')
 		applyTheme('default')
 		applyFont('default')
+
+		try {
+			await fetch(`${API_BASE}/auth/signout`, {
+				method: 'POST',
+				credentials: 'include',
+				keepalive: true,
+			})
+		} catch (error) {
+			console.warn('[Auth] signout request failed', error)
+		}
 	}
 
 	const updateUser = (patch: Partial<User>) => {
