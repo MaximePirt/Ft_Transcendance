@@ -244,14 +244,12 @@ function ProfilUser() {
 					headers: { "Content-Type": "application/json" },
 				});
 				const data = await response.json();
-
-				if (response.ok) {
-					setValue(data.value);
-				}
+				setValue(data.value);
 			} catch (e) {
 				console.error(e);
 			}
 		}
+		console.log("value: ", value);
 		fetchUserAuth();
 	}, [user?.email]);
 

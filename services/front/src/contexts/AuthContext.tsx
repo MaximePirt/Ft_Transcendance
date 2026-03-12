@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 					signal: abortController.signal,
 				})
 
-				if (meResponse.ok) {
+				if (meResponse.ok && document.cookie !== "") {
 					const me = await meResponse.json()
 					const userData = {
 						email: me?.email || '',
