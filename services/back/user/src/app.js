@@ -43,7 +43,6 @@ try {
   fastify.log.warn("@fastify/websocket not found, websocket routes disabled");
 }
 
-});
 if (websocketEnabled) {
   fastify.register(require("./routes/wsRoute"));
 }
