@@ -80,7 +80,7 @@ function SoloGamePage() {
   const [hint, setHint] = useState<string | null>(null)
   const [removedOptions, setRemovedOptions] = useState<removedOption[]>([])
   const [powerups, setPowerups] = useState<(string | null)[]>(Array(MAX_SLOTS).fill(null))
-  
+
   useEffect(() => {
     const abortController = new AbortController()
     
@@ -153,7 +153,9 @@ function SoloGamePage() {
       const msg = JSON.parse(event.data)
 
       if (msg.type === "powerups_granted") {
-        const newTypes = msg.payload.powerups.map((p: any) => p.powerup_type)
+        const userIdStr = localStorage.getItem("userId")
+        const userId = userIdStr ? Number(userIdStr) : null
+        const newTypes = msg.payload.powerups.filter((p: any) => p.user_id === userId).map((p: any) => p.powerup_type)
 
         setPowerups(prev => {
           const updated = [...prev]
@@ -279,6 +281,7 @@ function SoloGamePage() {
     }
 
     try {
+      localStorage.removeItem(STORAGE_KEY)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     } catch (err) {
       console.warn('[SoloGame] failed to persist state', err)
@@ -431,6 +434,35 @@ function SoloGamePage() {
     }
   }
 
+  const leaveGame = async () => {
+    const abortController = new AbortController()
+
+    try {
+      const sessionIdStr = await localStorage.getItem("sessionId");
+      const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+      if (!sessionId)
+        throw new Error('Invalid session ID')
+      const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/players/me`, {
+        method: 'DELETE',
+        credentials: 'include',
+        signal: abortController.signal,
+      })
+      if (!response.ok) {
+        throw new Error('Failed to fetch question')
+      }
+      setLoading(false)
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem("questionCount")
+      navigate('/quiz')
+    } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : t('error_occurred'))
+        setLoading(false)
+      }
+    return () => abortController.abort()
+  }
+
+
   if (loading) {
     return (
       <main className="page">
@@ -508,8 +540,9 @@ function SoloGamePage() {
                 return exitBtn && (
                   <button
                     onClick={() => {
-                      localStorage.removeItem(STORAGE_KEY)
-                      navigate('/quiz')
+                      if (window.confirm("Êtes-vous sûr de vouloir quitter la partie ? Votre progression ne sera pas sauvegardée.")) {
+                        leaveGame()
+                      }
                     }}
                     title="Quitter la partie"
                   >

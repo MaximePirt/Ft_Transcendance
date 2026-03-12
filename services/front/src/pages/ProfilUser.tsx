@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
 import DataRequester from '../content/DataRequester'
+import DataDeleter from '../content/DataDeleter'
 import '../App.css'
 
 // @ts-ignore
@@ -132,12 +133,6 @@ type AchievementPayload = {
 	all: Achievement[]
 }
 
-type LeaderboardPlayer = {
-	id: string
-	username: string
-	wins: number
-}
-
 const defaultGameStats: GameStats = {
 	totalMatches: 0,
 	wins: 0,
@@ -229,9 +224,7 @@ function ProfilUser() {
 	const [achievementsLoading, setAchievementsLoading] = useState(false)
 	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
 	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
-	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
-	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
-	const [leaderboardError, setLeaderboardError] = useState(false)
+
 	const totalQuestions = gameStats.answered
 	const correctAnswers = gameStats.correct
 	const accuracy = Number.isFinite(gameStats.accuracy) ? Math.round(gameStats.accuracy) : 0
@@ -410,38 +403,8 @@ function ProfilUser() {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
 			console.warn('[Profile] failed to load achievements', error)
-			setAchievements(defaultAchievements)
 		} finally {
 			setAchievementsLoading(false)
-		}
-	}
-
-	const loadLeaderboard = async (signal?: AbortSignal) => {
-		setLeaderboardLoading(true)
-		setLeaderboardError(false)
-		try {
-			const response = await fetch(`${API_BASE}/user/leaderboard/wins?limit=5`, { signal })
-			if (!response.ok) throw new Error('Failed to load leaderboard')
-			const data = await response.json()
-			const list = Array.isArray(data?.result) ? data.result : []
-			const normalized: LeaderboardPlayer[] = list.slice(0, 5).map((player: {
-				id: string | number
-				username?: string
-				wins?: number
-			}) => ({
-				id: String(player.id),
-				username: String(player.username || '-'),
-				wins: Number(player.wins || 0),
-			}))
-			setLeaderboard(normalized)
-		} catch (error) {
-			if (error instanceof Error && error.name === 'AbortError') return
-			if (error instanceof TypeError) return
-			console.warn('[Profile] failed to load leaderboard', error)
-			setLeaderboard([])
-			setLeaderboardError(true)
-		} finally {
-			setLeaderboardLoading(false)
 		}
 	}
 
@@ -671,18 +634,17 @@ function ProfilUser() {
 		if (!profileUsername) {
 			setRecentMatches([])
 			setGameStats(defaultGameStats)
-			setAchievements(defaultAchievements)
-			setLeaderboard([])
-			setLeaderboardError(false)
+			if (isAuthenticated) {
+				setAchievements(defaultAchievements)
+			}
 			return
 		}
 		const abortController = new AbortController()
 		void loadRecentMatches(profileUsername, abortController.signal)
 		void loadGameStats(profileUsername, abortController.signal)
 		void loadAchievements(profileUsername, abortController.signal)
-		void loadLeaderboard(abortController.signal)
 		return () => abortController.abort()
-	}, [profileUsername])
+	}, [profileUsername, isAuthenticated])
 
 	useEffect(() => {
 		document.body.dir = i18n.dir()
@@ -846,7 +808,7 @@ function ProfilUser() {
 				profileCardStickers: JSON.stringify(stickers),
 				profileCardTitles: JSON.stringify(titles),
 				profileCardDescription: description,
-				preferredLanguage: langToSave,
+				lang: langToSave,
 				theme: localStorage.getItem('theme') || 'default',
 				font: localStorage.getItem('font') || 'default',
 			})
@@ -1145,27 +1107,6 @@ function ProfilUser() {
 									<p className="stat-value">{gameStats.wins}</p>
 								</div>
 							</div>
-						</div>
-
-						<div className="control-group">
-							<p className="control-label">{t('profile_leaderboard_title')}</p>
-							{leaderboardLoading ? (
-								<p className="pref-desc">{t('profile_leaderboard_loading')}</p>
-							) : leaderboardError ? (
-								<p className="pref-desc">{t('profile_leaderboard_unavailable')}</p>
-							) : leaderboard.length === 0 ? (
-								<p className="pref-desc">{t('profile_leaderboard_empty')}</p>
-							) : (
-								leaderboard.map((player, index) => (
-									<p key={player.id} className="pref-desc">
-										{t('profile_leaderboard_row', {
-											rank: index + 1,
-											username: player.username,
-											wins: player.wins,
-										})}
-									</p>
-								))
-							)}
 						</div>
 
 						<div className="control-group">
@@ -1595,9 +1536,12 @@ function ProfilUser() {
 						</section>
 					)}
 				</div>
-				<label>
-				</label>
-				<DataRequester />
+				{canEdit && (
+					<>
+						<DataRequester />
+						<DataDeleter />
+					</>
+				)}
 			</div>
 		</main>
 	)

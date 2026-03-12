@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   avatarUrl TEXT DEFAULT '/avatar/Default.png',
-  lang TEXT DEFAULT 'fr',
+  lang TEXT DEFAULT 'en',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   lastConnexion DATETIME DEFAULT CURRENT_TIMESTAMP,
   onlineStatus BOOLEAN NOT NULL DEFAULT 0,
@@ -30,7 +30,6 @@ CREATE TABLE IF NOT EXISTS users (
   profileCardStickers TEXT DEFAULT '[]',
   profileCardTitles TEXT DEFAULT '["cinema","quiz_master"]',
   profileCardDescription TEXT DEFAULT '',
-  preferredLanguage TEXT DEFAULT 'en',
   theme TEXT DEFAULT 'default',
   font TEXT DEFAULT 'default'
 );`;
@@ -78,7 +77,7 @@ ensureUserColumn('profileCardBgColor', "TEXT DEFAULT '#0f0f10'", '#0f0f10');
 ensureUserColumn('profileCardStickers', "TEXT DEFAULT '[]'", '[]');
 ensureUserColumn('profileCardTitles', "TEXT DEFAULT '[\"cinema\",\"quiz_master\"]'", '["cinema","quiz_master"]');
 ensureUserColumn('profileCardDescription', "TEXT DEFAULT ''", '');
-ensureUserColumn('preferredLanguage', "TEXT DEFAULT 'en'", 'en');
+ensureUserColumn('lang', "TEXT DEFAULT 'en'", 'en');
 ensureUserColumn('theme', "TEXT DEFAULT 'default'", 'default');
 ensureUserColumn('font', "TEXT DEFAULT 'default'", 'default');
 

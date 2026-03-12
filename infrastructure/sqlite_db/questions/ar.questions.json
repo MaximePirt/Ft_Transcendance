@@ -40,5 +40,253 @@
                 }
             ]
         }
+    ],
+    "Sports": [
+        {
+            "id": "sports.fifa2018.winner",
+            "question": "أي بلد فاز بكأس العالم لكرة القدم 2018؟ ?",
+            "type": "qcm",
+            "réponse": "France",
+            "options": [
+                "البرازيل",
+                "ألمانيا",
+                "فرنسا",
+                "الأرجنتين"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "sports.olympics.100m_record",
+            "question": "من يحمل سجل العالم للمسافة 100 متر للرجال؟",
+            "type": "texte",
+            "réponse": "Usain Bolt",
+            "variantes": [
+                "Bolt",
+                "Usain",
+                "Usain St. Leo Bolt"
+            ],
+            "difficulté": "easy"
+        }
+    ],
+    "Cinéma": [
+        {
+            "id": "cinema.titanic.lead_actor",
+            "question": "من هو الممثل الرئيسي في الفيلم 'Titanic' ?",
+            "type": "qcm",
+            "réponse": "Leonardo DiCaprio",
+            "options": [
+                "Brad Pitt",
+                "Johnny Depp",
+                "Leonardo DiCaprio",
+                "Tom Cruise"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "cinema.lalaland.director",
+            "question": "من هو مخرج الفيلم 'Lalaland' ?",
+            "type": "qcm",
+            "réponse": "Damien Chazelle",
+            "options": [
+                "Steven Spielberg",
+                "Christopher Nolan",
+                "Damien Chazelle",
+                "Quentin Tarantino"
+            ],
+            "difficulté": "medium"
+        },
+        {
+            "id": "cinema.matrix.lead_actor",
+            "question": "في أي فيلم علمي فكاهي لعام 1999 يلعب Keanu Reeves دور باطل معلوماتي يُدعى Neo ?",
+            "type": "qcm",
+            "réponse": "The Matrix",
+            "options": [
+                "Inception",
+                "The Matrix",
+                "Blade Runner",
+                "Minority Report"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "cinema.oscar.best_animated_film_2020",
+            "question": "أي فيلم فاز بجائزة الأوسكار لأفضل فيلم أنمي في 2020 ?",
+            "type": "qcm",
+            "réponse": "Toy Story 4",
+            "options": [
+                "Frozen II",
+                "How to Train Your Dragon: The Hidden World",
+                "Toy Story 4",
+                "Klaus"
+            ],
+            "difficulté": "medium"
+        },
+        {
+            "id": "cinema.psychose.films",
+            "question": "من هو المخرج المعروف لفيلماته المثيرة مثل 'Psychose' و 'Les Oiseaux' ?",
+            "type": "texte",
+            "réponse": "Alfred Hitchcock",
+            "variantes": [
+                "Hitchcock",
+                "Alfred H.",
+                "Sir Alfred Hitchcock"
+            ],
+            "difficulté": "medium"
+        },
+        {
+            "id": "cinema.burton.victor",
+            "question": "أي فيلم لـ Tim Burton يعرض فتى يُدعى Victor يجد نفسه في عالم الأموات ?",
+            "type": "qcm",
+            "réponse": "Les Noces Funèbres",
+            "options": [
+                "L'Étrange Noël de Monsieur Jack",
+                "Les Noces Funèbres",
+                "Charlie et la Chocolaterie",
+                "Alice au Pays des Merveilles"
+            ],
+            "difficulté": "hard"
+        }
+    ],
+    "JeuxVidéo": [
+        {
+            "id": "games.esport.first_game",
+            "question": "أي هو أول لعبة على которой ظهرت الرياضات الإلكترونية ?",
+            "type": "texte",
+            "réponse": "The Intergalactic Space War",
+            "variantes": [
+                "Space War",
+                "The Space War",
+                "Intergalactic Space War"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "games.esport.game_awards_2025",
+            "question": "أي لعبة فازت بجائزة Game Awards لأفضل لعبة Esport في عام 2025 ?",
+            "type": "qcm",
+            "réponse": "Counter-Strike 2",
+            "options": [
+                "Dota 2",
+                "Counter-Strike 2",
+                "Fortnite",
+                "League of Legends"
+            ],
+            "difficulté": "medium"
+        },
+        {
+            "id": "games.league_of_legends.headquarters_country",
+            "question": "في أي بلد يقع مقر Riot Games, المطور של League of Legends ?",
+            "type": "texte",
+            "réponse": "États-Unis",
+            "variantes": [
+                "USA",
+                "Amérique",
+                "United States"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "games.quantic_dream.first_international_game",
+            "question": "أي هو أول لعبة فرنسية تم إنشاؤها بواسطة Quantic Dream وتم الاعتراف بها على المستوى الدولي ?",
+            "type": "qcm",
+            "réponse": "Omikron: The Nomad Soul",
+            "options": [
+                "Fahrenheit",
+                "Heavy Rain",
+                "Omikron: The Nomad Soul",
+                "Detroit: Become Human"
+            ],
+            "difficulté": "hard"
+
+        },
+        {
+            "id": "games.battle_royale.popular_game",
+            "question": "أي لعبة فيديو شعَّلت نوع Battle Royale ?",
+            "type": "qcm",
+            "réponse": "PlayerUnknown's Battlegrounds (PUBG)",
+            "options": [
+                "Fortnite",
+                "Apex Legends",
+                "PlayerUnknown's Battlegrounds (PUBG)",
+                "Call of Duty: Warzone"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "games.legend_of_zelda.main_character",
+            "question": "ما هو اسم الشخصية الرئيسية في سلسلة ألعاب 'The Legend of Zelda' ?",
+            "type": "texte",
+            "réponse": "Link",
+            "variantes": [
+                "Laink",
+                "Linque"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "games.minecraft.creeper_inspiration",
+            "question": "أي حيوان ساعد في إلهام خلق creeper في Minecraft ?",
+            "type": "texte",
+            "réponse": "خنزير",
+            "variantes": [
+                "Pig",
+                "Pork"
+            ],
+            "difficulté": "easy"
+        }
+    ],
+    "Echec": [
+        {
+            "id": "chess.longest_reign_world_champion",
+            "question": "Lequel de ces joueurs d'échecs détient le record du plus long règne ininterrompu en tant que champion du monde officiel (27 ans) ?",
+            "type": "qcm",
+            "réponse": "Emanuel Lasker",
+            "options": [
+                "Garry Kasparov",
+                "Emanuel Lasker",
+                "Anatoly Karpov",
+                "Magnus Carlsen"
+            ],
+            "difficulté": "easy"
+        }
+    ],
+    "Informatique": [
+        {
+            "id": "informatics.ios_primary_language",
+            "question": "أي لغة برمجة تُستخدم بشكل أساسي لتطوير تطبيقات iOS ?",
+            "type": "qcm",
+            "réponse": "Swift",
+            "options": [
+                "Java",
+                "Kotlin",
+                "Swift",
+                "Objective-C"
+            ],
+            "difficulté": "medium"
+        },
+        {
+            "id": "informatics.internet_security_protocol",
+            "question": "أي بروتوكول يُستخدم لتأمين الاتصالات على الإنترنت من خلال تشفير البيانات المتبادلة بين المتصفح والخادم الويب ?",
+            "type": "qcm",
+            "réponse": "HTTPS",
+            "options": [
+                "HTTP",
+                "FTP",
+                "SMTP",
+                "HTTPS"
+            ],
+            "difficulté": "easy"
+        },
+        {
+            "id": "informatics.linux_kernel",
+            "question": "ما هو نواة نظام التشغيل المفتوح المصدر الأكثر استخداماً في العالم ?",
+            "type": "texte",
+            "réponse": "Linux",
+            "variantes": [
+                "Linux Kernel",
+                "GNU/Linux"
+            ],
+            "difficulté": "easy"
+        }
     ]
 }

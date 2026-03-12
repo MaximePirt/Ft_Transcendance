@@ -37,6 +37,7 @@ function SoloGameSetup() {
   const [questionCount, setQuestionCount] = useState<number>(2);
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
+  localStorage.removeItem("questionCount")
   localStorage.removeItem(STORAGE_KEY);
 
 
@@ -87,6 +88,21 @@ function SoloGameSetup() {
     });
   };
 
+  async function getUserId() {
+    localStorage.removeItem("userId");
+    const response = await fetch(`https://localhost/api/user/me_id`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      console.error("Failed to fetch user ID")
+      return
+    }
+    const currentUserId = await response.json();
+    localStorage.setItem("userId", String(currentUserId.id));
+  }
+
+
   const handleStartGame = async () => {
     if (selectedThemes.size > 0) {
       let topic = Array.from(selectedThemes).filter((theme) => theme !== 'All');
@@ -119,7 +135,7 @@ function SoloGameSetup() {
 
       localStorage.setItem("sessionId", String(data.sessionId));
       localStorage.setItem("questionCount", String(questionCount));
-
+      getUserId();
       navigate('/quiz/solo', { state: {
         sessionId: data.sessionId,
         questionCount,

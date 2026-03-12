@@ -11,7 +11,6 @@ function generateSessionCode()
 
 function insertGameSession(sessionCode, mode, topic, question_count, max_players, power_ups, is_solo, hostId)
 {
-	console.log("Inserting powers_ups for new game session:", power_ups);
 	const insert = db.prepare(`
 		INSERT INTO game_sessions (code, mode, topic, question_count, max_players, power_ups, is_solo, host_id)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -24,7 +23,6 @@ function insertGameSession(sessionCode, mode, topic, question_count, max_players
 
 function insertPlayerInGame(playerId, gameSessionId)
 {
-	console.log("Inserting player ID:", playerId, "into game session ID:", gameSessionId);
 	const insertPlayer = db.prepare(`
 		INSERT INTO game_players (game_session_id, user_id)
 		VALUES (?, ?)
@@ -49,33 +47,28 @@ function getSessionById(sessionId)
 
 function getSessionByCode(sessionCode)
 {
-	console.log("Model : Fetching game session by code:", sessionCode);
 	const data = db.prepare(`
 		SELECT id, code, mode, topic, question_count, max_players, host_id, status, started_at, ended_at,
 			current_question_order, current_question_time, power_ups		
 		FROM game_sessions
 		WHERE code = ?
 	`).get(sessionCode);
-	console.log("Game session data retrieved:", data);
 	return data;
 }
 
 function getPlayersBySession(sessionId)
 {
-	console.log("Model : Fetching all players for game session ID:", sessionId);
 	const players = db.prepare(`
 		SELECT u.id, u.username, gp.joined_at, gp.answered_count, gp.correct_answers, gp.score, gp.is_active
 		FROM game_players gp
 		JOIN users u ON gp.user_id = u.id
 		WHERE gp.game_session_id = ? AND gp.is_active = 1
 	`).all(sessionId);
-	console.log("Players retrieved for session ID", sessionId, ":", players);
 	return players;
 }
 
 function updateSessionStatus(sessionId, newStatus)
 {
-	console.log("Model: Updating status of game session ID:", sessionId, "to:", newStatus);
 	const res = db.prepare(`
 		UPDATE game_sessions
 		SET status = ?,
@@ -89,7 +82,6 @@ function updateSessionStatus(sessionId, newStatus)
 }
 
 function updateWinnerForSession(sessionId) {
-	console.log("Model: Updating winner for completed game session ID:", sessionId);
 	const winner = db.prepare(`
 		SELECT user_id
 		FROM game_players
@@ -106,21 +98,13 @@ function updateWinnerForSession(sessionId) {
 	`).run(sessionId, winner.user_id);
 	if (res.changes !== 1)
 		throw new Error("Failed to update winner for game session");
-	console.log("Winner updated for game session ID:", sessionId, "Winner user ID:", winner.user_id);
 	return res;
 }
 
 
 function generateQuestionPool(mode, questionCount, topicJson)
 {
-	console.log("Printing every possible slugs for debugging:");
-	const allCategories = db.prepare(`SELECT slug FROM categories`).all();
-	console.log(allCategories.map(c => c.slug));
-	console.log("Printing every category name now:");
-	const allCategoryNames = db.prepare(`SELECT name FROM category_translations WHERE lang = 'fr'`).all();
-	console.log(allCategoryNames.map(c => c.name));
 
-	console.log("Model: Generating question pool with mode:", mode, "question count:", questionCount, "topic:", topicJson);
 	let query = `
 		SELECT q.id, q.difficulty, q.type, q.category_id
 		FROM questions q
@@ -138,10 +122,8 @@ function generateQuestionPool(mode, questionCount, topicJson)
 	if (topicJson && topicJson !== 'null') {
 		try {
 			const topics = JSON.parse(topicJson);
-			console.log("Parsed topic JSON for question pool generation:", topics);
 			if (Array.isArray(topics) && topics.length > 0) {
 				const placeholders = topics.map(() => '?').join(',');
-				console.log("Applying topic filter for question pool generation with topics:", topics);
 				query += ` AND q.category_id IN (
 				SELECT id FROM categories WHERE slug IN (${placeholders})
 			)`;
@@ -160,7 +142,6 @@ function generateQuestionPool(mode, questionCount, topicJson)
 	params.push(questionCount);
 
 	const questionPool = db.prepare(query).all(...params);
-	console.log("Generated question pool:", questionPool);
 
 	
 	return questionPool;
@@ -168,7 +149,6 @@ function generateQuestionPool(mode, questionCount, topicJson)
 
 function insertPoolToSession(sessionId, questionPool)
 {
-	console.log("Model: Inserting question pool into game session ID:", sessionId);
 	const insert = db.prepare(`
 		INSERT INTO game_session_questions (game_session_id, question_id, question_order)
 		VALUES (?, ?, ?)
@@ -180,7 +160,6 @@ function insertPoolToSession(sessionId, questionPool)
 		}
 	});
 	insertMany(questionPool);
-	console.log("Inserted", questionPool.length, "questions into game session ID:", sessionId);
 }
 /**
  * @brief Check if a user is part of a game session
@@ -190,7 +169,6 @@ function insertPoolToSession(sessionId, questionPool)
  */
 function findUserInSession(sessionId, userId)
 {
-	console.log("Model: Checking if user ID:", userId, "is in game session ID:", sessionId);
 	const player = db.prepare(`
 		SELECT u.id, u.lang, u.username,
 			gp.score, gp.answered_count, gp.correct_answers, gp.is_active
@@ -199,7 +177,6 @@ function findUserInSession(sessionId, userId)
 		WHERE game_session_id = ? AND user_id = ?
 	`).get(sessionId, userId);
 	const isInSession = !!player;
-	console.log("Is user ID:", userId, "in game session ID:", sessionId, "?", isInSession);
 	if (!player)
 		return null;
 	return player;
@@ -213,7 +190,6 @@ function findUserInSession(sessionId, userId)
  * @returns 
  */
 function getQuestionByOrderForPlayer(sessionId, questionOrder, lang) {
-	console.log("Model: Fetching question by order for game session ID:", sessionId, "question order:", questionOrder, "language:", lang);
 	const question = db.prepare(`
 		SELECT
 			gsq.question_order,
@@ -253,7 +229,6 @@ function getQuestionByOrderForPlayer(sessionId, questionOrder, lang) {
 	WHERE game_session_id = ?
 	`).get(sessionId).count;
 
-	console.log("Total questions for game session ID:", sessionId, ":", question.total_questions);
 	return question;
 }
 
@@ -290,7 +265,6 @@ function normalizeAnswer(s) {
 
 function checkAnswer(questionAnswer, answer)
 {
-	console.log("Model: Checking Answer");
 	if (!questionAnswer)
 		throw new Error("No correct answer data found for question ID: " + questionAnswer.id);
 
@@ -319,8 +293,6 @@ function recordPlayerAnswer(sessionId, userId, questionId, answer, timeTaken, is
 	INSERT INTO game_answers (game_session_id, user_id, question_id, answer_given, time_taken, is_correct)
 	VALUES (?, ?, ?, ?, ?, ?)
 	`).run(sessionId, userId, questionId, answer.toString(), timeTaken, isCorrect ? 1 : 0);
-
-	console.log("Recorded answer for user ID:", userId, "question ID:", questionId, "in game session ID:", sessionId, "Answer:", answer, "Time taken:", timeTaken, "Correct:", isCorrect);
 }
 
 function updatePlayerScore(sessionId, userId, isCorrect, timeTaken){
@@ -332,8 +304,6 @@ function updatePlayerScore(sessionId, userId, isCorrect, timeTaken){
 	answered_count = answered_count + 1
 	WHERE game_session_id = ? AND user_id = ?
 	`).run(scoreIncrement, isCorrect ? 1 : 0, sessionId, userId);
-	
-	console.log("Updated score for user ID:", userId, "in game session ID:", sessionId, "Score increment:", scoreIncrement, "Time taken:", timeTaken);
 }
 
 function getCorrectAnswerForQuestion(questionId, lang)
@@ -356,6 +326,7 @@ function getCorrectAnswerForQuestion(questionId, lang)
 			variants = JSON.parse(question.text_answer_variants_parsed);
 		} catch (err) {
 			console.log("Failed to parse text answer variants JSON for question ID:", questionId, "Error:", err);
+			return null;
 		}
 		return {
 			type: 'text',
@@ -512,6 +483,7 @@ function countPowerups(sessionId, userId) {
 		FROM game_players
 		WHERE game_session_id = ? AND user_id = ?
 	`).get(sessionId, userId);
+	console.log("User Id : ", userId, "has powerups count:", row?.powerups_count ?? 0);
 	return row?.powerups_count ?? 0;
 }
 
@@ -540,10 +512,12 @@ function getAvailablePowerupsForPlayer(sessionId, userId) {
 			AND used = 0
 		ORDER BY granted_at ASC
 	`).all(sessionId, userId);
+	console.log("User :", userId, "has available powerups: [", res.map(p => p.powerup_type).join(", "), "]");
 	return res;
 }
 
 function usePowerup(powerupId, userId, sessionId) {
+	console.log("Model: Using powerup ID:", powerupId, "for user ID:", userId, "in game session ID:", sessionId);
 	const result = db.prepare(`
 		UPDATE game_powerups
 		SET used = 1, used_at = CURRENT_TIMESTAMP
