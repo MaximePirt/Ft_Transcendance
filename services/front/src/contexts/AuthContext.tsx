@@ -220,18 +220,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 	const login = async (email: string, username: string): Promise<boolean> => {
 		const rawIdentifier = email.trim()
-		const candidateUsernames = rawIdentifier.includes('@')
-			? [rawIdentifier, rawIdentifier.split('@')[0]]
-			: [rawIdentifier]
-		const userData = {
-			email: email || rawIdentifier,
-			username: username || candidateUsernames[candidateUsernames.length - 1],
+		let userData: User | null = null
+
+		try {
+			const meResponse = await fetch(`${API_BASE}/auth/me`, {
+				method: 'GET',
+				credentials: 'include',
+			})
+
+			if (meResponse.ok) {
+				const me = await meResponse.json()
+				if (me?.username) {
+					userData = {
+						email: me?.email || rawIdentifier,
+						username: me.username,
+					}
+				}
+			}
+		} catch {
+			userData = null
+		}
+
+		if (!userData) {
+			if (!username) return false
+			userData = {
+				email: email || rawIdentifier,
+				username,
+			}
 		}
 
 		setUser(userData)
 		localStorage.setItem('user', JSON.stringify(userData))
 		setIsAuthReady(true)
-		await applylang(username)
+		await applylang(userData.username)
 		return true
 	}
 

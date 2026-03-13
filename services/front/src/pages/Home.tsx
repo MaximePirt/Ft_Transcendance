@@ -32,7 +32,7 @@ export let isAuth: number;
 function HomePage() {
 	const navigate = useNavigate()
 	const { t } = useTranslation()
-	const { user, login, logout } = useAuth()
+	const { user, login, logout, isAuthenticated } = useAuth()
 	const [showLogin, setShowLogin] = useState(false)
 	const [showSignup, setShowSignup] = useState(false)
 	const [show2fa, setShow2fa] = useState(false)
@@ -48,7 +48,6 @@ function HomePage() {
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 	const [leaderboardError, setLeaderboardError] = useState(false)
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const mapSignupError = (message?: string) => {
 		const normalized = String(message || '').toLowerCase()
 		if (normalized.includes('password != confirm password')) return t('signup_error_password_mismatch')
@@ -87,11 +86,6 @@ function HomePage() {
 		return () => abortController.abort()
 	}, [])
 
-	useEffect(() => {
-		const token = Cookies.get("token");
-		setIsAuthenticated(Boolean(token));
-	})
-
 	const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setLoginError('')
@@ -121,7 +115,8 @@ function HomePage() {
 				if (data.isAuth === 1)
 					setShow2fa(true);
 				else
-					setIsAuthenticated(true);
+					await login(userEmail, userUsername);
+
 			}
 		} catch (e) {
 			console.error('Error : ', e);
@@ -148,8 +143,7 @@ function HomePage() {
 				setUserUsername('');
 				setUserEmail('');
 				setShow2fa(false);
-				if (await login(userEmail, userUsername))
-					setIsAuthenticated(true);
+				await login(userEmail, userUsername);
 
 			} else {
 				const err = await send.json();
@@ -163,7 +157,6 @@ function HomePage() {
 	const handleLogout = async () => {
 		try {
 			await logout();
-			setIsAuthenticated(false);
 		} catch (e) {
 			console.error('Logout error:', e)
 		}
@@ -250,6 +243,7 @@ function HomePage() {
 				setCodeError('');
 				setShowSignup(false);
 				setShow2fa(true);
+				await login(email, username);
 			}
 		} catch (e) {
 			console.error('Error: ', e)
