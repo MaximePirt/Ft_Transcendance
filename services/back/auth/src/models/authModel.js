@@ -1,4 +1,5 @@
 import db from './db.js'
+import bcrypt from 'bcryptjs';
 
 function addNewUser(username, email, password) {
 	try {
@@ -39,11 +40,16 @@ function changeUserModelAuth(email, value) {
 	}
 }
 
-function getModelUserId(email) {
+async function getModelUserId(email, password) {
 	try {
 		const stmt = db.prepare(
-			"SELECT id FROM users WHERE email = ?"
+			"SELECT id, password FROM users WHERE email = ?"
 		).get(email);
+
+		const isMatch = await bcrypt.compare(password, stmt.password);
+
+		if (!isMatch)
+			return "USER_NOT_FOUND";
 		return stmt.id;
 	} catch (e) {
 		return "USER_NOT_FOUND";

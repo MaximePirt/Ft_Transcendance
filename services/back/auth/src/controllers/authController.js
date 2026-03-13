@@ -11,7 +11,7 @@ async function signupUser(email, username, password) {
 }
 
 async function loginUser(email, password) {
-	const resp = await getUserId(email, password);
+	const resp = await getModelUserId(email, password);
 
 	if (resp === "USER_NOT_FOUND")
 		throw new Error("INVALID_CREDENTIALS");

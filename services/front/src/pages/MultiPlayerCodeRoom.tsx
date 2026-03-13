@@ -188,6 +188,8 @@ useEffect(() => {
 
 
 		const roomCode = localStorage.getItem("sessionCode");
+		// localStorage.removeItem("sessionCode")
+		localStorage.removeItem("questionCount")
 		let session = await getSession();
 		if (!session)
 		{

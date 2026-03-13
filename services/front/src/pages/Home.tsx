@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../App.css'
+import Cookies from 'js-cookie'
 import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
@@ -31,7 +32,7 @@ export let isAuth: number;
 function HomePage() {
 	const navigate = useNavigate()
 	const { t } = useTranslation()
-	const { user, login, signup, logout, isAuthenticated } = useAuth()
+	const { user, login, logout } = useAuth()
 	const [showLogin, setShowLogin] = useState(false)
 	const [showSignup, setShowSignup] = useState(false)
 	const [show2fa, setShow2fa] = useState(false)
@@ -40,7 +41,6 @@ function HomePage() {
 	const [signupError, setSignupError] = useState('')
 	const [code, setCode] = useState('');
 	const [codeError, setCodeError] = useState('');
-	const [logoutError, setLogoutError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
 	const [AuthRequired, setAuthRequired] = useState(false);
@@ -48,6 +48,14 @@ function HomePage() {
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 	const [leaderboardError, setLeaderboardError] = useState(false)
+	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	const mapSignupError = (message?: string) => {
+		const normalized = String(message || '').toLowerCase()
+		if (normalized.includes('password != confirm password')) return t('signup_error_password_mismatch')
+		if (normalized.includes('username should count between 3 & 16')) return t('signup_error_username_format')
+		if (normalized.includes('password must be 12+ chars')) return t('signup_error_password_format')
+		return message || t('error_occurred')
+	}
 
 	useEffect(() => {
 		const abortController = new AbortController()
@@ -75,10 +83,14 @@ function HomePage() {
 				setLeaderboardLoading(false)
 			}
 		}
-
 		void loadLeaderboard()
 		return () => abortController.abort()
 	}, [])
+
+	useEffect(() => {
+		const token = Cookies.get("token");
+		setIsAuthenticated(Boolean(token));
+	})
 
 	const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
@@ -104,12 +116,12 @@ function HomePage() {
 				setLoginError(data.error || "Something went wrong");
 			} else {
 				setUserEmail(email);
-				if (await login(email, userUsername)) {
-					setShowLogin(false);
-					setCodeError('');
-					if (data.isAuth === 1)
-						setShow2fa(true);
-				}
+				setShowLogin(false);
+				setCodeError('');
+				if (data.isAuth === 1)
+					setShow2fa(true);
+				else
+					setIsAuthenticated(true);
 			}
 		} catch (e) {
 			console.error('Error : ', e);
@@ -136,6 +148,9 @@ function HomePage() {
 				setUserUsername('');
 				setUserEmail('');
 				setShow2fa(false);
+				if (await login(userEmail, userUsername))
+					setIsAuthenticated(true);
+
 			} else {
 				const err = await send.json();
 				setCodeError(err.error);
@@ -147,20 +162,10 @@ function HomePage() {
 
 	const handleLogout = async () => {
 		try {
-			const response = await fetch(`${API_BASE}/auth/logout`, {
-				method: "POST",
-				credentials: "include"
-			});
-
-			const data = await response.json();
-			if (!response.ok) {
-				setLogoutError(data.error || "Something went wrong");
-				return;
-			} else
-				logout();
+			await logout();
+			setIsAuthenticated(false);
 		} catch (e) {
-			setLogoutError("Cannot connect to authentication server");
-			return;
+			console.error('Logout error:', e)
 		}
 	}
 
@@ -206,7 +211,7 @@ function HomePage() {
 		setUserUsername(username);
 		// password !== username
 		if (password !== confirmPassword) {
-			setSignupError("Password != confirm password");
+			setSignupError(t('signup_error_password_mismatch'));
 			return
 		} else if (!email_regex.test(email)) {
 			setSignupError("Bad email format");
@@ -215,7 +220,7 @@ function HomePage() {
 			setSignupError('Username should count between 3 & 16 characters and contains not any special characters');
 			return
 		} else if (!password_regex.test(password)) {
-			setSignupError('Password must be 12+ chars, include an uppercase, a number, and a special character.');
+			setSignupError(t('signup_error_password_format'));
 			return
 		}
 
@@ -240,17 +245,11 @@ function HomePage() {
 				console.log("data error: ", data.error);
 				return
 			} else {
-				const success = await signup(email, username, password)
-				if (success) {
-					if (await login(email, username)) {
-						setUserUsername(username);
-						setUserEmail(email);
-						setCodeError('');
-						setShowSignup(false);
-						setShow2fa(true);
-					} else
-						setSignupError(data.error || "Something went wrong");
-				}
+				setUserUsername(username);
+				setUserEmail(email);
+				setCodeError('');
+				setShowSignup(false);
+				setShow2fa(true);
 			}
 		} catch (e) {
 			console.error('Error: ', e)
@@ -258,7 +257,7 @@ function HomePage() {
 		}
 	}
 	return (
-		<main className="page">
+		<main className="page home-page">
 			{!isAuthenticated && <LanguageSelector />}
 			<div className="login-bar">
 				{isAuthenticated ? (
@@ -267,7 +266,7 @@ function HomePage() {
 							<span className="login-welcome__text">
 								{t('welcome')}, {user?.username}!
 							</span>
-							<a className="login-welcome__logout" onClick={logout}>
+							<a className="login-welcome__logout" onClick={() => void handleLogout()}>
 								{t("logout")}
 							</a>
 						</div>
@@ -355,7 +354,7 @@ function HomePage() {
 							<span className="login-welcome__text">
 								{t('welcome')}, {user?.username}!
 							</span>
-							<a className="login-welcome__logout" onClick={handleLogout}>
+							<a className="login-welcome__logout" onClick={() => void handleLogout()}>
 								{t("logout")}
 							</a>
 						</div>
