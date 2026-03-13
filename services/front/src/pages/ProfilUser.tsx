@@ -81,9 +81,10 @@ type Sticker = {
 	y: number
 }
 
-type TitleOption = {
+type BadgeOption = {
 	id: string
 	text: string
+	requiredAchievementKey?: string
 }
 
 type RecentMatch = {
@@ -173,19 +174,22 @@ const stickerPalette = [
 
 const bgPresets = ['#0f0f10', '#111827', '#1f2937', '#0b5fff', '#8b5cf6', '#10b981', '#eab308']
 
-const titleOptions: TitleOption[] = [
+const badgeOptions: BadgeOption[] = [
 	{ id: 'cinema', text: 'profile_title_cinema' },
 	{ id: 'quiz_master', text: 'profile_title_quiz_master' },
 	{ id: 'speedrunner', text: 'profile_title_speedrunner' },
 	{ id: 'pixel', text: 'profile_title_pixel' },
 	{ id: 'music', text: 'profile_title_music' },
+	{ id: 'first_match', text: 'achievement_first_match_title', requiredAchievementKey: 'first_match' },
+	{ id: 'winning_start', text: 'achievement_winning_start_title', requiredAchievementKey: 'winning_start' },
+	{ id: 'accuracy_pro', text: 'achievement_accuracy_pro_title', requiredAchievementKey: 'accuracy_pro' },
 ]
 
 const DEFAULT_AVATAR = '/avatar/Default.png'
 const DEFAULT_AVATAR_CHOICES = ['/avatar/Default.png', '/avatar/Default2.png', '/avatar/Default3.png']
 
 const MAX_STICKERS = 3
-const MAX_TITLES = 2
+const MAX_BADGES = 2
 
 function ProfilUser() {
 	const navigate = useNavigate()
@@ -200,7 +204,7 @@ function ProfilUser() {
 	const friendWsRef = useRef<WebSocket | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
-	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
+	const [badges, setBadges] = useState<string[]>([])
 	const [description, setDescription] = useState('')
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
@@ -229,6 +233,14 @@ function ProfilUser() {
 	const correctAnswers = gameStats.correct
 	const accuracy = Number.isFinite(gameStats.accuracy) ? Math.round(gameStats.accuracy) : 0
 	const safeAccuracy = Math.max(0, Math.min(100, accuracy))
+	const achievementByKey = new Map(achievements.all.map((achievement) => [achievement.key, achievement]))
+	const isBadgeUnlocked = (badge: BadgeOption) => {
+		if (!badge.requiredAchievementKey) return true
+		return Boolean(achievementByKey.get(badge.requiredAchievementKey)?.unlocked)
+	}
+	const selectableBadgeSet = new Set(badgeOptions.filter((badge) => isBadgeUnlocked(badge)).map((badge) => badge.id))
+	const activeBadges = badges.filter((id) => selectableBadgeSet.has(id)).slice(0, MAX_BADGES)
+	const visibleBadges = activeBadges
 
 	const formatMatchDate = (dateValue?: string) => {
 		if (!dateValue) return '-'
@@ -477,7 +489,7 @@ function ProfilUser() {
 					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
 					setBgColor(userData.profileCardBgColor || '#0f0f10')
 					setStickers([])
-					setTitles([titleOptions[0].id, titleOptions[1].id])
+					setBadges([])
 					setDescription(String(userData.profileCardDescription || '').slice(0, 40))
 
 					// Charger les données de personnalisation depuis le serveur
@@ -496,10 +508,10 @@ function ProfilUser() {
 						try {
 							const parsed = JSON.parse(userData.profileCardTitles)
 							if (Array.isArray(parsed) && parsed.length) {
-								setTitles(parsed.slice(0, MAX_TITLES))
+								setBadges(parsed.slice(0, MAX_BADGES))
 							}
 						} catch (e) {
-							console.warn('Failed to parse titles', e)
+							console.warn('Failed to parse badges', e)
 						}
 					}
 
@@ -521,7 +533,8 @@ function ProfilUser() {
 					if (stored && canEdit) {
 						const data = JSON.parse(stored)
 						if (data.stickers) setStickers(data.stickers)
-						if (data.titles) setTitles(data.titles)
+						if (data.badges) setBadges(data.badges)
+						if (data.titles) setBadges(data.titles)
 						if (data.bgColor) setBgColor(data.bgColor)
 						if (data.description) setDescription(data.description)
 					}
@@ -645,6 +658,10 @@ function ProfilUser() {
 		void loadAchievements(profileUsername, abortController.signal)
 		return () => abortController.abort()
 	}, [profileUsername, isAuthenticated])
+
+	useEffect(() => {
+		setBadges((prev) => prev.filter((id) => selectableBadgeSet.has(id)).slice(0, MAX_BADGES))
+	}, [achievements.all])
 
 	useEffect(() => {
 		document.body.dir = i18n.dir()
@@ -806,7 +823,7 @@ function ProfilUser() {
 				username: usernameToSave,
 				profileCardBgColor: bgColor,
 				profileCardStickers: JSON.stringify(stickers),
-				profileCardTitles: JSON.stringify(titles),
+				profileCardTitles: JSON.stringify(badges),
 				profileCardDescription: description,
 				lang: langToSave,
 				theme: localStorage.getItem('theme') || 'default',
@@ -853,7 +870,7 @@ function ProfilUser() {
 		if (!canEdit) return
 		setStickers([])
 		setBgColor('#0f0f10')
-		setTitles([titleOptions[0].id, titleOptions[1].id])
+		setBadges([])
 		setDescription('')
 		localStorage.setItem('theme', 'default')
 		localStorage.setItem('font', 'default')
@@ -862,12 +879,14 @@ function ProfilUser() {
 		window.dispatchEvent(new CustomEvent('theme-font-reset'))
 	}
 
-	const toggleTitle = (id: string) => {
+	const toggleBadge = (id: string) => {
 		if (!canEdit) return
-		setTitles((prev) => {
-			if (prev.includes(id)) return prev.filter((t) => t !== id)
-			if (prev.length >= MAX_TITLES) return prev
-			return [...prev, id]
+		if (!selectableBadgeSet.has(id)) return
+		setBadges((prev) => {
+			const sanitized = prev.filter((badgeId) => selectableBadgeSet.has(badgeId)).slice(0, MAX_BADGES)
+			if (sanitized.includes(id)) return sanitized.filter((badgeId) => badgeId !== id)
+			if (sanitized.length >= MAX_BADGES) return sanitized
+			return [...sanitized, id]
 		})
 	}
 
@@ -1034,8 +1053,8 @@ function ProfilUser() {
 							<h2 className="profile-card-name">{userProfile.username}</h2>
 							{description && <p className="profile-card-tagline">{description}</p>}
 							<div className="profile-card-meta">
-								{titles.slice(0, MAX_TITLES).map((id) => {
-									const found = titleOptions.find((opt) => opt.id === id)
+								{visibleBadges.map((id) => {
+									const found = badgeOptions.find((opt) => opt.id === id)
 									if (!found) return null
 									return <span key={id}>{t(found.text)}</span>
 								})}
@@ -1324,20 +1343,27 @@ function ProfilUser() {
 							</div>
 
 							<div className="control-group">
-								<p className="control-label">{t('profile_titles_label', { max: MAX_TITLES })}</p>
+								<p className="control-label">{t('profile_badges_label', { max: MAX_BADGES })}</p>
 								<div className="chip-row">
-									{titleOptions.map((opt) => {
-										const active = titles.includes(opt.id)
-										const blocked = !active && titles.length >= MAX_TITLES
+									{badgeOptions.map((opt) => {
+										const active = badges.includes(opt.id)
+										const locked = !isBadgeUnlocked(opt)
+										const blocked = !active && activeBadges.length >= MAX_BADGES
+										const achievement = opt.requiredAchievementKey ? achievementByKey.get(opt.requiredAchievementKey) : null
+										const questText = opt.requiredAchievementKey
+											? t(`achievement_${opt.requiredAchievementKey}_desc`, { target: achievement?.target || 0 })
+											: ''
 										return (
 											<button
 												key={opt.id}
 												type="button"
-												onClick={() => toggleTitle(opt.id)}
-												disabled={blocked}
+												onClick={() => toggleBadge(opt.id)}
+												disabled={locked || blocked}
+												title={locked ? t('profile_badge_unlock_tooltip', { quest: questText }) : undefined}
 												className={`chip ${active ? 'chip-active' : ''}`}
+												style={locked ? { opacity: 0.45, filter: 'grayscale(0.8)', cursor: 'not-allowed' } : undefined}
 											>
-												{t(opt.text)}
+												{locked ? `🔒 ${t(opt.text)}` : t(opt.text)}
 											</button>
 										)
 									})}
