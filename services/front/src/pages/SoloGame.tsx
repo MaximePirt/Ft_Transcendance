@@ -584,7 +584,7 @@ function SoloGamePage() {
                 {p ?? "Powerup Slot"}
               </button>
             )
-          })};
+          })}
         </div>
 
         {/* Zone de Titre */}
