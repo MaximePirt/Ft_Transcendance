@@ -71,7 +71,7 @@ async function handleStartGame() {
 		if (!res.ok)
 			throw new Error('Failed to start the game')
 		const data = await res.json()
-		navigate('/quiz/solo', { state: { sessionId: data.sessionId, isHost: true } })
+		navigate('/quiz/game', { state: { sessionId: data.sessionId, isHost: true } })
 	} catch (err: any) {
 		console.error('Error starting game:', err)
 		alert(t("Error starting the game. Please try again."))
@@ -144,7 +144,7 @@ useEffect(() => {
 		}
 		else if (msg.type === "game_started") {
 			console.log("Session started, navigating to game")
-			navigate('/quiz/solo', { state: { sessionId, isHost } })
+			navigate('/quiz/game', { state: { sessionId, isHost } })
 		}
 	}
 

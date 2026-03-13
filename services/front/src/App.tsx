@@ -34,7 +34,7 @@ function App() {
 				<Route path="/" element={<HomePage />} />
 				<Route path="/quiz" element={<RequireAuth><QuizPage /></RequireAuth>} />
 				<Route path="/quiz/solo-setup" element={<RequireAuth><SoloGameSetup /></RequireAuth>} />
-				<Route path="/quiz/solo" element={<RequireAuth><SoloGamePage /></RequireAuth>} />
+				<Route path="/quiz/game" element={<RequireAuth><SoloGamePage /></RequireAuth>} />
 
 				<Route path="/quiz/multi" element={<RequireAuth><MultiPlayerCodeRoom /></RequireAuth>} />
 				<Route path="/quiz/multi/:roomCode" element={<RequireAuth><MultiPlayerCodeRoom /></RequireAuth>} />
