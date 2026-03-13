@@ -696,7 +696,7 @@ function SoloGamePage() {
               </button>
             ) : (
               <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
-                {currentQuestionIndex === 1 ? 'Terminer le Quiz' : 'Question suivante →'}
+                {currentQuestionIndex === question_count - 1 ? 'Terminer le Quiz' : 'Question suivante →'}
               </button>
             )}
           </div>
