@@ -156,8 +156,7 @@ export default async function authRoute(fastify, options) {
 			const codeFound = usersCode.find((e) => e.email === email);
 			const isAuth = await getUserAuth(email);
 
-			console.log("User Id: ", resolvedUserId, " - ", reqUser);
-
+			console.log("username: ", username, "email: ", email);
 			if (!Number.isInteger(resolvedUserId) || resolvedUserId <= 0) {
 				return reply.code(500).send({ success: false, error: 'Invalid user id' });
 			}
@@ -172,14 +171,7 @@ export default async function authRoute(fastify, options) {
 
 			if (isAuth === 1)
 				signInMail(email, username);
-			else {
-				reply.setCookie("token", user.token, {
-					httpOnly: true,
-					signed: false,
-					secure: true,
-					path: "/",
-				});
-			}
+
 			return reply.code(200).send({
 				ok: true,
 				user: {
@@ -188,6 +180,11 @@ export default async function authRoute(fastify, options) {
 					email: user.email,
 					isAuth: isAuth ? 1 : 0
 				},
+			}).setCookie("token", user.token, {
+				httpOnly: true,
+				signed: false,
+				secure: true,
+				path: "/",
 			});
 		} catch (e) {
 			console.error(e);

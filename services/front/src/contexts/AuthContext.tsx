@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import i18n from '../i18n'
+import Cookies from 'js-cookie'
 
 interface User {
 	email: string
@@ -112,7 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 					signal: abortController.signal,
 				})
 
-				if (meResponse.ok && document.cookie !== "") {
+				const token = Cookies.get("token");
+				if (token !== "" && meResponse.ok) {
 					const me = await meResponse.json()
 					const userData = {
 						email: me?.email || '',

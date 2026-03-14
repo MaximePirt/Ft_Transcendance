@@ -10,6 +10,7 @@
   "dependencies": {
     "i18next": "^25.7.3",
     "js-cookie": "^3.0.5",
+    "jwt-decode": "^4.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-i18next": "^16.5.0",

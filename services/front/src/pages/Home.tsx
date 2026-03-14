@@ -6,6 +6,7 @@ import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
+import { jwtDecode } from 'jwt-decode'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
@@ -106,17 +107,19 @@ function HomePage() {
 			});
 
 			const data = await response.json();
+			console.log("data: ", data);
 			if (!response.ok) {
 				setLoginError(data.error || "Something went wrong");
 			} else {
-				setUserEmail(email);
+				setUserEmail(data.user.email);
+				setUserUsername(data.user.username);
 				setShowLogin(false);
 				setCodeError('');
-				if (data.isAuth === 1)
+				if (data.user.isAuth === 1)
 					setShow2fa(true);
-				else
-					await login(userEmail, userUsername);
-
+				else {
+					await login(data.user.email, data.user.username);
+				}
 			}
 		} catch (e) {
 			console.error('Error : ', e);
@@ -140,8 +143,6 @@ function HomePage() {
 			});
 
 			if (send.ok) {
-				setUserUsername('');
-				setUserEmail('');
 				setShow2fa(false);
 				await login(userEmail, userUsername);
 
@@ -199,7 +200,6 @@ function HomePage() {
 			username: username,
 			password: password,
 		}
-		isAuth = 0;
 		setUserEmail(email);
 		setUserUsername(username);
 		// password !== username
@@ -243,7 +243,6 @@ function HomePage() {
 				setCodeError('');
 				setShowSignup(false);
 				setShow2fa(true);
-				await login(email, username);
 			}
 		} catch (e) {
 			console.error('Error: ', e)
