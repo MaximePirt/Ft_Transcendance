@@ -7,9 +7,16 @@ const FONTS = [
   'geometrical',
 ] as const
 
-async function applyFont(fontName: string, signal?: AbortSignal) {
+async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false) {
   try {
     const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
+    if (!res.ok) {
+      if (!isRetry && fontName !== 'default') {
+        return applyFont('default', signal, true)
+      }
+      return
+    }
+
     const themeToApply = await res.json()
 
     const root = document.documentElement
@@ -19,9 +26,12 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
 
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return
-    console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
-    if (fontName !== 'default')
-      return applyFont('default', signal)
+    if (!isRetry && fontName !== 'default') {
+      return applyFont('default', signal, true)
+    }
+    if (!isRetry && fontName !== 'default') {
+      console.warn(`Erreur lors du chargement de la police "${fontName}"`, err)
+    }
     return
   }
 }

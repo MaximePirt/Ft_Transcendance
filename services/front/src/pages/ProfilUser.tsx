@@ -11,9 +11,16 @@ import '../App.css'
 // @ts-ignore
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
-async function applyTheme(themeName: string, signal?: AbortSignal) {
+async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = false) {
 	try {
 		const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
+		if (!res.ok) {
+			if (!isRetry && themeName !== 'default') {
+				return applyTheme('default', signal, true)
+			}
+			return
+		}
+
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -22,15 +29,26 @@ async function applyTheme(themeName: string, signal?: AbortSignal) {
 		})
 	} catch (err) {
 		if (err instanceof Error && err.name === 'AbortError') return
-		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
-		if (themeName !== 'default') return applyTheme('default', signal)
+		if (!isRetry && themeName !== 'default') {
+			return applyTheme('default', signal, true)
+		}
+		if (!isRetry && themeName !== 'default') {
+			console.warn(`Erreur lors du chargement du thème "${themeName}"`, err)
+		}
 		return
 	}
 }
 
-async function applyFont(fontName: string, signal?: AbortSignal) {
+async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false) {
 	try {
 		const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
+		if (!res.ok) {
+			if (!isRetry && fontName !== 'default') {
+				return applyFont('default', signal, true)
+			}
+			return
+		}
+
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -39,8 +57,12 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
 		})
 	} catch (err) {
 		if (err instanceof Error && err.name === 'AbortError') return
-		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
-		if (fontName !== 'default') return applyFont('default', signal)
+		if (!isRetry && fontName !== 'default') {
+			return applyFont('default', signal, true)
+		}
+		if (!isRetry && fontName !== 'default') {
+			console.warn(`Erreur lors du chargement de la police "${fontName}"`, err)
+		}
 		return
 	}
 }
