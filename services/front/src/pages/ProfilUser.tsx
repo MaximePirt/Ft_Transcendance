@@ -852,13 +852,14 @@ function ProfilUser() {
 	const saveProfileToServer = async (userId: number | string, usernameToSave: string): Promise<Response> => {
 		const langToSave = i18n.language
 
-		return fetch(`${API_BASE}/user/${userId}`, {
+		const resp = await fetch(`${API_BASE}/user/${userId}`, {
 			method: 'PATCH',
 			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
+				id: userId,
 				username: usernameToSave,
 				profileCardBgColor: bgColor,
 				profileCardStickers: JSON.stringify(stickers),
@@ -869,6 +870,11 @@ function ProfilUser() {
 				font: localStorage.getItem('font') || 'default',
 			})
 		})
+		if (!resp.ok) {
+			const data = await resp.json();
+			console.error(data);
+		}
+		return resp;
 	}
 
 	type StickerPayload = { symbol: string; url?: string }

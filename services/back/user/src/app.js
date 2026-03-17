@@ -27,29 +27,29 @@ fastify.register(require("@fastify/cookie"), {
 
 
 fastify.register(fastifyJwt, {
-  secret: jwt_secret,
-  cookie: {
-    cookieName: "token",
-    signed: false
-  }
+	secret: jwt_secret,
+	cookie: {
+		cookieName: "token",
+		signed: false
+	}
 });
 
 let websocketEnabled = false;
 try {
-  const websocketPlugin = require("@fastify/websocket");
-  fastify.register(websocketPlugin);
-  websocketEnabled = true;
+	const websocketPlugin = require("@fastify/websocket");
+	fastify.register(websocketPlugin);
+	websocketEnabled = true;
 } catch (error) {
-  fastify.log.warn("@fastify/websocket not found, websocket routes disabled");
+	fastify.log.warn("@fastify/websocket not found, websocket routes disabled");
 }
 
 if (websocketEnabled) {
-  fastify.register(require("./routes/wsRoute"));
+	fastify.register(require("./routes/wsRoute"));
 }
 
 
 fastify.register(require("@fastify/cors"), {
-  origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://user_api:3001"],
+	origin: ["http://localhost:5173", "http://127.0.0.1:5173", "http://user_api:3001"],
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 	credentials: true,
 	allowedHeaders: ["Content-type", "Authorization"],
@@ -59,8 +59,8 @@ fastify.register(require("./plugins/auth"));
 
 fastify.register(require("@fastify/multipart"));
 fastify.register(require("@fastify/static"), {
-  root: path.join(__dirname, "..", "uploads"),
-  prefix: "/uploads/",
+	root: path.join(__dirname, "..", "uploads"),
+	prefix: "/uploads/",
 });
 
 fastify.register(require("./routes/userRoute"));
@@ -73,35 +73,35 @@ fastify.register(schedule);
 
 // Schedule job task
 const purgeTask = new AsyncTask(
-  "purgeUsersJob",
-  async () => {
-    const { cron_gdpr } = require("./jobs/purgeInactiveUsers");
-    await cron_gdpr();
-  },
-  (error) => {
-    fastify.log.error(error, "Error during purgeInactiveUsers job:");
-  }
+	"purgeUsersJob",
+	async () => {
+		const { cron_gdpr } = require("./jobs/purgeInactiveUsers");
+		await cron_gdpr();
+	},
+	(error) => {
+		fastify.log.error(error, "Error during purgeInactiveUsers job:");
+	}
 );
 
 // Schedule job timing at 3 AM daily
 // TODO: Change to 3AM, currently every 2 minutes for testing
 const purgeJob = new CronJob(
-  {
-	cronExpression: "*/20 * * * *",
-  },
-  purgeTask
+	{
+		cronExpression: "*/20 * * * *",
+	},
+	purgeTask
 );
 
 const start = async () => {
-  try {
-    await fastify.ready();
-    fastify.scheduler.addCronJob(purgeJob);
-    await fastify.listen({ port: 3001, host: "0.0.0.0" });
-    console.log("Microservice Users listening on port 3001");
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
+	try {
+		await fastify.ready();
+		fastify.scheduler.addCronJob(purgeJob);
+		await fastify.listen({ port: 3001, host: "0.0.0.0" });
+		console.log("Microservice Users listening on port 3001");
+	} catch (err) {
+		fastify.log.error(err);
+		process.exit(1);
+	}
 };
 
 start();

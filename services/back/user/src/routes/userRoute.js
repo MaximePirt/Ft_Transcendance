@@ -12,6 +12,7 @@ const { createZohoTransporter } = require("../services/userServices.js");
 const DataExportConfirmationEmail = require("../mails/dataExportConfirmationEmail.js");
 const AccountDeletionEmail = require("../mails/accountDeletionEmail.js");
 const SignupEmail = require("../mails/signupEmail.js");
+const { getUserById } = require("../controllers/userController");
 userController = require("../controllers/userController");
 
 const subjectExport = {
@@ -40,18 +41,33 @@ const sanitizeUser = (user) => {
 
 const getAuthenticatedUserId = async (request) => {
 	const cookieHeader = request.headers.cookie;
+
 	if (!cookieHeader) return null;
 
-	const meResponse = await fetch(`${AUTH_URL}/me`, {
-		method: "GET",
-		headers: { cookie: cookieHeader },
-	});
+	try {
+		// const meResponse = await fetch(`${AUTH_URL}/me`, {
+		// 	method: "GET",
+		// 	headers: { cookie: cookieHeader },
+		// });
 
-	if (!meResponse.ok) return null;
-	const me = await meResponse.json();
-	const meId = Number(me?.id);
-	if (!Number.isInteger(meId) || meId <= 0) return null;
-	return meId;
+		const userId = await getUserById(request.body.id);
+		// if (!meResponse.ok) {
+		// 	const data = await meResponse.json();
+		// 	console.error("--- ERROR ---");
+		// 	console.error("user error: ", data);
+		// 	return null;
+		// }
+		// const me = await meResponse.json();
+		// const meId = Number(me?.id);
+		// if (!Number.isInteger(meId) || meId <= 0) {
+		// 	return null;
+		// }
+		// return meId;
+		return userId;
+	} catch (e) {
+		console.error(e);
+		return null;
+	}
 };
 
 async function userRoutes(fastify, options) {
@@ -83,7 +99,7 @@ async function userRoutes(fastify, options) {
 	})
 
 
-	fastify.get("/me_id", {onRequest: [fastify.authenticate]}, async (request, reply) => {
+	fastify.get("/me_id", { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const userId = request.user.id;
 		console.log("Authenticated user ID:", userId);
 		if (!userId) {
@@ -203,7 +219,16 @@ async function userRoutes(fastify, options) {
 		return sanitizeUser(user);
 	});
 
-	fastify.patch("/:id", async (request, reply) => {
+	fastify.patch("/:id", {
+		onRequest:
+			async (request, reply) => {
+				try {
+					await request.jwtVerify();
+				} catch (err) {
+					reply.send(err);
+				}
+			}
+	}, async (request, reply) => {
 		const userId = request.params.id;
 		const userIdNumber = Number(userId);
 		if (!Number.isInteger(userIdNumber) || userIdNumber <= 0) {
@@ -212,6 +237,7 @@ async function userRoutes(fastify, options) {
 
 		const requesterId = await getAuthenticatedUserId(request);
 		if (!requesterId) {
+			console.log("requester id: ", requesterId);
 			return reply.code(401).send({ error: "Unauthorized" });
 		}
 		if (requesterId !== userIdNumber) {
@@ -344,13 +370,13 @@ async function userRoutes(fastify, options) {
 		try {
 			const { userId } = request.body;
 			if (!userId) {
-  				return reply.code(400).send({ error: "BAD_REQUEST" });
+				return reply.code(400).send({ error: "BAD_REQUEST" });
 			}
 
 			const user = await userController.getUserById(userId);
-		    if (!user) {
-      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
-    		}
+			if (!user) {
+				return reply.code(404).send({ error: "USER_NOT_FOUND" });
+			}
 
 			const lang = user.preferredLanguage;
 			const html = await render(React.createElement(AccountDeletionEmail, { username: user.username, lang: lang }));

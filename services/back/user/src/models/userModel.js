@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const db = require('./db');
+const db = require('./db.js');
 
 async function findAllUsers() {
 	var res = db.prepare('SELECT * FROM users').all();
@@ -16,8 +16,15 @@ async function findUser(username, password) {
 	// 	return "bad password"
 }
 
-function findUserById(id) {
-	return db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+async function findUserById(id) {
+	const stmt = await db.prepare('SELECT * FROM users WHERE id = ?').get(id);
+	if (!stmt) {
+		console.error('error: ', stmt);
+		return null;
+	}
+	console.log("--- USER ID ---");
+	console.log("user id: ", stmt.id);
+	return stmt.id;
 }
 
 function findUserByUsername(username) {
@@ -86,8 +93,7 @@ function findRecentMatchesByUserId(userId, limit = 3) {
 * @return : a JSON object containing user statistics
 
 */
-function findUserStatsById(userId)
-{
+function findUserStatsById(userId) {
 	const total_matches = db.prepare(`
 		SELECT COUNT(*) as cnt
 		FROM game_players
