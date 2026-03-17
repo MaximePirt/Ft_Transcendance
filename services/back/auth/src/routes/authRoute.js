@@ -6,6 +6,7 @@ import SigninEmail from "../mails/signinEmail.js";
 import SignupEmail from "../mails/signupEmail.js";
 import { changeUserAuth } from '../controllers/authController.js';
 import bcrypt from 'bcryptjs';
+import fastifyCookie from '@fastify/cookie';
 
 const ERROR_CODES = {
 	MISSING_FIELDS: { status: 400, message: 'Email and password are required' },
@@ -25,6 +26,7 @@ if (!user_api_url) {
 function JWTgenerator(fastify, user) {
 	return fastify.jwt.sign({
 		username: user.username,
+		email: user.email,
 		id: user.id
 	});
 }
@@ -112,7 +114,7 @@ export default async function authRoute(fastify, options) {
 		try {
 			const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 			const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
-			const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
+			const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!+/,.<>@$%^&*-]).{12,}$/;
 			const email = await request.body.email;
 			const username = await request.body.username;
 			const password = await request.body.password;
@@ -130,10 +132,8 @@ export default async function authRoute(fastify, options) {
 			else if (!email_regex.test(email))
 				return reply.code(401).send({ success: false, error: 'Bad email format' });
 			signUpMail(email, username);
-
-			if (!await checkUser(email, username))
-
-				return reply.code(200).send({ ok: true, message: "Signup successful" });
+			await checkUser(email, username);
+			return reply.code(200).send({ ok: true, message: "Signup successful" });
 		} catch (e) {
 			console.error(e.message);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
@@ -172,20 +172,25 @@ export default async function authRoute(fastify, options) {
 			if (isAuth === 1)
 				signInMail(email, username);
 
-			return reply.code(200).send({
-				ok: true,
-				user: {
-					id: user.id,
-					username: user.username,
-					email: user.email,
-					isAuth: isAuth ? 1 : 0
-				},
-			}).setCookie("token", user.token, {
-				httpOnly: true,
-				signed: false,
-				secure: true,
-				path: "/",
-			});
+			return reply
+				.code(200)
+				.setCookie("token", user.token, {
+					httpOnly: true,
+					signed: false,
+					secure: true,
+					path: "/",
+					maxAge: 84600,
+					sameSite: "lax"
+				})
+				.send({
+					ok: true,
+					user: {
+						id: user.id,
+						username: user.username,
+						email: user.email,
+						isAuth: isAuth ? 1 : 0
+					},
+				});
 		} catch (e) {
 			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
@@ -272,6 +277,7 @@ export default async function authRoute(fastify, options) {
 				subject: `Hey, ${username} !`,
 				html,
 			});
+			return rep.code(200).send({ success: true });
 		} catch (e) {
 			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
@@ -291,8 +297,8 @@ export default async function authRoute(fastify, options) {
 		const codeFound = usersCode.find((e) => e.email === email);
 		const user = Object.create(User);
 		try {
-			if (!code)
-				return;
+			if (code === "" || !code)
+				return rep.code(401).send({ success: false, error: "You must send a code" });
 			console.log(req.body);
 			if (Date.now() > codeFound.expireAt) {
 				console.error("error: code expired");
@@ -314,18 +320,25 @@ export default async function authRoute(fastify, options) {
 				} else {
 					user.id = userId;
 				}
+				console.log("user id: ", userId);
 				user.email = email;
 				user.username = username;
+				user.id = userId;
 				user.token = JWTgenerator(fastify, user);
 
 				usersCode = usersCode.filter((user) => user.email !== email);
-				rep.setCookie("token", user.token, {
-					httpOnly: true,
-					signed: false,
-					secure: true,
-					path: "/",
-				});
-				return rep.code(200).send({ success: true });
+				return rep
+					.code(200)
+					.setCookie("token", user.token, {
+						httpOnly: true,
+						signed: false,
+						secure: true,
+						path: "/",
+						maxAge: 86400,
+						sameSite: "lax"
+					})
+					.send({ success: true });
+
 			} else {
 				console.log("error: bad code")
 				return rep.code(401).send({ success: false, error: "invalid 6-digits code" });

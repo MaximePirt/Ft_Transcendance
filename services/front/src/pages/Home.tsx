@@ -115,9 +115,11 @@ function HomePage() {
 				setUserUsername(data.user.username);
 				setShowLogin(false);
 				setCodeError('');
-				if (data.user.isAuth === 1)
+				if (data.user.isAuth === 1) {
 					setShow2fa(true);
-				else {
+					sessionStorage.setItem("username_2fa_pending", userUsername);
+					sessionStorage.setItem("email_2fa_pending", userEmail)
+				} else {
 					await login(data.user.email, data.user.username);
 				}
 			}
@@ -145,7 +147,8 @@ function HomePage() {
 			if (send.ok) {
 				setShow2fa(false);
 				await login(userEmail, userUsername);
-
+				sessionStorage.removeItem("username_2fa_pending");
+				sessionStorage.removeItem("email_2fa_pending");
 			} else {
 				const err = await send.json();
 				setCodeError(err.error);
@@ -171,12 +174,14 @@ function HomePage() {
 					"Content-Type": "application/json"
 				},
 				body: JSON.stringify({
-					username: userUsername,
-					email: userEmail
+					username: sessionStorage.getItem("username_2fa_pending"),
+					email: sessionStorage.getItem("email_2fa_pending")
 				})
 			});
 
 			if (!resp.ok) {
+				const data = await resp.json();
+				console.log("resp: ", data);
 				setCodeError("send code again failed");
 			}
 		} catch (e) {
@@ -189,7 +194,7 @@ function HomePage() {
 		setSignupError('')
 		const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		const username_regex = /^[a-zA-Z0-9_]{3,}$/;
-		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
+		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!+/,.<>@$%^&*-]).{12,}$/;
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
 		const username = (form.elements.namedItem('username') as HTMLInputElement).value
@@ -242,6 +247,8 @@ function HomePage() {
 				setUserEmail(email);
 				setCodeError('');
 				setShowSignup(false);
+				sessionStorage.setItem("username_2fa_pending", username);
+				sessionStorage.setItem("email_2fa_pending", email);
 				setShow2fa(true);
 			}
 		} catch (e) {
