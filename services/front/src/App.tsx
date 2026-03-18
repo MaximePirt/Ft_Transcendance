@@ -44,6 +44,7 @@ function App() {
 				<Route path="/quiz/end" element={<EndGame />} />
 
 				<Route path="/profile" element={<ProfilUser />} />
+				<Route path="/profile/id/:userId" element={<ProfilUser />} />
 				<Route path="/profile/:username" element={<ProfilUser />} />
 
 				<Route path="*" element={<Navigate to="/" replace />} />

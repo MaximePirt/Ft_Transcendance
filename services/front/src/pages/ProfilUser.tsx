@@ -215,10 +215,11 @@ const MAX_BADGES = 2
 
 function ProfilUser() {
 	const navigate = useNavigate()
-	const { username: routeUsername } = useParams()
+	const { username: routeUsername, userId: routeUserId } = useParams()
 	const { t, i18n } = useTranslation()
 	const { user, isAuthenticated, isAuthReady, updateUser } = useAuth()
-	const isPublicView = Boolean(routeUsername) && routeUsername !== user?.username
+	const hasProfileParam = Boolean(routeUsername || routeUserId)
+	const isPublicView = hasProfileParam && (!routeUsername || routeUsername !== user?.username)
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
@@ -297,6 +298,23 @@ function ProfilUser() {
 		)))
 	}
 
+	const resolveUserId = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
+		const numericUserId = Number(userId)
+		if (Number.isInteger(numericUserId) && numericUserId > 0) return numericUserId
+
+		const normalizedUsername = String(username || '').trim()
+		if (!normalizedUsername) {
+			throw new Error('Missing user identifier')
+		}
+
+		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(normalizedUsername)}`, { signal })
+		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+		const { id } = await userIdResponse.json()
+		const resolvedId = Number(id)
+		if (!Number.isInteger(resolvedId) || resolvedId <= 0) throw new Error('Invalid user id')
+		return resolvedId
+	}
+
 	const loadFriends = async (username: string, signal?: AbortSignal) => {
 		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
 		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
@@ -338,12 +356,10 @@ function ProfilUser() {
 		setFriendRequests([...normalizedReceived, ...normalizedSent])
 	}
 
-	const loadRecentMatches = async (username: string, signal?: AbortSignal) => {
+	const loadRecentMatches = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		setRecentMatchesLoading(true)
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for match history')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const historyResponse = await fetch(`${API_BASE}/user/${id}/matches?limit=3`, { signal })
 			if (!historyResponse.ok) throw new Error('Failed to load match history')
@@ -381,11 +397,9 @@ function ProfilUser() {
 		}
 	}
 
-	const loadGameStats = async (username: string, signal?: AbortSignal) => {
+	const loadGameStats = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for game stats')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const statsResponse = await fetch(`${API_BASE}/user/${id}/stats`, { signal })
 			if (!statsResponse.ok) throw new Error('Failed to load game stats')
@@ -408,12 +422,10 @@ function ProfilUser() {
 		}
 	}
 
-	const loadAchievements = async (username: string, signal?: AbortSignal) => {
+	const loadAchievements = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		setAchievementsLoading(true)
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for achievements')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const response = await fetch(`${API_BASE}/user/${id}/achievements`, { signal })
 			if (!response.ok) throw new Error('Failed to load achievements')
@@ -483,18 +495,14 @@ function ProfilUser() {
 	// causait des conflits et bugs de timing
 
 	useEffect(() => {
-		if (!profileUsername) return
+		if (!routeUserId && !profileUsername) return
 		const abortController = new AbortController()
 		let isActive = true
 
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
-				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`, {
-					signal: abortController.signal,
-				})
-				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
-				const { id } = await userIdResponse.json()
+				const id = await resolveUserId({ username: profileUsername, userId: routeUserId }, abortController.signal)
 
 				const response = await fetch(`${API_BASE}/user/users/${id}`, {
 					signal: abortController.signal,
@@ -572,7 +580,7 @@ function ProfilUser() {
 			isActive = false
 			abortController.abort()
 		}
-	}, [profileUsername, canEdit, isPublicView])
+	}, [profileUsername, routeUserId, canEdit, isPublicView])
 
 	useEffect(() => {
 		if (!user || !canEdit) return
@@ -666,7 +674,7 @@ function ProfilUser() {
 	}, [user, canEdit])
 
 	useEffect(() => {
-		if (!profileUsername) {
+		if (!routeUserId && !profileUsername) {
 			setRecentMatches([])
 			setGameStats(defaultGameStats)
 			if (isAuthenticated) {
@@ -675,11 +683,12 @@ function ProfilUser() {
 			return
 		}
 		const abortController = new AbortController()
-		void loadRecentMatches(profileUsername, abortController.signal)
-		void loadGameStats(profileUsername, abortController.signal)
-		void loadAchievements(profileUsername, abortController.signal)
+		const profileTarget = { username: profileUsername, userId: routeUserId }
+		void loadRecentMatches(profileTarget, abortController.signal)
+		void loadGameStats(profileTarget, abortController.signal)
+		void loadAchievements(profileTarget, abortController.signal)
 		return () => abortController.abort()
-	}, [profileUsername, isAuthenticated])
+	}, [profileUsername, routeUserId, isAuthenticated])
 
 	useEffect(() => {
 		setBadges((prev) => prev.filter((id) => selectableBadgeSet.has(id)).slice(0, MAX_BADGES))
@@ -1034,8 +1043,8 @@ function ProfilUser() {
 		}
 	}
 
-	const openUserProfile = (username: string) => {
-		navigate(`/profile/${encodeURIComponent(username)}`)
+	const openUserProfile = (userId: string) => {
+		navigate(`/profile/id/${encodeURIComponent(userId)}`)
 	}
 
 	return (
@@ -1464,9 +1473,9 @@ function ProfilUser() {
 														<div>
 															<span
 																className="friend-name"
-																onClick={() => openUserProfile(request.username)}
+																onClick={() => openUserProfile(request.id)}
 																onKeyDown={(e) => {
-																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.id)
 																}}
 																role="button"
 																tabIndex={0}
@@ -1519,9 +1528,9 @@ function ProfilUser() {
 														<div>
 															<span
 																className="friend-name"
-																onClick={() => openUserProfile(request.username)}
+																onClick={() => openUserProfile(request.id)}
 																onKeyDown={(e) => {
-																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.id)
 																}}
 																role="button"
 																tabIndex={0}
@@ -1552,9 +1561,9 @@ function ProfilUser() {
 													<div>
 														<span
 															className="friend-name"
-															onClick={() => openUserProfile(friend.username)}
+															onClick={() => openUserProfile(friend.id)}
 															onKeyDown={(e) => {
-																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.username)
+																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.id)
 															}}
 															role="button"
 															tabIndex={0}
