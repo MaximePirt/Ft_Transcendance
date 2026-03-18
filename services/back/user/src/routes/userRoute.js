@@ -34,6 +34,8 @@ if (!AUTH_URL) {
 	process.exit(1);
 }
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,16}$/;
+
 const sanitizeUser = (user) => {
 	if (!user) return user;
 	const { password, ...safeUser } = user;
@@ -277,6 +279,13 @@ async function userRoutes(fastify, options) {
 		}
 
 		const updateData = request.body;
+		if (typeof updateData?.username === 'string') {
+			const normalizedUsername = updateData.username.trim();
+			if (!USERNAME_REGEX.test(normalizedUsername)) {
+				return reply.code(400).send({ error: 'Invalid username format' });
+			}
+			updateData.username = normalizedUsername;
+		}
 		try {
 			const updatedUser = await userController.updateUser(userId, updateData);
 			if (!updatedUser) {
@@ -357,6 +366,13 @@ async function userRoutes(fastify, options) {
 		}
 
 		const userData = request.body;
+		if (typeof userData?.username === 'string') {
+			const normalizedUsername = userData.username.trim();
+			if (!USERNAME_REGEX.test(normalizedUsername)) {
+				return reply.code(400).send({ error: 'Invalid username format' });
+			}
+			userData.username = normalizedUsername;
+		}
 		const updated = await userController.updateUser(userId, userData);
 		return sanitizeUser(updated);
 	});

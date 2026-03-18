@@ -76,9 +76,9 @@ const languages = [
 
 //en attendant la data base
 const defaultUserProfile = {
-	username: 'PlayerOne',
-	email: 'player@quiz.sprint',
-	joinYear: 2024,
+	username: '',
+	email: '',
+	joinYear: new Date().getFullYear(),
 	favorites: ['cinema', 'music', 'computer_science'],
 }
 
@@ -1053,14 +1053,19 @@ function ProfilUser() {
 		if (!canEdit || !user) return
 		const friendUsername = friendSearchInput.trim()
 		if (!friendUsername) return
+		const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
 		setFriendActionError('')
 		setFriendActionSuccess('')
+		if (!usernameRegex.test(friendUsername)) {
+			setFriendActionError(t('signup_error_username_format'))
+			return
+		}
 		if (friendUsername === user.username) {
 			setFriendActionError(t('save_error_generic'))
 			return
 		}
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(friendUsername)}`)
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/soft/${encodeURIComponent(friendUsername)}`)
 			if (!userIdResponse.ok) {
 				let backendMessage = ''
 				const payload = await userIdResponse.json().catch(() => null)
@@ -1071,6 +1076,10 @@ function ProfilUser() {
 				return
 			}
 			const { id: friendId } = await userIdResponse.json()
+			if (!friendId) {
+				setFriendActionError(t('profile_friend_user_not_found'))
+				return
+			}
 			const response = await fetch(`${API_BASE}/user/${friendId}/friends`, {
 				method: 'POST',
 				credentials: 'include',
@@ -1500,6 +1509,7 @@ function ProfilUser() {
 										id="friend-search"
 										type="text"
 										value={friendSearchInput}
+										maxLength={16}
 										onChange={(e) => setFriendSearchInput(e.target.value)}
 										placeholder={t('profile_username_placeholder')}
 										className="profile-desc-input"
