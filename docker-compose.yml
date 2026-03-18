@@ -58,7 +58,7 @@ services:
     depends_on:
       sqlite_db:
           condition: service_completed_successfully 
-    command: node --watch src/app.js
+    command: node src/app.js
 
   auth_api:
     build:
@@ -78,7 +78,7 @@ services:
     depends_on:
       sqlite_db:
           condition: service_completed_successfully
-    command: node --watch src/app.js
+    command: node src/app.js
 
 
   quiz_api:
@@ -99,7 +99,7 @@ services:
       depends_on:
         sqlite_db:
           condition: service_completed_successfully 
-      command: node --watch src/app.js
+      command: node src/app.js
     
 
   sqlite_db:

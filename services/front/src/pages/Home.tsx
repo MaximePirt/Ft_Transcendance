@@ -27,6 +27,7 @@ const SpaceZone = [
 ]
 
 function HomePage() {
+	const { i18n } = useTranslation()
 	const navigate = useNavigate()
 	const { t } = useTranslation()
 	const { user, login, signup, logout, isAuthenticated } = useAuth()
@@ -114,6 +115,7 @@ function HomePage() {
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
 						email: email,
+						lang: i18n.language?.split('-')[0] || "en"
 					})
 				});
 
@@ -187,9 +189,11 @@ function HomePage() {
 				headers: {
 					"Content-Type": "application/json"
 				},
+				credentials: 'include',
 				body: JSON.stringify({
 					username: userUsername,
-					email: userEmail
+					email: userEmail,
+					lang: i18n.language?.split('-')[0] || "en"
 				})
 			});
 
@@ -263,7 +267,8 @@ function HomePage() {
 						credentials: 'include',
 						body: JSON.stringify({
 							email: newUser.email,
-							username: newUser.username
+							username: newUser.username,
+							lang: i18n.language?.split('-')[0] || "en"
 						})
 					});
 

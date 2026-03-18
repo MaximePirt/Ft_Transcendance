@@ -1,4 +1,5 @@
 const friendWsHub = require("../ws/friendWsHub");
+const logoutWsHub = require("../ws/logoutWsHub");
 
 const AUTH_URL = process.env.AUTH_API_URL || false;
 if (!AUTH_URL) {
@@ -47,6 +48,21 @@ module.exports = async function wsRoutes(fastify) {
 
     socket.on("close", () => {
       friendWsHub.remove(meId, socket);
+    });
+  });
+
+  fastify.get("/ws/logout", { websocket: true }, async (socket, req) => {
+    const meId = await resolveAuthenticatedUserId(req);
+    if (!meId) {
+      socket.send(JSON.stringify({ type: "error", payload: "Unauthorized" }));
+      socket.close(1008, "Unauthorized");
+      return;
+    }
+
+    logoutWsHub.add(meId, socket);
+    socket.send(JSON.stringify({ type: "connected", payload: { ok: true } }));
+    socket.on("close", () => {
+      logoutWsHub.remove(meId, socket);
     });
   });
 };
