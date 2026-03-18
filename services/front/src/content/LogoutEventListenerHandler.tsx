@@ -19,7 +19,6 @@ const LogoutEventListenerHandler = () => {
                 logout();
                 navigate("/");
                 window.location.reload();
-                // if cookie : delete cookie
             }
         };
 
