@@ -11,9 +11,6 @@ const { render } = require("@react-email/render");
 const { createZohoTransporter } = require("../services/userServices.js");
 const DataExportConfirmationEmail = require("../mails/dataExportConfirmationEmail.js");
 const AccountDeletionEmail = require("../mails/accountDeletionEmail.js");
-const SignupEmail = require("../mails/signupEmail.js");
-const friendWsHub = require("../ws/friendWsHub");
-const friendModel = require("../models/friendModel");
 userController = require("../controllers/userController");
 
 const subjectExport = {
@@ -389,7 +386,7 @@ async function userRoutes(fastify, options) {
 				return reply.code(404).send({ error: "USER_NOT_FOUND" });
 			}
 
-			const lang = user.preferredLanguage;
+			const lang = user.lang;
 			const html = await render(React.createElement(DataExportConfirmationEmail, { username: user.username, lang: lang }));
 			const transporter = createZohoTransporter();
 
@@ -444,35 +441,7 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
-	fastify.post("/signup/mail", async (request, reply) => {
-		try {
-			const { userId, codeValidation } = request.body;
-			if (!userId || !codeValidation) {
-				return reply.code(400).send({ error: "BAD_REQUEST" });
-			}
-
-			const user = await userController.getUserById(userId);
-			if (!user) {
-				return reply.code(404).send({ error: "USER_NOT_FOUND" });
-			}
-
-			const html = await render(React.createElement(SignupEmail, { username: user.username, code: codeValidation }));
-			const transporter = createZohoTransporter();
-
-			await transporter.sendMail({
-				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
-				to: "thi.dausque@gmail.com",
-				//to: user.email,
-				subject: `Welcome, ${user.username} !`,
-				html,
-			});
-
-			return reply.send({ success: true });
-		} catch (err) {
-			console.error(err);
-			return reply.code(500).send({ error: "MAIL_FAILED" });
-		}
-	});
+	
 
 	fastify.delete("/delete-user", async (request, reply) => {
 		try {

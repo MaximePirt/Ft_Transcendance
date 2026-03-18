@@ -1,81 +1,113 @@
 import React from "react";
-
 import {
+	Html,
+	Head,
 	Body,
 	Container,
-	Head,
-	Html,
-	Img,
 	Preview,
 	Section,
 	Text,
+	Img,
 } from "@react-email/components";
 
-const bodyStyle = {
-	backgroundColor: "#ffffff",
-	color: "#24292e",
-	fontFamily:
-		'-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
-	margin: 0,
-	padding: 0,
+const previewLang = {
+	"fr": "Voici votre code de connexion",
+	"en": "Here is your login code",
+	"ar": "إليك رمز تسجيل الدخول الخاص بك",
 };
 
-const containerStyle = {
-	maxWidth: "480px",
-	margin: "0 auto",
-	padding: "20px 0 48px",
+const titleLang = {
+	"fr": "Voici votre code de connexion",
+	"en": "Here is your login code",
+	"ar": "إليك رمز تسجيل الدخول الخاص بك",
 };
 
-const titleStyle = {
-	fontSize: "24px",
-	lineHeight: "1.25",
-	marginBottom: "16px",
+const welcomeLang = {
+	"fr": "Bon retour sur Quiz Sprint.",
+	"en": "Welcome back to Quiz Sprint.",
+	"ar": "مرحباً بعودتك إلى Quiz Sprint.",
 };
 
-const paragraphStyle = {
-	margin: "0 0 10px 0",
-	textAlign: "left",
-	fontSize: "14px",
+const codeTextLang = {
+	"fr": "Voici votre code",
+	"en": "Here is your code",
+	"ar": "إليك الرمز الخاص بك",
 };
 
-const paragraphStyle2 = {
-	margin: "0 0 10px 0",
-	textAlign: "center",
-	fontSize: "14px",
+const ignoreLang = {
+	"fr": "Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer ce courriel.",
+	"en": "If you did not initiate this request, ignore this email.",
+	"ar": "إذا لم تكن أنت من بدأ هذا الطلب، في تجاهل هذه الرسالة الإلكترونية.",
 };
 
-const boxStyle = {
-	padding: "12px",
-	border: "1px solid #dedede",
-	borderRadius: "5px",
-	textAlign: "center",
-};
+function SigninValidationEmail({ username, code, lang }) {
+	const isRTL = lang === "ar";
 
-const codeStyle = {
-	fontSize: "24px",
-	lineHeight: "1.25",
-	marginBottom: "16px",
-	textAlign: "center",
-};
+	const bodyStyle = {
+		backgroundColor: "#ffffff",
+		color: "#24292e",
+		fontFamily:
+			'-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
+		margin: 0,
+		padding: 0,
+		direction: isRTL ? "rtl" : "ltr",
+	};
 
-const warningStyle = {
-	padding: "20px",
-	margin: "0 0 10px 0",
-	fontSize: "10px",
-	textAlign: "center",
-};
+	const containerStyle = {
+		maxWidth: "480px",
+		margin: "0 auto",
+		padding: "20px 0 48px",
+	};
 
-export default function SigninValidationEmail({ username, code }) {
+	const titleStyle = {
+		fontSize: "24px",
+		lineHeight: "1.25",
+		marginBottom: "16px",
+	};
+
+	const paragraphStyle = {
+		margin: "0 0 10px 0",
+		textAlign: isRTL ? "right" : "left",
+		fontSize: "14px",
+	};
+
+	const paragraphStyle2 = {
+		margin: "0 0 10px 0",
+		textAlign: "center",
+		fontSize: "14px",
+	};
+
+	const boxStyle = {
+		padding: "12px",
+		border: "1px solid #dedede",
+		borderRadius: "5px",
+		textAlign: "center",
+	};
+
+	const codeStyle = {
+		fontSize: "24px",
+		lineHeight: "1.25",
+		marginBottom: "16px",
+		textAlign: "center",
+	};
+
+	const warningStyle = {
+		padding: "20px",
+		margin: "0 0 10px 0",
+		fontSize: "10px",
+		textAlign: "center",
+	};
+
 	return React.createElement(
 		Html,
-		null,
+		{ dir: isRTL ? "rtl" : "ltr", lang },
 
 		React.createElement(Head, null),
 
 		React.createElement(
 			Preview,
 			null,
-			`Here's your code, ${username} !`
+			previewLang[lang]
 		),
 
 		React.createElement(
@@ -96,15 +128,15 @@ export default function SigninValidationEmail({ username, code }) {
 				React.createElement(
 					Text,
 					{ style: titleStyle },
-					"Hi ",
 					React.createElement("strong", null, username),
-					","
+					", ",
+					titleLang[lang]
 				),
 
 				React.createElement(
 					Text,
 					{ style: paragraphStyle },
-					"Welcome back to Quiz Sprint."
+					welcomeLang[lang]
 				),
 
 				React.createElement(
@@ -114,7 +146,7 @@ export default function SigninValidationEmail({ username, code }) {
 					React.createElement(
 						Text,
 						{ style: paragraphStyle2 },
-						"Here is your code"
+						codeTextLang[lang]
 					),
 
 					React.createElement(
@@ -127,9 +159,11 @@ export default function SigninValidationEmail({ username, code }) {
 				React.createElement(
 					Text,
 					{ style: warningStyle },
-					"If you did not initiate this request, ignore this email."
+					ignoreLang[lang]
 				)
 			)
 		)
 	);
 }
+
+export default SigninValidationEmail;

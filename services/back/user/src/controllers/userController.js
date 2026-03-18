@@ -2,6 +2,7 @@ const userModel = require('../models/userModel');
 const fs = require("fs");
 const { pipeline } = require("stream/promises");
 const path = require("path");
+const logoutWsHub = require("../ws/logoutWsHub.js");
 
 const ACHIEVEMENT_DEFS = [
 	{ key: 'first_match', metric: 'total_matches', target: 1, points: 10 },
@@ -157,7 +158,8 @@ async function deleteUser(userId) {
 	const res = await userModel.deleteUserById(userId);
 	if (!res || res.changes === 0)
 		throw new Error("User does not exist");
-	console.log("Controller log for delete : ",res);
+	
+	logoutWsHub.broadcast(userId, {type: 'logout', payload: { userId } });
 	return res;
 }
 
