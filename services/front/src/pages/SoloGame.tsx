@@ -98,6 +98,7 @@ function SoloGamePage() {
           setShowAnswer(false)
           setIsCorrect(false)
           setLoading(false)
+          setPowerups(parsed.powerups ?? Array(MAX_SLOTS).fill(null))
           return
         }
       } catch (err) {
@@ -277,6 +278,7 @@ function SoloGamePage() {
       currentQuestionIndex,
       userAnswer,
       selectedOption,
+      powerups,
       score,
     }
 
@@ -286,7 +288,7 @@ function SoloGamePage() {
     } catch (err) {
       console.warn('[SoloGame] failed to persist state', err)
     }
-  }, [question, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
+  }, [question, currentQuestionIndex, userAnswer, selectedOption, powerups, loading, error, score])
 
   useEffect(() => {
   if (!routeState) return;
@@ -584,7 +586,7 @@ function SoloGamePage() {
                 {p ?? "Powerup Slot"}
               </button>
             )
-          })};
+          })}
         </div>
 
         {/* Zone de Titre */}
@@ -696,7 +698,7 @@ function SoloGamePage() {
               </button>
             ) : (
               <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
-                {currentQuestionIndex === 1 ? 'Terminer le Quiz' : 'Question suivante →'}
+                {currentQuestionIndex === question_count - 1 ? 'Terminer le Quiz' : 'Question suivante →'}
               </button>
             )}
           </div>

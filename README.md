@@ -102,12 +102,8 @@ To ensure effective coordination, weekly synchronization meetings were held once
 
 
 #### Technical Stack:
-	◦ Frontend technologies and frameworks used.
-	◦ Backend technologies and frameworks used.
-	◦ Database system and why it was chosen.
-	◦ Any other significant technologies or libraries.
-	◦ Justification for major technical choices.
-As part of this project, the application was designed using modern technical architecture based on a frontend developed with React, integrating react-router-dom for navigation management, react-i18next for internationalization, and HTTP and WebSocket exchanges to ensure both traditional processing and real-time interactions.  The backend is based on Fastify and follows a microservices approach, with each API isolated in a separate Docker container to ensure better separation of responsibilities, easier maintenance, and greater scalability of the application as a whole.  This organization allows for a clear separation of different functional areas, such as quiz session management, response processing, secure authentication with JWT-tokens and cookie, and user-related features.
+As part of this project, the application was designed using modern technical architecture based on a frontend developed with React, integrating react-router-dom for navigation management, react-i18next for internationalization, and HTTP and WebSocket exchanges to ensure both traditional processing and real-time interactions.  The backend is based on Fastify and follows a microservices approach, with each API isolated in a separate Docker container to ensure better separation of responsibilities, easier maintenance, and greater scalability of the application as a whole. All of theses docker runing on the same sqlite databases as it is much more detailed as a mongodb, all by being easy to get on. 
+This organization allows for a clear separation of different functional areas, such as quiz session management, response processing, secure authentication with JWT-tokens and cookie, and user-related features.
 The choice of this architecture meets several technical objectives. 
 On the one hand, the use of WebSocket allows for the efficient management of real-time events related to the progress of a game session, particularly for receiving server messages, managing power-ups, and synchronizing certain game states, such as friends requests. 
 On the other hand, the use of separate APIs deployed in separate containers promotes a modular approach, in line with the principles of distributed architectures.
@@ -117,44 +113,237 @@ On the other hand, the use of separate APIs deployed in separate containers prom
 	◦ Tables/collections and their relationships.
 	◦ Key fields and data types.
 
+---
 
 #### Features List:
-	◦ Complete list of implemented features.
-	◦ Which team member(s) worked on each feature.
-	◦ Brief description of each feature’s functionality.
-Création et gestion de sessions (code, mode, topic, nombre de questions, max players, game-status).
-•	Participation live : rejoindre/quitter, gestion d’actifs/inactifs, transfert d’hôte si nécessaire.
-•	Gameplay temps réel : démarrage de partie, lancement de question, calcul du temps restant, et passage à la question suivante.
-•	Scoring : enregistrement des réponses, validation “correct/incorrect”, mise à jour des scores et leaderboard.
-•	Contenu & personnalisation : génération d’un pool de questions (filtre difficulté / topics quand fournis, sélection aléatoire).
-•	Multilingue : questions/options/catégories semblent servis via des tables de traductions (ex.  questiontranslations ,  mcqoptiontranslations ,  categorytranslations ).
-•	Power-ups : attribution/consommation de power-ups côté session et joueur, avec notifications live.
+
+##### Signin / Signup
+- *Signin / signup with 2FA and JWT token (cookie-based)*
+
+Implemented secure user authentication using JWT tokens stored in HTTP cookies, combined with a two-factor authentication flow to protect accounts and ensure only verified users can sign in.
+
+*Team member(s): tdausque*
 
 
+###### Quiz
+
+- *Solo / multiplayer quiz session creation with configurable settings*
+
+Allows users to create quiz game sessions in solo or multiplayer mode, choosing parameters such as number of questions, themes or difficulty, before starting the game.
+- *WebSocket usage for real-time interaction*
+
+Uses WebSocket connections between client and server to handle live game events, such as question delivery, answer submissions and state updates, without page reloads.
+- *Power‑ups via WebSockets*
+
+Implements in‑game power‑ups (e.g. hints, option removal, score boosts) that are triggered and propagated in real time to all relevant players through WebSocket messages.
+- *Real‑time state synchronisation*
+
+Keeps the game state (current question, scores, timers, session status) consistent across all connected clients by broadcasting state changes from the server in real time.
+- *Client-side quiz state persistence*
+
+Stores part of the current game state on the client side, allowing the session to be restored after a page refresh or a short interruption instead of fully resetting the game
+
+*Team member(s): mpierrot, tpipi*
+
+
+###### Social
+- *User information and statistics retrieval*
+
+Provides endpoints to fetch user profiles and gameplay statistics (such as number of games played, scores or win rate) so the frontend can display a personal dashboard.
+- *Friend management with HTTP and real-time updates*
+
+Includes features to send, accept or remove friendships so users can maintain a friend list, see other players’ status while keeping the social interface updated through standard API calls and real-time mechanisms when needed using Websockets.
+
+*Team member(s): mpierrot, vgodart*
+
+
+###### Frontend
+- *React-based frontend interface*
+
+Delivers a single-page application built with React, managing navigation, forms and game views, and consuming the backend APIs and WebSocket streams.
+
+- *Client-side routing with React Router*
+
+Uses client-side routing to navigate between the main application views without reloading the page, improving fluidity and user experience in the React interface.
+- *Multilanguage support with i18n*
+
+Integrates an internationalisation library (i18n) so all main UI texts can be translated, letting users switch languages without changing the application logic.
+
+*Team member(s): tpipi, vgodart*
+
+###### Backend Architecture
+- *Microservices architecture*
+
+Structures the backend into multiple independent services (e.g. authentication, quiz, user/social), each responsible for a specific domain, to improve scalability and maintainability.
+- *APIs separated by responsibility*
+
+Exposes distinct REST endpoints for authentication, quiz management and user data, ensuring clear boundaries and simpler evolution of each API.
+
+- *Containerised microservices deployment with Docker*
+
+Deploys backend services in separate Docker containers, making the application easier to isolate, maintain and scale across functional domains.
+- *SQLite database in a local volume*
+
+Uses SQLite as the persistence layer, stored in a dedicated local volume, providing a lightweight, file‑based database that is simple to deploy in containers.
+
+*Team member(s): mpierrot*
+
+
+---
 ### Modules
 
 ##### Major modules (2 points each) : 14 points
-	- Implement a complete web-based game where users can play against each other : 2 points
-	- Framework frontend and backend (react, fastify) : 2 points
-	- Implement WAF/ModSecurity + Hashicorp Vault : 2 points
-	- Standard user management and authentication : 2 points
-	- Backend as microservices : 2 points
-	- Multiplayer game : 2 points
-	- Websocket : 2 points
+- *Implement a complete web-based game where users can play against each other : 2 points*
 
-##### Minor modules (1 point each) : 9 points
-	- GDPR compliance features (mail + delete)  : 1 point
-	- Game Statistics and match history : 1 point
-	- Module of choice (minor version) : 1 point
-	- Support for additional browsers : 1 point
-	- Game customization options  : 1 point
-	- Complete 2Fa system  : 1 point
-	- Multiple language : 1 point
-	- Right-to-Left : 1 point
-	- Design system : 1 point
+This module is the heart of our project; we decided to implement it to create a fun website that also allows everyone to learn
+new trivia
+
+It was implemented through the creation of quiz sessions, multiplayer mode, WebSocket exchanges, and real-time synchronization of game state between clients. All of this is handled on the backend by providing a dedicated service so that the site can remain functional even if a problem were to arise
+
+*Team member(s): mpierrot, tpipi*
+
+- *Framework frontend and backend (react, fastify) : 2 points*
+
+We chose to implement this module to challenge ourselves with modern technologies that allow us to keep up with trends while simplifying the management of user interfaces and backend communications.
+
+The module was implemented throughout the project, using React with react-router and i18n, as well as Fastify for all API endpoints.
+
+*Team member(s): vgodart, tpipi, tdausque, mpierrot*
 
 
-#### Total : 23 points
+- *Implement WAF/ModSecurity + Hashicorp Vault : 2 points*
+
+This decision stems from our desire to maintain a secure project, allowing us to explore the various methods companies use to prevent malicious users from accessing data.
+
+This module was implemented first to retrieve the various variables contained in a secrets folder, which are then converted into an environment file for each service.
+The data is encrypted and stored in the computer’s tmpfs, which prevents any external access as well as its destruction when the program is shut down.
+
+*Team member(s): mpierrot*
+
+
+- *Standard user management and authentication : 2 points*
+
+We felt this module was essential for creating a user management system that would allow us to identify everyone wishing to test our project, as well as enable them to customize their profiles and view statistical feedback on their games.
+
+This module operates using its own service: *user*, which uses cookie-based authentication to retrieve and modify user information.
+
+*Team member(s): mpierrot, vgodart*
+
+- *Backend as microservices : 2 points*
+
+Breaking the system down into microservices improves the separation of concerns, maintainability, and the ability of services to evolve independently. This has also allowed us to better understand how the APIs function as a whole, while giving us insight into the project’s scalability potential.
+
+This module is implemented by deploying several independent services, each with its own set of functions, while maintaining a shared dependency on the database. Each service has its own Dockerfile, all managed by a Docker Compose file to handle the initial launch of the project.
+
+*Team member(s): mpierrot*
+
+
+- *Multiplayer game : 2 points*
+
+We felt that choosing this module made sense, as it extends the gaming experience by allowing players to compete against their friends.
+
+It was implemented by creating multiplayer sessions, with WebSocket communication enabling real-time synchronization during gameplay.
+
+*Team member(s): mpierrot,tpipi*
+
+- *Websocket : 2 points*
+
+The decision to incorporate WebSockets into the project came naturally as a way to create a real-time immersive experience for the user, allowing them to better appreciate the project as a whole.
+
+WebSockets are used to handle various in-game events, as well as to manage the friend system.
+
+*Team member(s): mpierrot, tpipi, vgodart*
+
+---
+
+##### Minor modules (1 point each) : 10 points
+- *A gamification system to reward users for their actions : 1 point*
+
+The value of this module lies in the importance we place on engaging users in our game. By providing rewards as they progress, we help them feel like active participants in the game—not just testers of a project.
+
+This module is represented by various achievements for the user to unlock, a leaderboard on the home page, and badges. Users can also view a progress bar on their profile showing their progress toward the various objectives.
+
+*Team member(s): vgodart*
+
+- *GDPR compliance features : 1 point*
+
+This module is legally justified by the right to erasure provided for in Article 17 of the GDPR, as well as by the obligation to respond to user requests regarding their personal data. 
+
+To comply with this module, we allow users to access their data, which is available for download and can also be sent via email. Users also have the option to delete their account, and a confirmation email is sent to them during significant operations.
+
+*Team member(s): mpierrot, tpipi*
+
+- *Game Statistics and match history : 1 point*
+
+The decision to include this module is based on the same line of thinking as gamification. The inclusion of statistics and game history allows players to take the game more seriously and even compare themselves to friends, which enhances their experience and increases their playtime.
+
+This module is implemented both on the backend in the user service and on the user’s profile page. It displays various statistics, such as the number of correct answers, the total number of answers, the number of wins, and the correct-to-total-answers ratio.
+As for the match history, it is also available on the user’s profile page.
+
+*Team member(s): vgodart, mpierrot*
+
+- *Module of choice (minor version) : 1 point*
+
+To meet the requirements of this module, we decided to implement the Single Page Application (SPA) approach, which enables smoother navigation from the moment the page first loads, as well as improved performance, by minimizing the number of backend calls required.
+This module is noteworthy because it demonstrates our commitment to delivering a modular website despite the increased complexity during development, while challenging us to work with a more complex yet modern technology.
+
+Its implementation was therefore carried out from the very start of the project to ensure a clear separation between the frontend and the backend.
+
+*Team member(s): vgodart, tpipi*
+
+- *Support for additional browsers : 1 point*
+
+We decided that implementing this module was necessary at this point to ensure that as many people as possible could access our website.
+
+We therefore integrated this module throughout the project to identify and resolve any compatibility issues across different browsers, ensuring a consistent experience for everyone.
+
+*Team member(s): vgodart, tpipi, tdausque, mpierrot*
+
+- *Game customization options  : 1 point*
+
+We felt this module was relevant because it allows each player to enjoy a personalized quiz experience before each game starts.
+
+It is implemented through various session creation settings, as well as directly on the profile page, where users can customize the game’s appearance.
+This module includes power-ups, various site themes, and game customization options.
+
+*Team member(s): vgodart, tpipi, mpierrot*
+
+- *Complete 2Fa system  : 1 point*
+
+Since user security is a top priority for us, and we were curious about how an A2F system works, we decided to choose this module.
+
+The A2F in our project is therefore an option that users can select to enhance security. This system works by sending an email directly to the address provided during account creation, combined with JWT authentication stored in a cookie.
+
+*Team member(s): tdausque*
+
+- *Multiple language : 1 point*
+
+Since inclusivity is at the heart of our values, we decided that adding this module was not just an option but a necessity to ensure the site is accessible to as many people as possible.
+
+To achieve this, we decided to implement multilingual support on the frontend using i18n, which currently allows us to translate the text into French, English, and Arabic to ensure the widest possible understanding.
+
+*Team member(s): tpipi, vgodart*
+
+- *Right-to-Left : 1 point*
+
+In line with this approach, we felt that RTL was necessary to logically complement the multilingual support.
+
+We are therefore reversing the direction of the entire site to maintain this inclusivity.
+
+*Team member(s): tpipi, vgodart*
+
+
+- *Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components) : 1 point*
+
+In order to ensure consistency across the entire interface and maintain a uniform UI, we decided to meet the requirements of this module.
+The site therefore uses the same color palette and typography throughout. These can be customized and selected by the user. However, all of these elements are handcrafted.
+
+*Team member(s): tpipi, vgodart*
+
+#### Total : 24 points
+
+---
+
 
 
 ####  Individual Contributions:

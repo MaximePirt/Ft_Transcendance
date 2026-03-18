@@ -136,7 +136,7 @@ function SoloGameSetup() {
       localStorage.setItem("sessionId", String(data.sessionId));
       localStorage.setItem("questionCount", String(questionCount));
       getUserId();
-      navigate('/quiz/solo', { state: {
+      navigate('/quiz/game', { state: {
         sessionId: data.sessionId,
         questionCount,
         themes: Array.from(selectedThemes),

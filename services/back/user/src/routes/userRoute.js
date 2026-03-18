@@ -31,6 +31,8 @@ if (!AUTH_URL) {
 	process.exit(1);
 }
 
+const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,16}$/;
+
 const sanitizeUser = (user) => {
 	if (!user) return user;
 	const { password, ...safeUser } = user;
@@ -94,6 +96,26 @@ async function userRoutes(fastify, options) {
 		}
 		return { id: user.id };
 	})
+
+	fastify.get("/userid/soft/:username", async (request, reply) => {
+		const username = request.params.username;
+		if (!username) {
+			return reply.code(400).send({ error: "Username parameter is required" });
+		}
+		try {
+			const user = await userController.getUserByUsername(username);
+			if (!user) {
+				return reply.code(200).send({ id: null });
+			}
+			return reply.code(200).send({ id: user.id });
+		} catch (error) {
+			if (String(error?.message).includes("User not found")) {
+				return reply.code(200).send({ id: null });
+			}
+			request.log.error(error);
+			return reply.code(500).send({ error: "Internal Server Error" });
+		}
+	});
 
 	fastify.get("/userid/:username", async (request, reply) => {
 		const username = request.params.username;
@@ -190,16 +212,52 @@ async function userRoutes(fastify, options) {
 	});
 
 	fastify.get("/:id", async (request, reply) => {
-		const res = await userController.getUserById(request.params.id);
-		if (!res)
-			return reply.code(404).send({ error: "User not found" });
-		return sanitizeUser(res);
+		try {
+			const res = await userController.getUserById(request.params.id);
+			if (!res)
+				return reply.code(404).send({ error: "User not found" });
+			return sanitizeUser(res);
+		} catch (error) {
+			if (String(error?.message).includes('User not found')) {
+				return reply.code(404).send({ error: 'User not found' });
+			}
+			request.log.error(error);
+			return reply.code(500).send({ error: 'Internal Server Error' });
+		}
+	});
+
+	fastify.get("/users/soft/:id", async (request, reply) => {
+		try {
+			const userId = request.params.id;
+			const user = await userController.getUserById(userId);
+			if (!user) {
+				return reply.code(200).send({ user: null });
+			}
+			return reply.code(200).send({ user: sanitizeUser(user) });
+		} catch (error) {
+			if (String(error?.message).includes('User not found')) {
+				return reply.code(200).send({ user: null });
+			}
+			request.log.error(error);
+			return reply.code(500).send({ error: 'Internal Server Error' });
+		}
 	});
 
 	fastify.get("/users/:id", async (request, reply) => {
-		const userId = request.params.id;
-		const user = await userController.getUserById(userId);
-		return sanitizeUser(user);
+		try {
+			const userId = request.params.id;
+			const user = await userController.getUserById(userId);
+			if (!user) {
+				return reply.code(404).send({ error: 'User not found' });
+			}
+			return sanitizeUser(user);
+		} catch (error) {
+			if (String(error?.message).includes('User not found')) {
+				return reply.code(404).send({ error: 'User not found' });
+			}
+			request.log.error(error);
+			return reply.code(500).send({ error: 'Internal Server Error' });
+		}
 	});
 
 	fastify.patch("/:id", async (request, reply) => {
@@ -218,6 +276,13 @@ async function userRoutes(fastify, options) {
 		}
 
 		const updateData = request.body;
+		if (typeof updateData?.username === 'string') {
+			const normalizedUsername = updateData.username.trim();
+			if (!USERNAME_REGEX.test(normalizedUsername)) {
+				return reply.code(400).send({ error: 'Invalid username format' });
+			}
+			updateData.username = normalizedUsername;
+		}
 		try {
 			const updatedUser = await userController.updateUser(userId, updateData);
 			if (!updatedUser) {
@@ -298,6 +363,13 @@ async function userRoutes(fastify, options) {
 		}
 
 		const userData = request.body;
+		if (typeof userData?.username === 'string') {
+			const normalizedUsername = userData.username.trim();
+			if (!USERNAME_REGEX.test(normalizedUsername)) {
+				return reply.code(400).send({ error: 'Invalid username format' });
+			}
+			userData.username = normalizedUsername;
+		}
 		const updated = await userController.updateUser(userId, userData);
 		return sanitizeUser(updated);
 	});
@@ -343,13 +415,13 @@ async function userRoutes(fastify, options) {
 		try {
 			const { userId } = request.body;
 			if (!userId) {
-				return reply.code(400).send({ error: "BAD_REQUEST" });
+  				return reply.code(400).send({ error: "BAD_REQUEST" });
 			}
 
 			const user = await userController.getUserById(userId);
-			if (!user) {
-				return reply.code(404).send({ error: "USER_NOT_FOUND" });
-			}
+		    if (!user) {
+      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
+    		}
 
 			const lang = user.lang;
 			const html = await render(React.createElement(AccountDeletionEmail, { username: user.username, lang: lang }));
@@ -369,13 +441,35 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
+	
+
 	fastify.delete("/delete-user", async (request, reply) => {
 		try {
 			const { userId } = request.body;
 			if (!userId)
 				return reply.code(400).send({ error: "BAD_REQUEST" });
 
-			await userController.deleteUser(userId);
+			const userIdNumber = Number(userId);
+			if (!Number.isInteger(userIdNumber) || userIdNumber <= 0) {
+				return reply.code(400).send({ error: "BAD_REQUEST" });
+			}
+
+			let relatedUserIds = [];
+			try {
+				relatedUserIds = friendModel.listRelatedUserIds(userIdNumber);
+			} catch (err) {
+				request.log.error(err);
+				relatedUserIds = [];
+			}
+
+			await userController.deleteUser(userIdNumber);
+
+			if (relatedUserIds.length > 0) {
+				friendWsHub.notifyUsers(relatedUserIds, {
+					type: "friend_updated",
+					payload: { reason: "account_deleted", userId: userIdNumber },
+				});
+			}
 			return reply.send({ success: true });
 		}
 		catch (err) {
