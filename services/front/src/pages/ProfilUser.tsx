@@ -756,7 +756,7 @@ function ProfilUser() {
 	}, [achievements.all])
 
 	useEffect(() => {
-		document.body.dir = i18n.dir()
+		document.documentElement.dir = i18n.dir()
 	}, [i18n, i18n.language])
 
 	// Auto-save désactivé (sauvegarde manuelle uniquement)
@@ -1097,7 +1097,7 @@ function ProfilUser() {
 	const changeLanguage = async (lang: string) => {
 		try {
 			await i18n.changeLanguage(lang)
-			document.body.dir = i18n.dir(lang)
+			document.documentElement.dir = i18n.dir(lang)
 			document.documentElement.lang = lang
 		} catch (e) {
 			console.warn('[Profile] failed to change language', e)
