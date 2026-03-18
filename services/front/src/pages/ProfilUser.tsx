@@ -251,6 +251,9 @@ function ProfilUser() {
 	const [achievementsLoading, setAchievementsLoading] = useState(false)
 	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
 	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
+	const [profileNotFound, setProfileNotFound] = useState(false)
+	const [resolvedProfileUserId, setResolvedProfileUserId] = useState<number | null>(null)
+	const [profileResolutionDone, setProfileResolutionDone] = useState(false)
 
 	const totalQuestions = gameStats.answered
 	const correctAnswers = gameStats.correct
@@ -298,6 +301,11 @@ function ProfilUser() {
 		)))
 	}
 
+	const removeUserFromSocialLists = (targetUserId: string) => {
+		setFriends((current) => current.filter((friend) => friend.id !== targetUserId))
+		setFriendRequests((current) => current.filter((request) => request.id !== targetUserId))
+	}
+
 	const resolveUserId = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		const numericUserId = Number(userId)
 		if (Number.isInteger(numericUserId) && numericUserId > 0) return numericUserId
@@ -307,13 +315,18 @@ function ProfilUser() {
 			throw new Error('Missing user identifier')
 		}
 
-		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(normalizedUsername)}`, { signal })
+		const userIdResponse = await fetch(`${API_BASE}/user/userid/soft/${encodeURIComponent(normalizedUsername)}`, { signal })
 		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
 		const { id } = await userIdResponse.json()
+		if (id === null || id === undefined) throw new Error('User not found')
 		const resolvedId = Number(id)
 		if (!Number.isInteger(resolvedId) || resolvedId <= 0) throw new Error('Invalid user id')
 		return resolvedId
 	}
+
+	const isUserNotFoundError = (error: unknown) => (
+		error instanceof Error && error.message.includes('User not found')
+	)
 
 	const loadFriends = async (username: string, signal?: AbortSignal) => {
 		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
@@ -390,6 +403,7 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
+			if (isUserNotFoundError(error)) return
 			console.warn('[Profile] failed to load recent matches', error)
 			setRecentMatches([])
 		} finally {
@@ -417,6 +431,7 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
+			if (isUserNotFoundError(error)) return
 			console.warn('[Profile] failed to load game stats', error)
 			setGameStats(defaultGameStats)
 		}
@@ -448,6 +463,7 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
+			if (isUserNotFoundError(error)) return
 			console.warn('[Profile] failed to load achievements', error)
 		} finally {
 			setAchievementsLoading(false)
@@ -498,18 +514,28 @@ function ProfilUser() {
 		if (!routeUserId && !profileUsername) return
 		const abortController = new AbortController()
 		let isActive = true
+		setProfileNotFound(false)
+		setResolvedProfileUserId(null)
+		setProfileResolutionDone(false)
 
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
 				const id = await resolveUserId({ username: profileUsername, userId: routeUserId }, abortController.signal)
 
-				const response = await fetch(`${API_BASE}/user/users/${id}`, {
+				const response = await fetch(`${API_BASE}/user/users/soft/${id}`, {
 					signal: abortController.signal,
 				})
 				if (response.ok) {
 					if (!isActive) return
-					const userData = await response.json()
+					const payload = await response.json()
+					const userData = payload?.user || null
+					if (!userData) {
+						throw new Error('User not found')
+					}
+					setProfileNotFound(false)
+					setResolvedProfileUserId(id)
+					setProfileResolutionDone(true)
 					setUserProfile({
 						username: userData.username || profileUsername,
 						email: userData.email || '',
@@ -557,6 +583,14 @@ function ProfilUser() {
 			} catch (e) {
 				if (e instanceof DOMException && e.name === 'AbortError') return
 				if (e instanceof TypeError) return
+				if (isUserNotFoundError(e)) {
+					setProfileNotFound(true)
+					setResolvedProfileUserId(null)
+					setProfileResolutionDone(true)
+					navigate('/', { replace: true })
+					return
+				}
+				setProfileResolutionDone(true)
 				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
 				try {
 					const stored = localStorage.getItem('profileCard')
@@ -580,7 +614,7 @@ function ProfilUser() {
 			isActive = false
 			abortController.abort()
 		}
-	}, [profileUsername, routeUserId, canEdit, isPublicView])
+	}, [profileUsername, routeUserId, canEdit, isPublicView, navigate])
 
 	useEffect(() => {
 		if (!user || !canEdit) return
@@ -639,6 +673,13 @@ function ProfilUser() {
 						}
 						return
 					}
+					if (msg?.type === 'friend_updated' && msg?.payload?.reason === 'account_deleted') {
+						const removedUserId = String(msg?.payload?.userId || '')
+						if (removedUserId) {
+							removeUserFromSocialLists(removedUserId)
+						}
+						return
+					}
 					if (msg?.type === 'friend_updated' || msg?.type === 'friend_request_received') {
 						await Promise.all([loadFriends(user.username), loadFriendRequests()])
 					}
@@ -674,6 +715,23 @@ function ProfilUser() {
 	}, [user, canEdit])
 
 	useEffect(() => {
+		if (profileNotFound) {
+			setRecentMatches([])
+			setGameStats(defaultGameStats)
+			setAchievements(defaultAchievements)
+			return
+		}
+
+		if (hasProfileParam) {
+			if (!profileResolutionDone) return
+			if (!resolvedProfileUserId) {
+				setRecentMatches([])
+				setGameStats(defaultGameStats)
+				setAchievements(defaultAchievements)
+				return
+			}
+		}
+
 		if (!routeUserId && !profileUsername) {
 			setRecentMatches([])
 			setGameStats(defaultGameStats)
@@ -683,12 +741,15 @@ function ProfilUser() {
 			return
 		}
 		const abortController = new AbortController()
-		const profileTarget = { username: profileUsername, userId: routeUserId }
+		const resolvedUserIdForTarget = resolvedProfileUserId ?? undefined
+		const profileTarget = hasProfileParam
+			? { userId: resolvedUserIdForTarget }
+			: { username: profileUsername, userId: routeUserId }
 		void loadRecentMatches(profileTarget, abortController.signal)
 		void loadGameStats(profileTarget, abortController.signal)
 		void loadAchievements(profileTarget, abortController.signal)
 		return () => abortController.abort()
-	}, [profileUsername, routeUserId, isAuthenticated])
+	}, [profileUsername, routeUserId, hasProfileParam, resolvedProfileUserId, profileResolutionDone, profileNotFound, isAuthenticated])
 
 	useEffect(() => {
 		setBadges((prev) => prev.filter((id) => selectableBadgeSet.has(id)).slice(0, MAX_BADGES))
