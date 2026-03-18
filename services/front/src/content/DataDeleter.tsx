@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import logoutUser from './LogoutHandler'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
@@ -39,7 +38,6 @@ const DataDeleter = () => {
     const [open, setOpen] = useState(false);
     const [forbidden, setForbidden] = useState(false);
 
-    const [logoutError, setLogoutError] = useState('');
     const navigate = useNavigate()
     const { logout } = useAuth();
 
@@ -57,7 +55,6 @@ const DataDeleter = () => {
             credentials: "include",
         })
         const json = await isUserInGame.json();
-        console.log("ISUSERINGAME PRINT :", json);
         if (json.ingame)
             setForbidden(true);
         else
@@ -73,7 +70,8 @@ const DataDeleter = () => {
         })
 
         const me_user = await res.json();
-        await logoutUser(logout, navigate, setLogoutError);
+        logout();
+        navigate("/");
         await sendDeletionMail(me_user.id);
         await handleDeletion(me_user.id);
         setOpen(false);

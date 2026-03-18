@@ -273,10 +273,9 @@ export default async function authRoute(fastify, options) {
 		}
 	});
 
-	fastify.post("/send", async (req, rep) => {
+	fastify.post("/send", async (request, reply) => {
 		try {
-			const username = await req.body.username;
-			const email = await req.body.email;
+			const { username, email, lang } = request.body;
 			const codeValue = Math.floor(100000 + Math.random() * 900000);
 			const transporter = createZohoTransporter();
 			const codeFound = usersCode.find((e) => e.email === email);
@@ -285,26 +284,25 @@ export default async function authRoute(fastify, options) {
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
 			else {
-				return rep.code(401).send({ success: false, error: "user doesn't exist" });
+				return reply.code(401).send({ success: false, error: "user doesn't exist" });
 			}
 			usersCode.push({
 				email: email,
 				code: codeValue.toString(),
 				expireAt: Date.now() + FIFTEEN_MIN
 			});
-			const html = await render(React.createElement(SigninEmail, { username: username, code: codeValue }));
+			const html = await render(React.createElement(SigninEmail, { username: username, code: codeValue, lang: lang }));
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: email,
-				//to: user.email,
-				subject: `Hey, ${username} !`,
+				subject: subjectSignin[lang]+`, ${username} !`,
 				html,
 			});
 		} catch (e) {
 			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
 
-			return rep.code(errorInfo.status).send({
+			return reply.code(errorInfo.status).send({
 				success: false,
 				error: errorInfo.message
 			})

@@ -189,9 +189,11 @@ function HomePage() {
 				headers: {
 					"Content-Type": "application/json"
 				},
+				credentials: 'include',
 				body: JSON.stringify({
 					username: userUsername,
-					email: userEmail
+					email: userEmail,
+					lang: i18n.language?.split('-')[0] || "en"
 				})
 			});
 
