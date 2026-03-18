@@ -1,11 +1,11 @@
 import { signupUser, loginUser, getUsername, codeVerification } from '../controllers/authController.js'
 import { createZohoTransporter } from '../services/authServices.js'
+import { getUserByEmail } from '../controllers/authController.js';
+import bcrypt from 'bcryptjs';
 import React from "react";
 import { render } from "@react-email/render";
 import SigninEmail from "../mails/signinEmail.js";
 import SignupEmail from "../mails/signupEmail.js";
-import { getUserByEmail } from '../controllers/authController.js';
-import bcrypt from 'bcryptjs';
 
 const ERROR_CODES = {
 	MISSING_FIELDS: { status: 400, message: 'Email and password are required' },
@@ -15,6 +15,18 @@ const ERROR_CODES = {
 	DATABASE_ERROR: { status: 500, message: 'Internal server error' },
 	DEFAULT: { status: 500, message: 'An unexpected error occurred' }
 }
+
+const subjectSignup = {
+	"fr": "Bienvenue",
+	"en": "Welcome",
+	"ar": "مرحباً",
+};
+
+const subjectSignin = {
+	"fr": "Bon retour !",
+	"en": "Welcome back !",
+	"ar": "مرحبًا بعودتك !",
+};
 
 const user_api_url = process.env.USER_API_URL || false;
 if (!user_api_url) {
@@ -195,11 +207,11 @@ export default async function authRoute(fastify, options) {
 		}
 	});
 
-	fastify.post("/signin/mail", async function (req, rep) {
+	fastify.post("/signin/mail", async function (request, reply) {
 		try {
 			const FIFTEEN_MIN = 15 * 60 * 1000;
 			const transporter = createZohoTransporter();
-			const email = await req.body.email;
+			const { email, lang } = request.body;
 			const user = await getUserByEmail(email);
 			const codeValue = Math.floor(100000 + Math.random() * 900000);
 
@@ -208,20 +220,19 @@ export default async function authRoute(fastify, options) {
 				code: codeValue.toString(),
 				expireAt: Date.now() + FIFTEEN_MIN
 			});
-			const html = await render(React.createElement(SigninEmail, { username: user.username, code: codeValue }));
+			const html = await render(React.createElement(SigninEmail, { username: user.username, code: codeValue, lang: lang }));
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: email,
-				//to: user.email,
-				subject: `Hello back !`,
+				subject: subjectSignin[lang],
 				html,
 			})
-			return rep.send({ success: true })
+			return reply.send({ success: true })
 		} catch (e) {
 			console.error('signin/email error: ', e.message);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
 
-			return rep.code(errorInfo.status).send({
+			return reply.code(errorInfo.status).send({
 				success: false,
 				error: errorInfo.message
 			})
@@ -232,8 +243,7 @@ export default async function authRoute(fastify, options) {
 		try {
 			const FIFTEEN_MIN = 15 * 60 * 1000;
 			const codeValue = Math.floor(100000 + Math.random() * 900000);
-			const username = await request.body.username;
-			const email = await request.body.email;
+			const { username, email, lang } = request.body;
 
 			console.log("body user: ", await request.body)
 			usersCode.push({
@@ -241,14 +251,13 @@ export default async function authRoute(fastify, options) {
 				code: codeValue.toString(),
 				expireAt: Date.now() + FIFTEEN_MIN
 			});
-			const html = await render(React.createElement(SignupEmail, { username: username, code: codeValue }));
+			const html = await render(React.createElement(SignupEmail, { username: username, code: codeValue, lang: lang }));
 			const transporter = createZohoTransporter();
 
 			await transporter.sendMail({
 				from: `"ft_transcendence" <ft_trans@zohomail.eu>`,
 				to: email,
-				//to: user.email,
-				subject: `Welcome, ${username} !`,
+				subject: subjectSignup[lang]+`, ${username} !`,
 				html,
 			});
 
