@@ -40,24 +40,6 @@ services:
       - ./shared:/scripts:ro
     restart: on-failure
     
-  api:
-    build:
-      context: ./services/back/api
-      dockerfile: Dockerfile
-    container_name: api
-    networks:
-      - ft_transcendance
-    ports:
-      - "3000:3000"
-    environment:
-      - API_URL=https://localhost:3000
-    volumes:
-      - db:/db
-    depends_on:
-      sqlite_db:
-          condition: service_completed_successfully 
-    command: node --watch src/app.js 
-    
   user_api:
     build:
       context: ./services/back/user
