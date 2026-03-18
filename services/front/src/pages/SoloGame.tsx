@@ -95,8 +95,11 @@ function SoloGamePage() {
           setUserAnswer(parsed.userAnswer ?? '')
           setSelectedOption(parsed.selectedOption ?? null)
           setScore(parsed.score ?? 0)
-          setShowAnswer(false)
-          setIsCorrect(false)
+          setShowAnswer(parsed.showAnswer ?? false)
+          setIsCorrect(parsed.isCorrect ?? false)
+          setRightAnswer(parsed.rightAnswer ?? undefined)
+          setHint(parsed.hint ?? null)
+          setRemovedOptions(parsed.removedOptions ?? [])
           setLoading(false)
           setPowerups(parsed.powerups ?? Array(MAX_SLOTS).fill(null))
           return
@@ -279,6 +282,10 @@ function SoloGamePage() {
       userAnswer,
       selectedOption,
       powerups,
+      showAnswer,
+      isCorrect,
+      rightAnswer,
+      hint,
       score,
     }
 
@@ -288,7 +295,7 @@ function SoloGamePage() {
     } catch (err) {
       console.warn('[SoloGame] failed to persist state', err)
     }
-  }, [question, currentQuestionIndex, userAnswer, selectedOption, powerups, loading, error, score])
+  }, [question, currentQuestionIndex, userAnswer, selectedOption, powerups, showAnswer, isCorrect, rightAnswer, hint, score])
 
   useEffect(() => {
   if (!routeState) return;
