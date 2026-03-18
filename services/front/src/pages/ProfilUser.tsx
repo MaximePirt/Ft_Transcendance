@@ -11,9 +11,16 @@ import '../App.css'
 // @ts-ignore
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
-async function applyTheme(themeName: string, signal?: AbortSignal) {
+async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = false) {
 	try {
 		const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
+		if (!res.ok) {
+			if (!isRetry && themeName !== 'default') {
+				return applyTheme('default', signal, true)
+			}
+			return
+		}
+
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -22,15 +29,26 @@ async function applyTheme(themeName: string, signal?: AbortSignal) {
 		})
 	} catch (err) {
 		if (err instanceof Error && err.name === 'AbortError') return
-		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
-		if (themeName !== 'default') return applyTheme('default', signal)
+		if (!isRetry && themeName !== 'default') {
+			return applyTheme('default', signal, true)
+		}
+		if (!isRetry && themeName !== 'default') {
+			console.warn(`Erreur lors du chargement du thème "${themeName}"`, err)
+		}
 		return
 	}
 }
 
-async function applyFont(fontName: string, signal?: AbortSignal) {
+async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false) {
 	try {
 		const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
+		if (!res.ok) {
+			if (!isRetry && fontName !== 'default') {
+				return applyFont('default', signal, true)
+			}
+			return
+		}
+
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -39,8 +57,12 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
 		})
 	} catch (err) {
 		if (err instanceof Error && err.name === 'AbortError') return
-		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
-		if (fontName !== 'default') return applyFont('default', signal)
+		if (!isRetry && fontName !== 'default') {
+			return applyFont('default', signal, true)
+		}
+		if (!isRetry && fontName !== 'default') {
+			console.warn(`Erreur lors du chargement de la police "${fontName}"`, err)
+		}
 		return
 	}
 }
@@ -54,9 +76,9 @@ const languages = [
 
 //en attendant la data base
 const defaultUserProfile = {
-	username: 'PlayerOne',
-	email: 'player@quiz.sprint',
-	joinYear: 2024,
+	username: '',
+	email: '',
+	joinYear: new Date().getFullYear(),
 	favorites: ['cinema', 'music', 'computer_science'],
 }
 
@@ -193,10 +215,11 @@ const MAX_BADGES = 2
 
 function ProfilUser() {
 	const navigate = useNavigate()
-	const { username: routeUsername } = useParams()
+	const { username: routeUsername, userId: routeUserId } = useParams()
 	const { t, i18n } = useTranslation()
 	const { user, isAuthenticated, isAuthReady, updateUser } = useAuth()
-	const isPublicView = Boolean(routeUsername) && routeUsername !== user?.username
+	const hasProfileParam = Boolean(routeUsername || routeUserId)
+	const isPublicView = hasProfileParam && (!routeUsername || routeUsername !== user?.username)
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
@@ -228,6 +251,9 @@ function ProfilUser() {
 	const [achievementsLoading, setAchievementsLoading] = useState(false)
 	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
 	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
+	const [profileNotFound, setProfileNotFound] = useState(false)
+	const [resolvedProfileUserId, setResolvedProfileUserId] = useState<number | null>(null)
+	const [profileResolutionDone, setProfileResolutionDone] = useState(false)
 
 	const totalQuestions = gameStats.answered
 	const correctAnswers = gameStats.correct
@@ -275,6 +301,33 @@ function ProfilUser() {
 		)))
 	}
 
+	const removeUserFromSocialLists = (targetUserId: string) => {
+		setFriends((current) => current.filter((friend) => friend.id !== targetUserId))
+		setFriendRequests((current) => current.filter((request) => request.id !== targetUserId))
+	}
+
+	const resolveUserId = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
+		const numericUserId = Number(userId)
+		if (Number.isInteger(numericUserId) && numericUserId > 0) return numericUserId
+
+		const normalizedUsername = String(username || '').trim()
+		if (!normalizedUsername) {
+			throw new Error('Missing user identifier')
+		}
+
+		const userIdResponse = await fetch(`${API_BASE}/user/userid/soft/${encodeURIComponent(normalizedUsername)}`, { signal })
+		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+		const { id } = await userIdResponse.json()
+		if (id === null || id === undefined) throw new Error('User not found')
+		const resolvedId = Number(id)
+		if (!Number.isInteger(resolvedId) || resolvedId <= 0) throw new Error('Invalid user id')
+		return resolvedId
+	}
+
+	const isUserNotFoundError = (error: unknown) => (
+		error instanceof Error && error.message.includes('User not found')
+	)
+
 	const loadFriends = async (username: string, signal?: AbortSignal) => {
 		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
 		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
@@ -316,12 +369,10 @@ function ProfilUser() {
 		setFriendRequests([...normalizedReceived, ...normalizedSent])
 	}
 
-	const loadRecentMatches = async (username: string, signal?: AbortSignal) => {
+	const loadRecentMatches = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		setRecentMatchesLoading(true)
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for match history')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const historyResponse = await fetch(`${API_BASE}/user/${id}/matches?limit=3`, { signal })
 			if (!historyResponse.ok) throw new Error('Failed to load match history')
@@ -352,6 +403,7 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
+			if (isUserNotFoundError(error)) return
 			console.warn('[Profile] failed to load recent matches', error)
 			setRecentMatches([])
 		} finally {
@@ -359,11 +411,9 @@ function ProfilUser() {
 		}
 	}
 
-	const loadGameStats = async (username: string, signal?: AbortSignal) => {
+	const loadGameStats = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for game stats')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const statsResponse = await fetch(`${API_BASE}/user/${id}/stats`, { signal })
 			if (!statsResponse.ok) throw new Error('Failed to load game stats')
@@ -381,17 +431,16 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
+			if (isUserNotFoundError(error)) return
 			console.warn('[Profile] failed to load game stats', error)
 			setGameStats(defaultGameStats)
 		}
 	}
 
-	const loadAchievements = async (username: string, signal?: AbortSignal) => {
+	const loadAchievements = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		setAchievementsLoading(true)
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for achievements')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const response = await fetch(`${API_BASE}/user/${id}/achievements`, { signal })
 			if (!response.ok) throw new Error('Failed to load achievements')
@@ -414,6 +463,7 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
+			if (isUserNotFoundError(error)) return
 			console.warn('[Profile] failed to load achievements', error)
 		} finally {
 			setAchievementsLoading(false)
@@ -461,25 +511,31 @@ function ProfilUser() {
 	// causait des conflits et bugs de timing
 
 	useEffect(() => {
-		if (!profileUsername) return
+		if (!routeUserId && !profileUsername) return
 		const abortController = new AbortController()
 		let isActive = true
+		setProfileNotFound(false)
+		setResolvedProfileUserId(null)
+		setProfileResolutionDone(false)
 
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
-				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`, {
-					signal: abortController.signal,
-				})
-				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
-				const { id } = await userIdResponse.json()
+				const id = await resolveUserId({ username: profileUsername, userId: routeUserId }, abortController.signal)
 
-				const response = await fetch(`${API_BASE}/user/users/${id}`, {
+				const response = await fetch(`${API_BASE}/user/users/soft/${id}`, {
 					signal: abortController.signal,
 				})
 				if (response.ok) {
 					if (!isActive) return
-					const userData = await response.json()
+					const payload = await response.json()
+					const userData = payload?.user || null
+					if (!userData) {
+						throw new Error('User not found')
+					}
+					setProfileNotFound(false)
+					setResolvedProfileUserId(id)
+					setProfileResolutionDone(true)
 					setUserProfile({
 						username: userData.username || profileUsername,
 						email: userData.email || '',
@@ -527,6 +583,14 @@ function ProfilUser() {
 			} catch (e) {
 				if (e instanceof DOMException && e.name === 'AbortError') return
 				if (e instanceof TypeError) return
+				if (isUserNotFoundError(e)) {
+					setProfileNotFound(true)
+					setResolvedProfileUserId(null)
+					setProfileResolutionDone(true)
+					navigate('/', { replace: true })
+					return
+				}
+				setProfileResolutionDone(true)
 				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
 				try {
 					const stored = localStorage.getItem('profileCard')
@@ -550,7 +614,7 @@ function ProfilUser() {
 			isActive = false
 			abortController.abort()
 		}
-	}, [profileUsername, canEdit, isPublicView])
+	}, [profileUsername, routeUserId, canEdit, isPublicView, navigate])
 
 	useEffect(() => {
 		if (!user || !canEdit) return
@@ -609,6 +673,13 @@ function ProfilUser() {
 						}
 						return
 					}
+					if (msg?.type === 'friend_updated' && msg?.payload?.reason === 'account_deleted') {
+						const removedUserId = String(msg?.payload?.userId || '')
+						if (removedUserId) {
+							removeUserFromSocialLists(removedUserId)
+						}
+						return
+					}
 					if (msg?.type === 'friend_updated' || msg?.type === 'friend_request_received') {
 						await Promise.all([loadFriends(user.username), loadFriendRequests()])
 					}
@@ -644,7 +715,24 @@ function ProfilUser() {
 	}, [user, canEdit])
 
 	useEffect(() => {
-		if (!profileUsername) {
+		if (profileNotFound) {
+			setRecentMatches([])
+			setGameStats(defaultGameStats)
+			setAchievements(defaultAchievements)
+			return
+		}
+
+		if (hasProfileParam) {
+			if (!profileResolutionDone) return
+			if (!resolvedProfileUserId) {
+				setRecentMatches([])
+				setGameStats(defaultGameStats)
+				setAchievements(defaultAchievements)
+				return
+			}
+		}
+
+		if (!routeUserId && !profileUsername) {
 			setRecentMatches([])
 			setGameStats(defaultGameStats)
 			if (isAuthenticated) {
@@ -653,18 +741,22 @@ function ProfilUser() {
 			return
 		}
 		const abortController = new AbortController()
-		void loadRecentMatches(profileUsername, abortController.signal)
-		void loadGameStats(profileUsername, abortController.signal)
-		void loadAchievements(profileUsername, abortController.signal)
+		const resolvedUserIdForTarget = resolvedProfileUserId ?? undefined
+		const profileTarget = hasProfileParam
+			? { userId: resolvedUserIdForTarget }
+			: { username: profileUsername, userId: routeUserId }
+		void loadRecentMatches(profileTarget, abortController.signal)
+		void loadGameStats(profileTarget, abortController.signal)
+		void loadAchievements(profileTarget, abortController.signal)
 		return () => abortController.abort()
-	}, [profileUsername, isAuthenticated])
+	}, [profileUsername, routeUserId, hasProfileParam, resolvedProfileUserId, profileResolutionDone, profileNotFound, isAuthenticated])
 
 	useEffect(() => {
 		setBadges((prev) => prev.filter((id) => selectableBadgeSet.has(id)).slice(0, MAX_BADGES))
 	}, [achievements.all])
 
 	useEffect(() => {
-		document.body.dir = i18n.dir()
+		document.documentElement.dir = i18n.dir()
 	}, [i18n, i18n.language])
 
 	// Auto-save désactivé (sauvegarde manuelle uniquement)
@@ -961,14 +1053,19 @@ function ProfilUser() {
 		if (!canEdit || !user) return
 		const friendUsername = friendSearchInput.trim()
 		if (!friendUsername) return
+		const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
 		setFriendActionError('')
 		setFriendActionSuccess('')
+		if (!usernameRegex.test(friendUsername)) {
+			setFriendActionError(t('signup_error_username_format'))
+			return
+		}
 		if (friendUsername === user.username) {
 			setFriendActionError(t('save_error_generic'))
 			return
 		}
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(friendUsername)}`)
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/soft/${encodeURIComponent(friendUsername)}`)
 			if (!userIdResponse.ok) {
 				let backendMessage = ''
 				const payload = await userIdResponse.json().catch(() => null)
@@ -979,6 +1076,10 @@ function ProfilUser() {
 				return
 			}
 			const { id: friendId } = await userIdResponse.json()
+			if (!friendId) {
+				setFriendActionError(t('profile_friend_user_not_found'))
+				return
+			}
 			const response = await fetch(`${API_BASE}/user/${friendId}/friends`, {
 				method: 'POST',
 				credentials: 'include',
@@ -1005,15 +1106,15 @@ function ProfilUser() {
 	const changeLanguage = async (lang: string) => {
 		try {
 			await i18n.changeLanguage(lang)
-			document.body.dir = i18n.dir(lang)
+			document.documentElement.dir = i18n.dir(lang)
 			document.documentElement.lang = lang
 		} catch (e) {
 			console.warn('[Profile] failed to change language', e)
 		}
 	}
 
-	const openUserProfile = (username: string) => {
-		navigate(`/profile/${encodeURIComponent(username)}`)
+	const openUserProfile = (userId: string) => {
+		navigate(`/profile/id/${encodeURIComponent(userId)}`)
 	}
 
 	return (
@@ -1408,6 +1509,7 @@ function ProfilUser() {
 										id="friend-search"
 										type="text"
 										value={friendSearchInput}
+										maxLength={16}
 										onChange={(e) => setFriendSearchInput(e.target.value)}
 										placeholder={t('profile_username_placeholder')}
 										className="profile-desc-input"
@@ -1442,9 +1544,9 @@ function ProfilUser() {
 														<div>
 															<span
 																className="friend-name"
-																onClick={() => openUserProfile(request.username)}
+																onClick={() => openUserProfile(request.id)}
 																onKeyDown={(e) => {
-																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.id)
 																}}
 																role="button"
 																tabIndex={0}
@@ -1497,9 +1599,9 @@ function ProfilUser() {
 														<div>
 															<span
 																className="friend-name"
-																onClick={() => openUserProfile(request.username)}
+																onClick={() => openUserProfile(request.id)}
 																onKeyDown={(e) => {
-																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.id)
 																}}
 																role="button"
 																tabIndex={0}
@@ -1530,9 +1632,9 @@ function ProfilUser() {
 													<div>
 														<span
 															className="friend-name"
-															onClick={() => openUserProfile(friend.username)}
+															onClick={() => openUserProfile(friend.id)}
 															onKeyDown={(e) => {
-																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.username)
+																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.id)
 															}}
 															role="button"
 															tabIndex={0}

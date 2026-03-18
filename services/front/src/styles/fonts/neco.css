@@ -1,27 +1,31 @@
 @font-face {
   font-family: 'Neco';
-  src: url('/fonts/Neco/Neco-Regular.woff') format('woff');
+  src: url('/fonts/Neco/Neco-Regular.woff2') format('woff2'),
+       url('/fonts/Neco/Neco-Regular.woff') format('woff');
   font-weight: 400;
   font-display: swap;
   font-style: normal;
 }
 @font-face {
   font-family: 'Neco';
-  src: url('/fonts/Neco/Neco-Italic.woff') format('woff');
+  src: url('/fonts/Neco/Neco-Italic.woff2') format('woff2'),
+       url('/fonts/Neco/Neco-Italic.woff') format('woff');
   font-weight: 400;
   font-display: swap;
   font-style: italic;
 }
 @font-face {
   font-family: 'Neco';
-  src: url('/fonts/Neco/Neco-Bold.woff') format('woff');
+  src: url('/fonts/Neco/Neco-Bold.woff2') format('woff2'),
+       url('/fonts/Neco/Neco-Bold.woff') format('woff');
   font-weight: 700;
   font-display: swap;
   font-style: normal;
 }
 @font-face {
   font-family: 'Neco';
-  src: url('/fonts/Neco/Neco-BoldItalic.woff') format('woff');
+  src: url('/fonts/Neco/Neco-BoldItalic.woff2') format('woff2'),
+       url('/fonts/Neco/Neco-BoldItalic.woff') format('woff');
   font-weight: 700;
   font-display: swap;
   font-style: italic;
