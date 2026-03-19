@@ -159,14 +159,13 @@ function SoloGamePage() {
       if (msg.type === "powerups_granted") {
         const userIdStr = localStorage.getItem("userId")
         const userId = userIdStr ? Number(userIdStr) : null
-        const newTypes: string[] = msg.payload.powerups
-          .filter((p: any) => p.user_id === userId)
-          .map((p: any) => p.powerup_type)
+        const newTypes = msg.payload.powerups.filter((p: any) => p.user_id === userId).map((p: any) => p.powerup_type)
+
 
         setPowerups(prev => {
           const updated = [...prev]
 
-          newTypes.forEach((type: string) => {
+          newTypes.forEach(type => {
             const emptyIndex = updated.findIndex(p => p === null)
             if (emptyIndex !== -1) {
               updated[emptyIndex] = type
@@ -204,7 +203,7 @@ function SoloGamePage() {
           }
           else {
             let answer: AnswerMCQ = msg.payload.correct_answer
-            setRightAnswer(answer.answer[0])
+            setRightAnswer(answer.answer)
           }
           setIsCorrect(true)
           setShowAnswer(true)
@@ -332,7 +331,7 @@ function SoloGamePage() {
     let id: number = question.id
 
     if (question.type == "mcq") {
-      ;(question.options ?? []).map((optionObj: Option, index: number) => {
+      question.options.map((optionObj: Option, index: number) => {
         let option = optionObj.label
 
         if (selectedOption === option)
@@ -370,7 +369,7 @@ function SoloGamePage() {
         setRightAnswer(answer.answer[0])
       } else {
         let answer: AnswerMCQ = data.correct_answers
-        setRightAnswer(answer.answer[0])
+        setRightAnswer(answer.answer)
       }
       setIsCorrect(Boolean(data.is_correct))
       setShowAnswer(true)
