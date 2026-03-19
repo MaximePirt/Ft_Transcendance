@@ -55,6 +55,33 @@ function HomePage() {
 		return message || t('error_occurred')
 	}
 
+	const persistSignupLanguage = async (username: string, language: string) => {
+		try {
+			const lang = String(language || 'en').split('-')[0]
+			if (!username || !lang) return
+
+			const idResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, {
+				credentials: 'include',
+			})
+			if (!idResponse.ok) return
+
+			const idData = await idResponse.json().catch(() => null)
+			const userId = Number(idData?.id)
+			if (!Number.isInteger(userId) || userId <= 0) return
+
+			await fetch(`${API_BASE}/user/${userId}`, {
+				method: 'PATCH',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ lang }),
+			})
+		} catch {
+			return
+		}
+	}
+
 	useEffect(() => {
 		const abortController = new AbortController()
 
@@ -106,7 +133,7 @@ function HomePage() {
 			})
 			if (!response.ok) {
 				const data = await response.json();
-				setLoginError(data.error || "Something went wrong");
+				setLoginError(data.error || t('auth_error_generic'));
 			} else {
 				const signinData = await response.json().catch(() => null);
 				const signedUsername = signinData?.user?.username || '';
@@ -130,23 +157,25 @@ function HomePage() {
 						setShow2fa(true);
 					} else {
 						data = await authMail.json();
-						setLoginError(data.error || "Something went wrong");
+						setLoginError(data.error || t('auth_error_generic'));
 
 					}
 				} else {
 					data = await authMail.json();
-					setLoginError(data.error || "Something went wrong");
+					setLoginError(data.error || t('auth_error_generic'));
 				}
 			}
 		} catch (e) {
-			setLoginError("Cannot connect to authentication server");
+			setLoginError(t('auth_error_network'));
 		}
 	}
 
 	const handleAuthCode = async () => {
 		try {
-			if (!code)
-				alert('enter auth code please');
+			if (!code) {
+				setCodeError(t('twofa_code_required'))
+				return
+			}
 			const send = await fetch(`${API_BASE}/auth/verify-2fa`, {
 				method: "POST",
 				headers: {
@@ -159,15 +188,16 @@ function HomePage() {
 				})
 			});
 
-			if (send.ok) {
+			const data = await send.json();
+			if (data.success) {
 				setUserUsername('');
 				setUserEmail('');
 				setShow2fa(false);
 			} else {
-				setCodeError("Something went wrong");
+				setCodeError(data.error || t('twofa_error_invalid'));
 			}
 		} catch (e) {
-			setCodeError("Cannot connect to authentication server");
+			setCodeError(t('twofa_error_network'));
 		}
 	}
 
@@ -195,10 +225,10 @@ function HomePage() {
 			});
 
 			if (!resp.ok) {
-				setCodeError("send code again failed");
+				setCodeError(t('twofa_error_resend'));
 			}
 		} catch (e) {
-			setCodeError("Cannot connect to authentication server");
+			setCodeError(t('twofa_error_network'));
 		}
 	}
 
@@ -276,6 +306,7 @@ function HomePage() {
 			} else {
 				const success = await signup(email, username, password)
 				if (success) {
+					await persistSignupLanguage(newUser.username, i18n.language)
 					const authMail = await fetch(`${API_BASE}/auth/signup/mail`, {
 						method: "POST",
 						headers: {
@@ -299,14 +330,14 @@ function HomePage() {
 							setShowSignup(false);
 							setShow2fa(true);
 						} else
-							setSignupError(data.error || "Something went wrong");
+							setSignupError(data.error || t('auth_error_generic'));
 					} else {
-						setSignupError(data.error || "Something went wrong");
+						setSignupError(data.error || t('auth_error_generic'));
 					}
 				}
 			}
 		} catch (e) {
-			setSignupError("Cannot connect to authentication server");
+			setSignupError(t('auth_error_network'));
 		}
 	}
 	return (
@@ -469,7 +500,7 @@ function HomePage() {
 								</p>
 								<h2>{policy === 'privacy' ? t("privacy_policy") : t("terms")}</h2>
 							</div>
-							<button className="close" aria-label="Fermer" onClick={() => setPolicy(null)}>
+							<button className="close" aria-label={t('close')} onClick={() => setPolicy(null)}>
 								×
 							</button>
 						</div>
@@ -511,17 +542,17 @@ function HomePage() {
 			{show2fa && (
 				<div className='auth-overlay' role='dialog' aria-modal='true'>
 					<div className='login-card'>
-						<h1>{t("Code authentication")}</h1>
+						<h1>{t('twofa_title')}</h1>
 						<form className='login-form'>
 							{codeError && <div style={{ color: 'red', marginBottom: '1rem' }}>{codeError}</div>}
-							<p>{t("A 6-digits code has been sent at your email adress")}</p>
+							<p>{t('twofa_subtitle')}</p>
 							<label className='field'>
-								<input type="text" id="verify-token" placeholder="XXXXXX" onChange={(e) => (setCode(e.target.value))} required />
+								<input type="text" id="verify-token" placeholder={t('twofa_placeholder')} onChange={(e) => (setCode(e.target.value))} required />
 							</label>
 						</form>
-						<button type="submit" onClick={sendCodeAgain} className='btn primary full'>{t("send code again")}</button>
+						<button type="submit" onClick={sendCodeAgain} className='btn primary full'>{t('twofa_resend')}</button>
 						<button type="submit" onClick={handleAuthCode} className="btn primary full">
-							{t("GO !")}
+							{t('twofa_confirm')}
 						</button>
 
 					</div>

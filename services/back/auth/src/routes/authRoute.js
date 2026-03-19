@@ -91,7 +91,6 @@ async function performSignout(req, reply) {
 }
 
 export default async function authRoute(fastify, options) {
-	console.log("Auth route loaded");
 	fastify.decorate("authenticate", async (request, reply) => {
 		try {
 			const token = request.cookies.token;
@@ -173,7 +172,7 @@ export default async function authRoute(fastify, options) {
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
 
-			console.log("username: ", username, " email: ", email, " password: ", hashPass);
+
 			if (!password_regex.test(password))
 				return reply.code(401).send({ success: false, error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
 			else if (!username_regex.test(username))
@@ -214,7 +213,6 @@ export default async function authRoute(fastify, options) {
 
 	fastify.post("/signin", async function (request, reply) {
 		try {
-			console.log("user: ", request.body);
 			const email = await request.body.email;
 			const password = await request.body.password;
 			const reqUser = await loginUser(email, password);
@@ -249,7 +247,6 @@ export default async function authRoute(fastify, options) {
 				},
 			});
 		} catch (e) {
-			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
 			return reply.code(errorInfo.status).send({
 				success: false,
@@ -280,7 +277,6 @@ export default async function authRoute(fastify, options) {
 			})
 			return reply.send({ success: true })
 		} catch (e) {
-			console.error('signin/email error: ', e.message);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
 
 			return reply.code(errorInfo.status).send({
@@ -295,8 +291,6 @@ export default async function authRoute(fastify, options) {
 			const FIFTEEN_MIN = 15 * 60 * 1000;
 			const codeValue = Math.floor(100000 + Math.random() * 900000);
 			const { username, email, lang } = request.body;
-
-			console.log("body user: ", await request.body)
 			usersCode.push({
 				email: email,
 				code: codeValue.toString(),
@@ -314,7 +308,6 @@ export default async function authRoute(fastify, options) {
 
 			return reply.send({ success: true });
 		} catch (err) {
-			console.error("ERROR ", err);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
 
 			return rep.code(errorInfo.status).send({
@@ -350,7 +343,6 @@ export default async function authRoute(fastify, options) {
 				html,
 			});
 		} catch (e) {
-			console.error(e);
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
 
 			return reply.code(errorInfo.status).send({
@@ -366,24 +358,20 @@ export default async function authRoute(fastify, options) {
 		const email = await req.body.email;
 		const codeFound = usersCode.find((e) => e.email === email);
 
-		console.log("email: ", email);
-		console.log("code: ", code);
-		console.log("code found: ", codeFound.code);
-		if (Date.now() > codeFound.expireAt) {
-			console.error("error: code expired");
-			usersCode = usersCode.filter((user) => user.email !== email);
-			return rep.code({
-				error: "The code has expired. Please request a new one."
-			});
+		if (!codeFound) {
+			return rep.code(200).send({ success: false, error: "invalid 6-digits code" });
 		}
 
-		if (codeFound && codeFound.code === code.toString()) {
-			console.log("OK: valid authentication code");
+		if (Date.now() > codeFound.expireAt) {
 			usersCode = usersCode.filter((user) => user.email !== email);
-			return rep.send({ success: true });
+			return rep.code(200).send({ success: false, error: "The code has expired. Please request a new one." });
+		}
+
+		if (codeFound.code === code.toString()) {
+			usersCode = usersCode.filter((user) => user.email !== email);
+			return rep.code(200).send({ success: true });
 		} else {
-			console.log("error: bad code")
-			return rep.code(401).send({ success: false, error: "invalid 6-digits code" });
+			return rep.code(200).send({ success: false, error: "invalid 6-digits code" });
 		}
 	})
 
@@ -393,7 +381,6 @@ export default async function authRoute(fastify, options) {
 			if (rep.sent) {
 				return;
 			}
-			console.log("You've been Logged out")
 			return performSignout(req, rep);
 		} catch (e) {
 			rep.clearCookie('token', { path: '/' });
@@ -409,7 +396,6 @@ export default async function authRoute(fastify, options) {
 			return reply.code(404).send({ error: "Code verification failed" });
 		return reply.code(200).send({ ok: true, message: "Code verified successfully" });
 	});
-	console.log("Auth routes registered");
 }
 
 export { authRoute };
