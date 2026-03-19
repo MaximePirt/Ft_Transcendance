@@ -1,4 +1,4 @@
-import { signupUser, loginUser, getUsername, codeVerification } from '../controllers/authController.js'
+import { signupUser, loginUser, getUsername, codeVerification, checkSignupAvailability } from '../controllers/authController.js'
 import { createZohoTransporter } from '../services/authServices.js'
 import { getUserByEmail } from '../controllers/authController.js';
 import bcrypt from 'bcryptjs';
@@ -103,18 +103,40 @@ export default async function authRoute(fastify, options) {
 		}
 	});
 
-	fastify.get("/me",
-		{ onRequest: [fastify.authenticate] },
-		async (req, reply) => {
-			const userId = req.user.id;
+	fastify.get("/me", async (req, reply) => {
+		try {
+			const token = req.cookies?.token;
+			if (!token) {
+				return reply.code(200).send({ authenticated: false });
+			}
+
+			let decoded;
+			try {
+				decoded = fastify.jwt.verify(token);
+			} catch {
+				return reply.code(200).send({ authenticated: false });
+			}
+
+			const userId = Number(decoded?.id);
+			if (!Number.isInteger(userId) || userId <= 0) {
+				return reply.code(200).send({ authenticated: false });
+			}
+
 			const r = await fetch(`${user_api_url}/users/${userId}`);
 			if (!r.ok) {
-				return reply.code(404).send({ error: "User not found" });
+				return reply.code(200).send({ authenticated: false });
 			}
+
 			const profile = await r.json();
-			return profile || reply.code(404).send({ error: "User not found" });
+			if (!profile) {
+				return reply.code(200).send({ authenticated: false });
+			}
+
+			return reply.code(200).send({ ...profile, authenticated: true });
+		} catch {
+			return reply.code(200).send({ authenticated: false });
 		}
-	);
+	});
 
 	fastify.post("/signout",
 		{ onRequest: [fastify.authenticate] },
@@ -124,6 +146,20 @@ export default async function authRoute(fastify, options) {
 	);
 
 	let usersCode = [];
+	fastify.post('/signup/check', async function (request, reply) {
+		try {
+			const email = request.body?.email;
+			const username = request.body?.username;
+			const availability = await checkSignupAvailability(email, username);
+			return reply.code(200).send({ success: true, ...availability });
+		} catch (e) {
+			if (e?.message === 'MISSING_FIELDS') {
+				return reply.code(200).send({ success: true, emailAvailable: false, usernameAvailable: false });
+			}
+			return reply.code(200).send({ success: true, emailAvailable: true, usernameAvailable: true });
+		}
+	});
+
 	fastify.post('/signup', async function (request, reply) {
 		try {
 			const username_regex = /^[a-zA-Z0-9_]{3,16}$/;

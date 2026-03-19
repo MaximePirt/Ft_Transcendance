@@ -6,8 +6,6 @@ import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
-
 type LeaderboardPlayer = {
 	id: string
 	username: string
@@ -141,7 +139,6 @@ function HomePage() {
 				}
 			}
 		} catch (e) {
-			console.error('Error : ', e);
 			setLoginError("Cannot connect to authentication server");
 		}
 	}
@@ -150,7 +147,6 @@ function HomePage() {
 		try {
 			if (!code)
 				alert('enter auth code please');
-			console.log("code: ", code, "username: ", userUsername, "email: ", userEmail);
 			const send = await fetch(`${API_BASE}/auth/verify-2fa`, {
 				method: "POST",
 				headers: {
@@ -166,10 +162,8 @@ function HomePage() {
 			if (send.ok) {
 				setUserUsername('');
 				setUserEmail('');
-				console.log("ok")
 				setShow2fa(false);
 			} else {
-				console.error("error")
 				setCodeError("Something went wrong");
 			}
 		} catch (e) {
@@ -181,7 +175,7 @@ function HomePage() {
 		try {
 			await logout()
 		} catch (e) {
-			console.error('Logout error:', e)
+			return
 		}
 	}
 
@@ -231,7 +225,6 @@ function HomePage() {
 			setSignupError(t('signup_error_password_mismatch'));
 			return
 		} else if (!username_regex.test(username)) {
-			console.log("coucou");
 			setSignupError(t('signup_error_username_format'));
 			return
 		} else if (!password_regex.test(password)) {
@@ -240,6 +233,28 @@ function HomePage() {
 		}
 
 		try {
+			const checkResponse = await fetch(`${API_BASE}/auth/signup/check`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: 'include',
+				body: JSON.stringify({
+					email: newUser.email,
+					username: newUser.username,
+				})
+			});
+
+			const checkData = await checkResponse.json().catch(() => null);
+			if (checkData && checkData.emailAvailable === false) {
+				setSignupError(t('signup_error_email_taken'));
+				return;
+			}
+			if (checkData && checkData.usernameAvailable === false) {
+				setSignupError(t('signup_error_username_taken'));
+				return;
+			}
+
 			const response = await fetch(`${API_BASE}/auth/signup`, {
 				method: "POST",
 				headers: {
@@ -257,7 +272,6 @@ function HomePage() {
 
 			if (!response.ok) {
 				setSignupError(mapSignupError(data.error, data.errorCode));
-				console.log("data error: ", data.error);
 				return
 			} else {
 				const success = await signup(email, username, password)
@@ -292,7 +306,6 @@ function HomePage() {
 				}
 			}
 		} catch (e) {
-			console.error('Error: ', e)
 			setSignupError("Cannot connect to authentication server");
 		}
 	}

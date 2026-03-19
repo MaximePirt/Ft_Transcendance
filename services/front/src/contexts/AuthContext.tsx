@@ -134,6 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 				if (meResponse.ok) {
 					const me = await meResponse.json()
+					if (me?.authenticated === false) {
+						setUser(null)
+						localStorage.removeItem('user')
+						return
+					}
 					const userData = {
 						email: me?.email || '',
 						username: me?.username || '',

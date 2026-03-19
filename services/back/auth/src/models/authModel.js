@@ -74,6 +74,16 @@ function getUserModelEmail(email) {
 	return stmt;
 }
 
+function getSignupAvailability(email, username) {
+	const existingByEmail = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+	const existingByUsername = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+
+	return {
+		emailAvailable: !existingByEmail,
+		usernameAvailable: !existingByUsername,
+	};
+}
+
 async function getUserId(email, password) {
 	const stmt = db.prepare(
 		`SELECT * FROM users
@@ -97,5 +107,6 @@ export {
 	addNewUser,
 	getUserName,
 	getUserId,
-	getUserModelEmail
+	getUserModelEmail,
+	getSignupAvailability
 };
