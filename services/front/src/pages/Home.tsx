@@ -172,7 +172,7 @@ function HomePage() {
 
 	const handleAuthCode = async () => {
 		try {
-			if (!code) {
+			if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
 				setCodeError(t('twofa_code_required'))
 				return
 			}
@@ -543,15 +543,30 @@ function HomePage() {
 				<div className='auth-overlay' role='dialog' aria-modal='true'>
 					<div className='login-card'>
 						<h1>{t('twofa_title')}</h1>
-						<form className='login-form'>
+						<form className='login-form' onSubmit={(e) => {
+							e.preventDefault();
+							handleAuthCode();
+						}}>
 							{codeError && <div style={{ color: 'red', marginBottom: '1rem' }}>{codeError}</div>}
 							<p>{t('twofa_subtitle')}</p>
 							<label className='field'>
-								<input type="text" id="verify-token" placeholder={t('twofa_placeholder')} onChange={(e) => (setCode(e.target.value))} required />
+								<input 
+									type="text" 
+									id="verify-token" 
+									placeholder={t('twofa_placeholder')} 
+									value={code}
+									maxLength="6"
+									inputMode="numeric"
+									onChange={(e) => {
+										const value = e.target.value.replace(/[^0-9]/g, '');
+										setCode(value.slice(0, 6));
+									}} 
+									required 
+								/>
 							</label>
 						</form>
-						<button type="submit" onClick={sendCodeAgain} className='btn primary full'>{t('twofa_resend')}</button>
-						<button type="submit" onClick={handleAuthCode} className="btn primary full">
+						<button type="button" onClick={sendCodeAgain} className='btn primary full'>{t('twofa_resend')}</button>
+						<button type="button" onClick={handleAuthCode} className="btn primary full">
 							{t('twofa_confirm')}
 						</button>
 

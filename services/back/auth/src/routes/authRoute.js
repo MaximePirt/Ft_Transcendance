@@ -358,6 +358,10 @@ export default async function authRoute(fastify, options) {
 		const email = await req.body.email;
 		const codeFound = usersCode.find((e) => e.email === email);
 
+		if (!code || !/^\d{6}$/.test(code.toString())) {
+			return rep.code(200).send({ success: false, error: "invalid 6-digits code" });
+		}
+
 		if (!codeFound) {
 			return rep.code(200).send({ success: false, error: "invalid 6-digits code" });
 		}
