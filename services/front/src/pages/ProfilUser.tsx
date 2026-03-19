@@ -550,6 +550,15 @@ function ProfilUser() {
 					setBadges([])
 					setDescription(String(userData.profileCardDescription || '').slice(0, 40))
 
+					if (canEdit && typeof userData.lang === 'string' && userData.lang) {
+						const normalizedLang = userData.lang.split('-')[0]
+						if (normalizedLang && normalizedLang !== i18n.language.split('-')[0]) {
+							await i18n.changeLanguage(normalizedLang)
+							document.documentElement.dir = i18n.dir(normalizedLang)
+							document.documentElement.lang = normalizedLang
+						}
+					}
+
 					// Charger les données de personnalisation depuis le serveur
 					if (userData.profileCardStickers) {
 						try {
@@ -1180,7 +1189,7 @@ function ProfilUser() {
 							<p className="control-label">{t('profile_language_label')}</p>
 							<div className="chip-row">
 								{languages.map((lng) => {
-									const active = i18n.language === lng.code
+									const active = i18n.language.split('-')[0] === lng.code
 									return (
 										<button
 											key={lng.code}

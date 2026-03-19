@@ -24,7 +24,7 @@ async function resolveAuthenticatedUserId(req) {
 }
 
 module.exports = async function wsRoutes(fastify) {
-  fastify.get("/ws/friends", { websocket: true }, async (socket, req) => {
+  fastify.get("/ws/friends", { preHandler: fastify.authenticate, websocket: true }, async (socket, req) => {
     const meId = await resolveAuthenticatedUserId(req);
     if (!meId) {
       socket.send(JSON.stringify({ type: "error", payload: "Unauthorized" }));

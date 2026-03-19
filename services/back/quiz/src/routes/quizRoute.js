@@ -2,8 +2,6 @@ quizController = require('../controllers/quizController');
 const schemas = require('../schemas/game.schemas');
 const wsHub = require('../ws/wsHub');
 
-
-
 async function quizRoutes(fastify, options) {
 
 	/**

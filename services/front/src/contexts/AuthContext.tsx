@@ -136,6 +136,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 				if (meResponse.ok) {
 					const me = await meResponse.json()
+					if (me?.authenticated === false) {
+						setUser(null)
+						localStorage.removeItem('user')
+						return
+					}
 					const userData = {
 						email: me?.email || '',
 						username: me?.username || '',
@@ -145,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 						localStorage.setItem('user', JSON.stringify(userData))
 						await applylang(userData.username, abortController.signal)
 					}
-				} else if (meResponse.status === 401 || meResponse.status === 403) {
+				} else if (meResponse.status === 401 || meResponse.status === 403 || meResponse.status === 404) {
 					setUser(null)
 					localStorage.removeItem('user')
 				} else if (storedUser?.username) {
@@ -240,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}
 	}, [user])
 
-	const login = async (email: string, username: string): Promise<boolean> => {
+	const login = async (email: string, _username: string): Promise<boolean> => {
 		const rawIdentifier = email.trim()
 
 		// let signedIn = false
@@ -294,13 +299,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			userData = null
 		}
 
-		if (!userData) {
-			if (!username) return false
-			userData = {
-				email: email || rawIdentifier,
-				username,
-			}
-		}
+		if (!userData) return false
 
 		setUser(userData)
 		localStorage.setItem('user', JSON.stringify(userData))
@@ -324,6 +323,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		localStorage.removeItem('user')
 		localStorage.setItem('theme', 'default')
 		localStorage.setItem('font', 'default')
+		window.location.reload()
 
 		try {
 			await fetch(`${API_BASE}/auth/signout`, {

@@ -31,7 +31,7 @@ function HomePage() {
 	const { i18n } = useTranslation()
 	const navigate = useNavigate()
 	const { t } = useTranslation()
-	const { user, login, signup, logout, isAuthenticated } = useAuth()
+	const { user, login, logout, isAuthenticated } = useAuth()
 	const [showLogin, setShowLogin] = useState(false)
 	const [showSignup, setShowSignup] = useState(false)
 	const [show2fa, setShow2fa] = useState(false)
@@ -42,17 +42,56 @@ function HomePage() {
 	const [codeError, setCodeError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
-	const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
+  const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
+	const [isSignup2faPending, setIsSignup2faPending] = useState(false);
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 	const [leaderboardError, setLeaderboardError] = useState(false)
 
-	const mapSignupError = (message?: string) => {
+	const mapSignupError = (message?: string, errorCode?: string) => {
 		const normalized = String(message || '').toLowerCase()
+		const normalizedCode = String(errorCode || '').toUpperCase()
+		if (normalizedCode === 'EMAIL_EXISTS' || normalized.includes('email already exists')) return t('signup_error_email_taken')
+		if (normalizedCode === 'USERNAME_TAKEN' || normalized.includes('username already taken')) return t('signup_error_username_taken')
 		if (normalized.includes('password != confirm password')) return t('signup_error_password_mismatch')
 		if (normalized.includes('username should count between 3 & 16')) return t('signup_error_username_format')
 		if (normalized.includes('password must be 12+ chars')) return t('signup_error_password_format')
 		return message || t('error_occurred')
+	}
+
+	const mapLoginError = (message?: string, status?: number) => {
+		const normalized = String(message || '').toLowerCase()
+		if (status === 400 || normalized.includes('required')) return t('login_error_missing_fields')
+		if (status === 401 || normalized.includes('invalid email or password')) return t('login_error_invalid_credentials')
+		if (status === 503 || normalized.includes('temporarily unavailable') || normalized.includes('read-only')) return t('login_error_service_unavailable')
+		return t('auth_error_generic')
+	}
+
+	const persistSignupLanguage = async (username: string, language: string) => {
+		try {
+			const lang = String(language || 'en').split('-')[0]
+			if (!username || !lang) return
+
+			const idResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, {
+				credentials: 'include',
+			})
+			if (!idResponse.ok) return
+
+			const idData = await idResponse.json().catch(() => null)
+			const userId = Number(idData?.id)
+			if (!Number.isInteger(userId) || userId <= 0) return
+
+			await fetch(`${API_BASE}/user/${userId}`, {
+				method: 'PATCH',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ lang }),
+			})
+		} catch {
+			return
+		}
 	}
 
 	useEffect(() => {
@@ -104,11 +143,10 @@ function HomePage() {
 					password: password
 				})
 			})
-			if (!response.ok) {
-				const data = await response.json();
-				setLoginError(data.error || "Something went wrong");
+			const signinData = await response.json().catch(() => null);
+			if (!response.ok || !signinData?.ok) {
+				setLoginError(mapLoginError(signinData?.error, response.status));
 			} else {
-				const signinData = await response.json().catch(() => null);
 				const signedUsername = signinData?.user?.username || '';
 				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
 					method: "POST",
@@ -124,33 +162,29 @@ function HomePage() {
 				setUserUsername(signedUsername);
 				let data;
 				if (authMail.ok) {
-					if (await login(email, signedUsername)) {
-						setShowLogin(false);
-						setCodeError('');
-						setShow2fa(true);
-					} else {
-						data = await authMail.json();
-						setLoginError(data.error || "Something went wrong");
-
-					}
+					setIsSignup2faPending(false);
+					setShowLogin(false);
+					setCodeError('');
+					setShow2fa(true);
 				} else {
 					data = await authMail.json();
-					setLoginError(data.error || "Something went wrong");
+					setLoginError(data?.error ? mapLoginError(data.error, authMail.status) : t('login_error_code_send_failed'));
 				}
 			}
 		} catch (e) {
-			console.error('Error : ', e);
-			setLoginError("Cannot connect to authentication server");
+			setLoginError(t('auth_error_network'));
 		}
 	}
 
 	const handleAuthCode = async () => {
 		try {
-			if (!code)
-				alert('enter auth code please');
-			console.log("code: ", code, "username: ", userUsername, "email: ", userEmail);
+			if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+				setCodeError(t('twofa_code_required'))
+				return
+			}
 			const send = await fetch(`${API_BASE}/auth/verify-2fa`, {
 				method: "POST",
+				credentials: 'include',
 				headers: {
 					"Content-Type": "application/json"
 				},
@@ -161,17 +195,25 @@ function HomePage() {
 				})
 			});
 
-			if (send.ok) {
-				setUserUsername('');
-				setUserEmail('');
-				console.log("ok")
-				setShow2fa(false);
+			const data = await send.json();
+			if (data.success) {
+				const verifiedUsername = data?.user?.username || userUsername;
+				if (await login(userEmail, verifiedUsername)) {
+					if (isSignup2faPending) {
+						await persistSignupLanguage(verifiedUsername, i18n.language)
+						setIsSignup2faPending(false)
+					}
+					setUserUsername('');
+					setUserEmail('');
+					setShow2fa(false);
+				} else {
+					setCodeError(t('auth_error_generic'));
+				}
 			} else {
-				console.error("error")
-				setCodeError("Something went wrong");
+				setCodeError(data.error || t('twofa_error_invalid'));
 			}
 		} catch (e) {
-			setCodeError("Cannot connect to authentication server");
+			setCodeError(t('twofa_error_network'));
 		}
 	}
 
@@ -179,7 +221,7 @@ function HomePage() {
 		try {
 			await logout()
 		} catch (e) {
-			console.error('Logout error:', e)
+			return
 		}
 	}
 
@@ -199,10 +241,10 @@ function HomePage() {
 			});
 
 			if (!resp.ok) {
-				setCodeError("send code again failed");
+				setCodeError(t('twofa_error_resend'));
 			}
 		} catch (e) {
-			setCodeError("Cannot connect to authentication server");
+			setCodeError(t('twofa_error_network'));
 		}
 	}
 
@@ -229,7 +271,6 @@ function HomePage() {
 			setSignupError(t('signup_error_password_mismatch'));
 			return
 		} else if (!username_regex.test(username)) {
-			console.log("coucou");
 			setSignupError(t('signup_error_username_format'));
 			return
 		} else if (!password_regex.test(password)) {
@@ -238,6 +279,28 @@ function HomePage() {
 		}
 
 		try {
+			const checkResponse = await fetch(`${API_BASE}/auth/signup/check`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: 'include',
+				body: JSON.stringify({
+					email: newUser.email,
+					username: newUser.username,
+				})
+			});
+
+			const checkData = await checkResponse.json().catch(() => null);
+			if (checkData && checkData.emailAvailable === false) {
+				setSignupError(t('signup_error_email_taken'));
+				return;
+			}
+			if (checkData && checkData.usernameAvailable === false) {
+				setSignupError(t('signup_error_username_taken'));
+				return;
+			}
+
 			const response = await fetch(`${API_BASE}/auth/signup`, {
 				method: "POST",
 				headers: {
@@ -254,44 +317,37 @@ function HomePage() {
 			const data = await response.json();
 
 			if (!response.ok) {
-				setSignupError(mapSignupError(data.error));
-				console.log("data error: ", data.error);
+				setSignupError(mapSignupError(data.error, data.errorCode));
 				return
 			} else {
-				const success = await signup(email, username, password)
-				if (success) {
-					const authMail = await fetch(`${API_BASE}/auth/signup/mail`, {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json"
-						},
-						credentials: 'include',
-						body: JSON.stringify({
-							email: newUser.email,
-							username: newUser.username,
-							lang: i18n.language?.split('-')[0] || "en"
-						})
-					});
+				const authMail = await fetch(`${API_BASE}/auth/signup/mail`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					credentials: 'include',
+					body: JSON.stringify({
+						email: newUser.email,
+						username: newUser.username,
+						lang: i18n.language?.split('-')[0] || "en"
+					})
+				});
 
-					const data = await authMail.json();
+				const data = await authMail.json();
 
-					if (authMail.ok) {
-						if (await login(email, username)) {
-							setUserUsername(username);
-							setUserEmail(email);
-							setCodeError('');
-							setShowSignup(false);
-							setShow2fa(true);
-						} else
-							setSignupError(data.error || "Something went wrong");
-					} else {
-						setSignupError(data.error || "Something went wrong");
-					}
+				if (authMail.ok) {
+					setIsSignup2faPending(true);
+					setUserUsername(username);
+					setUserEmail(email);
+					setCodeError('');
+					setShowSignup(false);
+					setShow2fa(true);
+				} else {
+					setSignupError(data.error || t('auth_error_generic'));
 				}
 			}
 		} catch (e) {
-			console.error('Error: ', e)
-			setSignupError("Cannot connect to authentication server");
+			setSignupError(t('auth_error_network'));
 		}
 	}
 	return (
@@ -454,7 +510,7 @@ function HomePage() {
 								</p>
 								<h2>{policy === 'privacy' ? t("privacy_policy") : t("terms")}</h2>
 							</div>
-							<button className="close" aria-label="Fermer" onClick={() => setPolicy(null)}>
+							<button className="close" aria-label={t('close')} onClick={() => setPolicy(null)}>
 								×
 							</button>
 						</div>
@@ -496,17 +552,32 @@ function HomePage() {
 			{show2fa && (
 				<div className='auth-overlay' role='dialog' aria-modal='true'>
 					<div className='login-card'>
-						<h1>{t("Code authentication")}</h1>
-						<form className='login-form'>
+						<h1>{t('twofa_title')}</h1>
+						<form className='login-form' onSubmit={(e) => {
+							e.preventDefault();
+							handleAuthCode();
+						}}>
 							{codeError && <div style={{ color: 'red', marginBottom: '1rem' }}>{codeError}</div>}
-							<p>{t("A 6-digits code has been sent at your email adress")}</p>
+							<p>{t('twofa_subtitle')}</p>
 							<label className='field'>
-								<input type="text" id="verify-token" placeholder="XXXXXX" onChange={(e) => (setCode(e.target.value))} required />
+								<input 
+									type="text" 
+									id="verify-token" 
+									placeholder={t('twofa_placeholder')} 
+									value={code}
+									maxLength={6}
+									inputMode="numeric"
+									onChange={(e) => {
+										const value = e.target.value.replace(/[^0-9]/g, '');
+										setCode(value.slice(0, 6));
+									}} 
+									required 
+								/>
 							</label>
 						</form>
-						<button type="submit" onClick={sendCodeAgain} className='btn primary full'>{t("send code again")}</button>
-						<button type="submit" onClick={handleAuthCode} className="btn primary full">
-							{t("GO !")}
+						<button type="button" onClick={sendCodeAgain} className='btn primary full'>{t('twofa_resend')}</button>
+						<button type="button" onClick={handleAuthCode} className="btn primary full">
+							{t('twofa_confirm')}
 						</button>
 
 					</div>
