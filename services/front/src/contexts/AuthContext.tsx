@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 						localStorage.setItem('user', JSON.stringify(userData))
 						await applylang(userData.username, abortController.signal)
 					}
-				} else if (meResponse.status === 401 || meResponse.status === 403) {
+				} else if (meResponse.status === 401 || meResponse.status === 403 || meResponse.status === 404) {
 					setUser(null)
 					localStorage.removeItem('user')
 				} else if (storedUser?.username) {
@@ -321,6 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		localStorage.removeItem('user')
 		localStorage.setItem('theme', 'default')
 		localStorage.setItem('font', 'default')
+		window.location.reload()
 
 		try {
 			await fetch(`${API_BASE}/auth/signout`, {
