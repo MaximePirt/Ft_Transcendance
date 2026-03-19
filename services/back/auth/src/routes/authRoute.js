@@ -94,55 +94,80 @@ export default async function authRoute(fastify, options) {
 	fastify.decorate("authenticate", async (request, reply) => {
 		try {
 			const token = request.cookies.token;
-			if (!token) return reply.code(401).send({ error: "No cookies found" });
+			if (!token) {
+				return reply.code(401).send({ error: "No token" });
+			}
 			const decoded = fastify.jwt.verify(token);
+			
+			const res = await fetch(`${user_api_url}/users/${decoded.id}`);
+			if (!res.ok) {
+				reply.clearCookie("token", {
+					path: "/",
+					httpOnly: true,
+					secure: true,
+					sameSite: "lax"
+				});
+				return reply.code(401).send({ error: "User no longer exists" });
+			}
+
+			const data = await res.json();
+			if (data.username !== decoded.username)
+			{
+				reply.clearCookie("token", {
+					path: "/",
+					httpOnly: true,
+					secure: true,
+					sameSite: "lax"
+				});
+				return reply.code(401).send({ error: "Wrong cookie used" });
+
+			}
 			request.user = decoded;
+
 		} catch (e) {
-			reply.send(e);
+			return reply.code(401).send({ error: "Invalid token" });
 		}
 	});
 
 	fastify.get("/me", async (req, reply) => {
+		const token = req.cookies?.token;
+		if (!token) {
+			return reply.code(200).send({ authenticated: false });
+		}
+
+		let decoded;
 		try {
-			const token = req.cookies?.token;
-			if (!token) {
-				return reply.code(200).send({ authenticated: false });
-			}
+			decoded = fastify.jwt.verify(token);
+		} catch {
+			return reply.code(200).send({ authenticated: false });
+		}
 
-			let decoded;
-			try {
-				decoded = fastify.jwt.verify(token);
-			} catch {
-				return reply.code(200).send({ authenticated: false });
-			}
+		const userId = Number(decoded?.id);
+		if (!Number.isInteger(userId) || userId <= 0) {
+			return reply.code(200).send({ authenticated: false });
+		}
 
-			const userId = Number(decoded?.id);
-			if (!Number.isInteger(userId) || userId <= 0) {
-				return reply.code(200).send({ authenticated: false });
-			}
+		const r = await fetch(`${user_api_url}/users/${userId}`);
+		if (!r.ok) {
+			return reply.clearCookie("token", {
+				path: "/",
+				httpOnly: true,
+				signed: false,
+				secure: true,
+			})
+			.code(404)
+			.send({ error: "User not found" });
+		}
 
-			const r = await fetch(`${user_api_url}/users/${userId}`);
-			if (!r.ok) {
-				return reply.clearCookie("token", {
+		const profile = await r.json();
+		return profile || reply.clearCookie("token", {
 					path: "/",
 					httpOnly: true,
 					signed: false,
 					secure: true,
 				})
 				.code(404)
-				.send({ error: "User not found 1" });
-			}
-
-			const profile = await r.json();
-			return profile || reply.clearCookie("token", {
-						path: "/",
-						httpOnly: true,
-						signed: false,
-						secure: true,
-					})
-					.code(404)
-					.send({ error: "User not found 2" });
-		}
+				.send({ error: "User not found" });
 	});
 
 	fastify.post("/signout",

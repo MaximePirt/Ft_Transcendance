@@ -34,6 +34,13 @@ fastify.register(fastifyJwt, {
   }
 });
 
+fastify.register(require("./plugins/auth"));
+fastify.register(require("@fastify/multipart"));
+fastify.register(require("@fastify/static"), {
+  root: path.join(__dirname, "..", "uploads"),
+  prefix: "/uploads/",
+});
+
 let websocketEnabled = false;
 try {
   const websocketPlugin = require("@fastify/websocket");
@@ -53,14 +60,6 @@ fastify.register(require("@fastify/cors"), {
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
 	credentials: true,
 	allowedHeaders: ["Content-type", "Authorization"],
-});
-
-fastify.register(require("./plugins/auth"));
-
-fastify.register(require("@fastify/multipart"));
-fastify.register(require("@fastify/static"), {
-  root: path.join(__dirname, "..", "uploads"),
-  prefix: "/uploads/",
 });
 
 fastify.register(require("./routes/userRoute"));
