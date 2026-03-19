@@ -322,6 +322,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		localStorage.removeItem('user')
 		localStorage.setItem('theme', 'default')
 		localStorage.setItem('font', 'default')
+		window.location.reload()
 
 		try {
 			await fetch(`${API_BASE}/auth/signout`, {
