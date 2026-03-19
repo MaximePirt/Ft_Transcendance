@@ -1,19 +1,49 @@
 #!/bin/sh
+set -eu
 
-echo "Injecting runtime environment variables..."
+/scripts/vault-run.sh /secrets/front/app.env /bin/sh -eu <<'SH'
+OUT="/usr/share/nginx/html/env-config.js"
 
-API_URL="${VITE_API_URL:-/api}"
+js_escape() {
+  printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
 
-# Ensure the config file exists
-CONFIG_FILE="/usr/share/nginx/html/env-config.js"
-touch $CONFIG_FILE
+trim() {
+  printf '%s' "$1" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
 
-# Write the config
-echo "window.env = {" > $CONFIG_FILE
-echo "  API_URL: \"${API_URL}\"," >> $CONFIG_FILE
-echo "};" >> $CONFIG_FILE
+is_valid_key() {
+  printf '%s' "$1" | grep -Eq '^[A-Za-z_][A-Za-z0-9_]*$'
+}
 
-echo "Configuration injected into $CONFIG_FILE"
+{
+  printf 'window.env = {\n'
+  first=1
 
-# Standard nginx entrypoint will take over from here to start nginx
+  while IFS= read -r raw || [ -n "$raw" ]; do
+    line=$(printf '%s' "$raw" | tr -d '\r')
+    line=$(trim "$line")
 
+    [ -z "$line" ] && continue
+    case "$line" in \#*) continue ;; esac
+
+    case "$line" in
+      *=*) key=${line%%=*} ;;
+      *:*) key=${line%%:*} ;;
+      *) continue ;;
+    esac
+
+    key=$(trim "$key")
+    is_valid_key "$key" || continue
+
+    val=$(printenv "$key" 2>/dev/null || true)
+    val=$(js_escape "$val")
+
+    [ "$first" -eq 0 ] && printf ',\n'
+    printf '  "%s": "%s"' "$key" "$val"
+    first=0
+  done < /secrets/front/app.env
+
+  printf '\n};\n'
+} > "$OUT"
+SH

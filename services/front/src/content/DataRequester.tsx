@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+import { runtimeEnv } from '../runtime-env'
+
+const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
 
 async function sendExportMail(json: any, id: number) {
     const res = await fetch(`${API_BASE}/user/export-data/mail`, {
