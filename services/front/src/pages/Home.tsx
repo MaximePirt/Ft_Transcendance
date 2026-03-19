@@ -28,7 +28,7 @@ function HomePage() {
 	const { i18n } = useTranslation()
 	const navigate = useNavigate()
 	const { t } = useTranslation()
-	const { user, login, signup, logout, isAuthenticated } = useAuth()
+	const { user, login, logout, isAuthenticated } = useAuth()
 	const [showLogin, setShowLogin] = useState(false)
 	const [showSignup, setShowSignup] = useState(false)
 	const [show2fa, setShow2fa] = useState(false)
@@ -39,6 +39,7 @@ function HomePage() {
 	const [codeError, setCodeError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
+	const [isSignup2faPending, setIsSignup2faPending] = useState(false);
 	const API_BASE = import.meta.env.AUTH_API_URL || 'https://localhost/api'
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
@@ -151,15 +152,10 @@ function HomePage() {
 				setUserUsername(signedUsername);
 				let data;
 				if (authMail.ok) {
-					if (await login(email, signedUsername)) {
-						setShowLogin(false);
-						setCodeError('');
-						setShow2fa(true);
-					} else {
-						data = await authMail.json();
-						setLoginError(data.error || t('auth_error_generic'));
-
-					}
+					setIsSignup2faPending(false);
+					setShowLogin(false);
+					setCodeError('');
+					setShow2fa(true);
 				} else {
 					data = await authMail.json();
 					setLoginError(data.error || t('auth_error_generic'));
@@ -178,6 +174,7 @@ function HomePage() {
 			}
 			const send = await fetch(`${API_BASE}/auth/verify-2fa`, {
 				method: "POST",
+				credentials: 'include',
 				headers: {
 					"Content-Type": "application/json"
 				},
@@ -190,9 +187,18 @@ function HomePage() {
 
 			const data = await send.json();
 			if (data.success) {
-				setUserUsername('');
-				setUserEmail('');
-				setShow2fa(false);
+				const verifiedUsername = data?.user?.username || userUsername;
+				if (await login(userEmail, verifiedUsername)) {
+					if (isSignup2faPending) {
+						await persistSignupLanguage(verifiedUsername, i18n.language)
+						setIsSignup2faPending(false)
+					}
+					setUserUsername('');
+					setUserEmail('');
+					setShow2fa(false);
+				} else {
+					setCodeError(t('auth_error_generic'));
+				}
 			} else {
 				setCodeError(data.error || t('twofa_error_invalid'));
 			}
@@ -304,36 +310,30 @@ function HomePage() {
 				setSignupError(mapSignupError(data.error, data.errorCode));
 				return
 			} else {
-				const success = await signup(email, username, password)
-				if (success) {
-					await persistSignupLanguage(newUser.username, i18n.language)
-					const authMail = await fetch(`${API_BASE}/auth/signup/mail`, {
-						method: "POST",
-						headers: {
-							"Content-Type": "application/json"
-						},
-						credentials: 'include',
-						body: JSON.stringify({
-							email: newUser.email,
-							username: newUser.username,
-							lang: i18n.language?.split('-')[0] || "en"
-						})
-					});
+				const authMail = await fetch(`${API_BASE}/auth/signup/mail`, {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json"
+					},
+					credentials: 'include',
+					body: JSON.stringify({
+						email: newUser.email,
+						username: newUser.username,
+						lang: i18n.language?.split('-')[0] || "en"
+					})
+				});
 
-					const data = await authMail.json();
+				const data = await authMail.json();
 
-					if (authMail.ok) {
-						if (await login(email, username)) {
-							setUserUsername(username);
-							setUserEmail(email);
-							setCodeError('');
-							setShowSignup(false);
-							setShow2fa(true);
-						} else
-							setSignupError(data.error || t('auth_error_generic'));
-					} else {
-						setSignupError(data.error || t('auth_error_generic'));
-					}
+				if (authMail.ok) {
+					setIsSignup2faPending(true);
+					setUserUsername(username);
+					setUserEmail(email);
+					setCodeError('');
+					setShowSignup(false);
+					setShow2fa(true);
+				} else {
+					setSignupError(data.error || t('auth_error_generic'));
 				}
 			}
 		} catch (e) {
@@ -555,7 +555,7 @@ function HomePage() {
 									id="verify-token" 
 									placeholder={t('twofa_placeholder')} 
 									value={code}
-									maxLength="6"
+									maxLength={6}
 									inputMode="numeric"
 									onChange={(e) => {
 										const value = e.target.value.replace(/[^0-9]/g, '');

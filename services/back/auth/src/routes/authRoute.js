@@ -145,6 +145,7 @@ export default async function authRoute(fastify, options) {
 	);
 
 	let usersCode = [];
+	let pendingSignups = [];
 	fastify.post('/signup/check', async function (request, reply) {
 		try {
 			const email = request.body?.email;
@@ -168,6 +169,7 @@ export default async function authRoute(fastify, options) {
 			const password = await request.body.password;
 			const hashPass = await bcrypt.hash(password, 12);
 			const codeFound = usersCode.find((e) => e.email === email);
+			const availability = await checkSignupAvailability(email, username);
 
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
@@ -177,18 +179,41 @@ export default async function authRoute(fastify, options) {
 				return reply.code(401).send({ success: false, error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
 			else if (!username_regex.test(username))
 				return reply.code(401).send({ success: false, error: 'Username should count between 3 & 16 characters and contains not any special characters' });
-			const resId = await signupUser(email, username, hashPass);
-			const user = Object.create(User);
-			user.username = await request.body.username;
-			user.id = resId;
-			user.token = JWTgenerator(fastify, user);
-			reply.setCookie("token", user.token, {
-				httpOnly: true,
-				signed: false,
-				secure: true,
-				path: "/",
+
+			if (!availability.emailAvailable) {
+				return reply.code(409).send({
+					success: false,
+					error: ERROR_CODES.EMAIL_EXISTS.message,
+					errorCode: 'EMAIL_EXISTS'
+				});
+			}
+
+			if (!availability.usernameAvailable) {
+				return reply.code(409).send({
+					success: false,
+					error: ERROR_CODES.USERNAME_TAKEN.message,
+					errorCode: 'USERNAME_TAKEN'
+				});
+			}
+
+			pendingSignups = pendingSignups.filter((pendingUser) => pendingUser.email !== email);
+			pendingSignups.push({
+				email,
+				username,
+				hashPass,
+				createdAt: Date.now()
 			});
-			return reply.code(200).send({ ok: true, message: "Signup successful" });
+
+			return reply.code(200).send({
+				ok: true,
+				requires2fa: true,
+				user: {
+					id: 0,
+					username,
+					email,
+				},
+				message: "Signup successful"
+			});
 		} catch (e) {
 			let errorKey = e?.message;
 			const rawError = String(e || '');
@@ -218,7 +243,6 @@ export default async function authRoute(fastify, options) {
 			const reqUser = await loginUser(email, password);
 			const resolvedUserId = Number(reqUser?.id);
 			const username = reqUser?.username || await getUsername(email);
-			const user = Object.create(User);
 			const codeFound = usersCode.find((e) => e.email === email);
 
 			if (!Number.isInteger(resolvedUserId) || resolvedUserId <= 0) {
@@ -227,23 +251,13 @@ export default async function authRoute(fastify, options) {
 
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
-
-			user.email = await request.body.email;
-			user.username = username;
-			user.id = resolvedUserId;
-			user.token = JWTgenerator(fastify, user);
-			reply.setCookie("token", user.token, {
-				httpOnly: true,
-				signed: false,
-				secure: true,
-				path: "/",
-			});
 			return reply.code(200).send({
 				ok: true,
+				requires2fa: true,
 				user: {
-					id: user.id,
-					username: user.username,
-					email: user.email,
+					id: resolvedUserId,
+					username,
+					email,
 				},
 			});
 		} catch (e) {
@@ -291,6 +305,13 @@ export default async function authRoute(fastify, options) {
 			const FIFTEEN_MIN = 15 * 60 * 1000;
 			const codeValue = Math.floor(100000 + Math.random() * 900000);
 			const { username, email, lang } = request.body;
+			const pendingSignup = pendingSignups.find((pendingUser) => pendingUser.email === email && pendingUser.username === username);
+
+			if (!pendingSignup) {
+				return reply.code(401).send({ success: false, error: "signup verification session not found" });
+			}
+
+			usersCode = usersCode.filter((user) => user.email !== email);
 			usersCode.push({
 				email: email,
 				code: codeValue.toString(),
@@ -354,7 +375,6 @@ export default async function authRoute(fastify, options) {
 
 	fastify.post("/verify-2fa", async (req, rep) => {
 		const code = await req.body.code;
-		const username = await req.body.username;
 		const email = await req.body.email;
 		const codeFound = usersCode.find((e) => e.email === email);
 
@@ -373,7 +393,59 @@ export default async function authRoute(fastify, options) {
 
 		if (codeFound.code === code.toString()) {
 			usersCode = usersCode.filter((user) => user.email !== email);
-			return rep.code(200).send({ success: true });
+
+			const pendingSignup = pendingSignups.find((pendingUser) => pendingUser.email === email);
+			let resolvedUserId;
+			let resolvedUsername;
+
+			if (pendingSignup) {
+				try {
+					resolvedUserId = await signupUser(pendingSignup.email, pendingSignup.username, pendingSignup.hashPass);
+					resolvedUsername = pendingSignup.username;
+					pendingSignups = pendingSignups.filter((pendingUser) => pendingUser.email !== email);
+				} catch (e) {
+					let errorKey = e?.message;
+					const rawError = String(e || '');
+					if (rawError.includes('users.email')) errorKey = 'EMAIL_EXISTS';
+					else if (rawError.includes('users.username')) errorKey = 'USERNAME_TAKEN';
+					const errorInfo = ERROR_CODES[errorKey] || ERROR_CODES.DEFAULT;
+					return rep.code(errorInfo.status).send({
+						success: false,
+						error: errorInfo.message,
+						errorCode: errorKey || 'DEFAULT'
+					});
+				}
+			} else {
+				const verifiedUser = await getUserByEmail(email);
+				resolvedUserId = Number(verifiedUser?.id);
+				resolvedUsername = verifiedUser?.username;
+			}
+
+			if (!Number.isInteger(Number(resolvedUserId)) || Number(resolvedUserId) <= 0 || !resolvedUsername) {
+				return rep.code(200).send({ success: false, error: "invalid 6-digits code" });
+			}
+
+			const user = Object.create(User);
+			user.email = email;
+			user.username = resolvedUsername;
+			user.id = Number(resolvedUserId);
+			user.token = JWTgenerator(fastify, user);
+
+			rep.setCookie("token", user.token, {
+				httpOnly: true,
+				signed: false,
+				secure: true,
+				path: "/",
+			});
+
+			return rep.code(200).send({
+				success: true,
+				user: {
+					id: user.id,
+					username: user.username,
+					email: user.email,
+				},
+			});
 		} else {
 			return rep.code(200).send({ success: false, error: "invalid 6-digits code" });
 		}
