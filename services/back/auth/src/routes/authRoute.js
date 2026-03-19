@@ -106,10 +106,24 @@ export default async function authRoute(fastify, options) {
 			const userId = req.user.id;
 			const r = await fetch(`${user_api_url}/users/${userId}`);
 			if (!r.ok) {
-				return reply.code(404).send({ error: "User not found" });
+				return reply.clearCookie("token", {
+					path: "/",
+					httpOnly: true,
+					signed: false,
+					secure: true,
+				})
+				.code(404)
+				.send({ error: "User not found 1" });
 			}
 			const profile = await r.json();
-			return profile || reply.code(404).send({ error: "User not found" });
+			return profile || reply.clearCookie("token", {
+						path: "/",
+						httpOnly: true,
+						signed: false,
+						secure: true,
+					})
+					.code(404)
+					.send({ error: "User not found 2" });
 		}
 	);
 

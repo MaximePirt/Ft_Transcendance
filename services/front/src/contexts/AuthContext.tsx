@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 						localStorage.setItem('user', JSON.stringify(userData))
 						await applylang(userData.username, abortController.signal)
 					}
-				} else if (meResponse.status === 401 || meResponse.status === 403) {
+				} else if (meResponse.status === 401 || meResponse.status === 403 || meResponse.status === 404) {
 					setUser(null)
 					localStorage.removeItem('user')
 				} else if (storedUser?.username) {
