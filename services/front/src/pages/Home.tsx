@@ -248,8 +248,9 @@ function HomePage() {
 	const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setSignupError('')
-		const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
-		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
+		const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		const username_regex = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u;
+		const password_regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*\W).{12,}$/;
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
 		const username = (form.elements.namedItem('username') as HTMLInputElement).value
@@ -257,7 +258,7 @@ function HomePage() {
 		const confirmPassword = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value
 		const newUser = {
 			email: email,
-			username: username,
+			username: username.trim(),
 			password: password
 		}
 
@@ -267,7 +268,10 @@ function HomePage() {
 		if (password !== confirmPassword) {
 			setSignupError(t('signup_error_password_mismatch'));
 			return
-		} else if (!username_regex.test(username)) {
+		} else if (!email_regex.test(email)) {
+			setSignupError(t('signup_error_email_mismatch'));
+		} else if (!username_regex.test(username.trim())) {
+			console.log("coucou");
 			setSignupError(t('signup_error_username_format'));
 			return
 		} else if (!password_regex.test(password)) {
