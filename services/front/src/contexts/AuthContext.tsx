@@ -18,6 +18,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const supportedLanguages = ['en', 'fr', 'ar'] as const
 
 // @ts-ignore
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
@@ -80,6 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const presenceSocketRef = useRef<WebSocket | null>(null)
 	const lastActivitySentRef = useRef(0)
 
+	const normalizeLanguage = (lang?: string) => {
+		const normalized = String(lang || '').toLowerCase().split('-')[0]
+		return supportedLanguages.includes(normalized as (typeof supportedLanguages)[number])
+			? normalized
+			: 'en'
+	}
+
 	const applylang = async (username: string, signal?: AbortSignal) => {
 		try {
 			const userIdResponse = await fetch(`${API_BASE}/user/userid/${username}`, { signal })
@@ -90,9 +98,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			if (!response.ok) return
 			const userData = await response.json()
 
-			if (userData?.lang && userData.lang !== i18n.language) {
-				i18n.changeLanguage(userData.lang)
-				localStorage.setItem('language', userData.lang)
+			if (typeof userData?.lang === 'string' && userData.lang) {
+				const preferredLanguage = normalizeLanguage(userData.lang)
+				if (preferredLanguage !== i18n.language.split('-')[0]) {
+					await i18n.changeLanguage(preferredLanguage)
+				}
+				localStorage.setItem('language', preferredLanguage)
+				document.documentElement.dir = i18n.dir(preferredLanguage)
+				document.documentElement.lang = preferredLanguage
 			}
 
 			if (userData?.theme) {
@@ -110,6 +123,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			console.warn('[Auth] failed to apply preferred language', error)
 		}
 	}
+
+	useEffect(() => {
+		const normalized = normalizeLanguage(i18n.language)
+		document.documentElement.dir = i18n.dir(normalized)
+		document.documentElement.lang = normalized
+	}, [i18n.language])
 
 	useEffect(() => {
 		const abortController = new AbortController()

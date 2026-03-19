@@ -40,6 +40,7 @@ function HomePage() {
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
 	const [isSignup2faPending, setIsSignup2faPending] = useState(false);
+	const [signupSelectedLanguage, setSignupSelectedLanguage] = useState('en');
 	const API_BASE = import.meta.env.AUTH_API_URL || 'https://localhost/api'
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
@@ -64,9 +65,14 @@ function HomePage() {
 		return t('auth_error_generic')
 	}
 
+	const normalizeLang = (lang?: string) => {
+		const normalized = String(lang || 'en').toLowerCase().split('-')[0]
+		return normalized === 'fr' || normalized === 'ar' ? normalized : 'en'
+	}
+
 	const persistSignupLanguage = async (username: string, language: string) => {
 		try {
-			const lang = String(language || 'en').split('-')[0]
+			const lang = normalizeLang(language)
 			if (!username || !lang) return
 
 			const idResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, {
@@ -194,15 +200,27 @@ function HomePage() {
 
 			const data = await send.json();
 			if (data.success) {
+				const shouldRedirectToProfile = isSignup2faPending
 				const verifiedUsername = data?.user?.username || userUsername;
+				if (isSignup2faPending) {
+					const signupLang = normalizeLang(signupSelectedLanguage || i18n.language)
+					await persistSignupLanguage(verifiedUsername, signupLang)
+					await i18n.changeLanguage(signupLang)
+					localStorage.setItem('language', signupLang)
+					document.documentElement.dir = i18n.dir(signupLang)
+					document.documentElement.lang = signupLang
+				}
 				if (await login(userEmail, verifiedUsername)) {
 					if (isSignup2faPending) {
-						await persistSignupLanguage(verifiedUsername, i18n.language)
 						setIsSignup2faPending(false)
+						setSignupSelectedLanguage('en')
 					}
 					setUserUsername('');
 					setUserEmail('');
 					setShow2fa(false);
+					if (shouldRedirectToProfile) {
+						navigate('/profile')
+					}
 				} else {
 					setCodeError(t('auth_error_generic'));
 				}
@@ -333,6 +351,7 @@ function HomePage() {
 				const data = await authMail.json();
 
 				if (authMail.ok) {
+					setSignupSelectedLanguage(normalizeLang(i18n.language))
 					setIsSignup2faPending(true);
 					setUserUsername(username);
 					setUserEmail(email);
