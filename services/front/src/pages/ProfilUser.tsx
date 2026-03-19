@@ -1674,10 +1674,10 @@ function ProfilUser() {
 					)}
 				</div>
 				{canEdit && (
-					<>
+					<div className="profile-data-actions">
 						<DataRequester />
 						<DataDeleter />
-					</>
+					</div>
 				)}
 			</div>
 		</main>

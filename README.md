@@ -354,6 +354,7 @@ The site therefore uses the same color palette and typography throughout. These 
 #### Pipi Tristan
 
 #### Godart Victor
+Project Manager
 
 #### Dausque Thibault
 

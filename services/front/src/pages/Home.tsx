@@ -437,33 +437,6 @@ function HomePage() {
 				</aside>
 			</div>
 
-			{!isAuthenticated && <LanguageSelector />}
-			<div className="login-bar">
-				{isAuthenticated ? (
-					<>
-						<div className="login-welcome">
-							<span className="login-welcome__text">
-								{t('welcome')}, {user?.username}!
-							</span>
-							<a className="login-welcome__logout" onClick={() => void handleLogout()}>
-								{t("logout")}
-							</a>
-						</div>
-						<button className="btn login" onClick={() => navigate('/profile')}>
-							{t("profile")}
-						</button>
-					</>
-				) : (
-					<>
-						<button className="btn login" onClick={() => setShowLogin(true)}>
-							{t("connect")}
-						</button>
-						<button className="btn primary" onClick={() => setShowSignup(true)}>
-							{t("signup")}
-						</button>
-					</>
-				)}
-			</div>
 			<footer className="footer">
 				<div className="footer__inner">
 					<div>
@@ -582,8 +555,8 @@ function HomePage() {
 			)}
 
 			{showSignup && (
-				<div className="login-overlay" role="dialog" aria-modal="true">
-					<div className="login-card">
+				<div className="login-overlay signup-overlay" role="dialog" aria-modal="true">
+					<div className="login-card signup-card">
 						<div className="login-card__head">
 							<div>
 								<p className="eyebrow small">{t("signup_title")}</p>
