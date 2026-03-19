@@ -28,7 +28,8 @@ const MAX_Q = 10;
 
 function SoloGameSetup() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isRtl = i18n.dir() === 'rtl'
   const [selectedThemes, setSelectedThemes] = useState<Set<string>>(new Set())
   const [showThemesCard, setShowThemesCard] = useState(false)
   const [showPowerUpsCard, setShowPowerUpsCard] = useState(false);
@@ -146,7 +147,7 @@ function SoloGameSetup() {
   }
 
   return (
-    <main className="page">
+    <main className="page" dir={i18n.dir()}>
       <div className="shell">
         <p className="eyebrow">Quiz Sprint - {t("solo_mode")}</p>
         <div className="hero">
@@ -197,6 +198,7 @@ function SoloGameSetup() {
                   key={theme.slug}
                   style={{
                     display: 'flex',
+                    flexDirection: isRtl ? 'row-reverse' : 'row',
                     alignItems: 'center',
                     padding: 'clamp(0.75rem, 2vw, 1rem)',
                     backgroundColor: '#f9f9f9',
@@ -204,14 +206,15 @@ function SoloGameSetup() {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
-                    position: 'relative'
+                    position: 'relative',
+                    textAlign: isRtl ? 'right' : 'left'
                   }}
                 >
                   <div style={{ 
                     position: 'relative', 
                     width: '64px', 
                     height: '64px', 
-                    marginRight: '1rem',
+                    marginInlineEnd: '1rem',
                     flexShrink: 0 
                   }}>
                     <img
@@ -351,6 +354,7 @@ function SoloGameSetup() {
                   key={pu.id}
                   style={{
                     display: 'flex',
+                    flexDirection: isRtl ? 'row-reverse' : 'row',
                     alignItems: 'center',
                     padding: 'clamp(0.75rem, 2vw, 1rem)',
                     backgroundColor: '#f9f9f9',
@@ -358,14 +362,15 @@ function SoloGameSetup() {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
-                    position: 'relative'
+                    position: 'relative',
+                    textAlign: isRtl ? 'right' : 'left'
                   }}
                 >
                   <div style={{
                     position: 'relative',
                     width: '64px',
                     height: '64px',
-                    marginRight: '1rem',
+                    marginInlineEnd: '1rem',
                     flexShrink: 0
                   }}>
                     <img
