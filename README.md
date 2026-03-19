@@ -355,6 +355,9 @@ The site therefore uses the same color palette and typography throughout. These 
 
 #### Godart Victor
 Project Manager
+la page de profil utilisateur
+la traduction du site
+Gamification, adchievement, profil card.
 
 #### Dausque Thibault
 
