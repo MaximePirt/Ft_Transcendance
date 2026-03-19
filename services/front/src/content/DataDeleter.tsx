@@ -70,10 +70,11 @@ const DataDeleter = () => {
         })
 
         const me_user = await res.json();
-        logout();
-        navigate("/");
         await sendDeletionMail(me_user.id);
         await handleDeletion(me_user.id);
+        
+        logout();
+        navigate("/");
         setOpen(false);
     }
 

@@ -26,9 +26,9 @@ const subjectSignup = {
 };
 
 const subjectSignin = {
-	"fr": "Bon retour !",
-	"en": "Welcome back !",
-	"ar": "مرحبًا بعودتك !",
+	"fr": "Bon retour",
+	"en": "Welcome back",
+	"ar": "مرحبًا بعودتك",
 };
 
 const user_api_url = process.env.USER_API_URL || false;
