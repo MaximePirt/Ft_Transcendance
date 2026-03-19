@@ -120,6 +120,18 @@ function SoloGameSetup() {
       localStorage.removeItem("questionCount");
       localStorage.removeItem("maxPlayers");
       localStorage.removeItem("sessionCode");
+      let count = questionCount;
+      if (count < MIN_Q)
+        count = MIN_Q;
+      else if (count > MAX_Q)
+        count = MAX_Q;
+
+      let playerNum = playerCount;
+      if (playerNum < MIN_P)
+        playerNum = MIN_P;
+      else if (playerNum > MAX_P)
+        playerNum = MAX_P;
+
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
         method: 'POST',
         credentials: 'include',
@@ -127,8 +139,8 @@ function SoloGameSetup() {
         body: JSON.stringify({
           mode: "random",
           topic: topic,
-          question_count: questionCount,
-          max_players: playerCount,
+          question_count: count,
+          max_players: playerNum,
           power_ups: Array.from(selectedPowerUps),
         }),
       });
@@ -138,10 +150,10 @@ function SoloGameSetup() {
       const data = await session.json();
       localStorage.setItem("sessionId", String(data.sessionId));
       localStorage.setItem("sessionCode", String(data.sessionCode));
-      localStorage.setItem("maxPlayers", String(playerCount));
-      localStorage.setItem("questionCount", String(questionCount));
+      localStorage.setItem("maxPlayers", String(playerNum));
+      localStorage.setItem("questionCount", String(count));
       getUserId();
-      navigate('/quiz/multi', { state: { themes: Array.from(selectedThemes), questionCount, playerCount, powerUps: Array.from(selectedPowerUps), sessionId: data.sessionId } });
+      navigate('/quiz/multi', { state: { themes: Array.from(selectedThemes), questionCount: count, playerCount: playerNum, powerUps: Array.from(selectedPowerUps), sessionId: data.sessionId } });
     }
   }
 
