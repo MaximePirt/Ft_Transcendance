@@ -56,6 +56,14 @@ function HomePage() {
 		return message || t('error_occurred')
 	}
 
+	const mapLoginError = (message?: string, status?: number) => {
+		const normalized = String(message || '').toLowerCase()
+		if (status === 400 || normalized.includes('required')) return t('login_error_missing_fields')
+		if (status === 401 || normalized.includes('invalid email or password')) return t('login_error_invalid_credentials')
+		if (status === 503 || normalized.includes('temporarily unavailable') || normalized.includes('read-only')) return t('login_error_service_unavailable')
+		return t('auth_error_generic')
+	}
+
 	const persistSignupLanguage = async (username: string, language: string) => {
 		try {
 			const lang = String(language || 'en').split('-')[0]
@@ -132,11 +140,10 @@ function HomePage() {
 					password: password
 				})
 			})
-			if (!response.ok) {
-				const data = await response.json();
-				setLoginError(data.error || t('auth_error_generic'));
+			const signinData = await response.json().catch(() => null);
+			if (!response.ok || !signinData?.ok) {
+				setLoginError(mapLoginError(signinData?.error, response.status));
 			} else {
-				const signinData = await response.json().catch(() => null);
 				const signedUsername = signinData?.user?.username || '';
 				const authMail = await fetch(`${API_BASE}/auth/signin/mail`, {
 					method: "POST",
@@ -158,7 +165,7 @@ function HomePage() {
 					setShow2fa(true);
 				} else {
 					data = await authMail.json();
-					setLoginError(data.error || t('auth_error_generic'));
+					setLoginError(data?.error ? mapLoginError(data.error, authMail.status) : t('login_error_code_send_failed'));
 				}
 			}
 		} catch (e) {

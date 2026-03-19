@@ -246,7 +246,7 @@ export default async function authRoute(fastify, options) {
 			const codeFound = usersCode.find((e) => e.email === email);
 
 			if (!Number.isInteger(resolvedUserId) || resolvedUserId <= 0) {
-				return reply.code(500).send({ success: false, error: 'Invalid user id' });
+				return reply.code(200).send({ ok: false, success: false, error: 'Invalid user id' });
 			}
 
 			if (codeFound)
@@ -262,9 +262,11 @@ export default async function authRoute(fastify, options) {
 			});
 		} catch (e) {
 			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT;
-			return reply.code(errorInfo.status).send({
+			return reply.code(200).send({
+				ok: false,
 				success: false,
-				error: errorInfo.message
+				error: errorInfo.message,
+				errorCode: e?.message || 'DEFAULT'
 			});
 		}
 	});
