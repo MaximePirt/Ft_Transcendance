@@ -134,6 +134,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 				if (meResponse.ok) {
 					const me = await meResponse.json()
+					if (me?.authenticated === false) {
+						setUser(null)
+						localStorage.removeItem('user')
+						return
+					}
 					const userData = {
 						email: me?.email || '',
 						username: me?.username || '',
@@ -238,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}
 	}, [user])
 
-	const login = async (email: string, username: string): Promise<boolean> => {
+	const login = async (email: string, _username: string): Promise<boolean> => {
 		const rawIdentifier = email.trim()
 
 		// let signedIn = false
@@ -292,13 +297,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			userData = null
 		}
 
-		if (!userData) {
-			if (!username) return false
-			userData = {
-				email: email || rawIdentifier,
-				username,
-			}
-		}
+		if (!userData) return false
 
 		setUser(userData)
 		localStorage.setItem('user', JSON.stringify(userData))

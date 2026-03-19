@@ -1,4 +1,4 @@
-import { addNewUser, getUserName, getUserId, getUserModelEmail } from '../models/authModel.js'
+import { addNewUser, getUserName, getUserId, getUserModelEmail, getSignupAvailability } from '../models/authModel.js'
 
 function User(username, email, password, token) {
 	this.username = username;
@@ -37,6 +37,13 @@ async function getUserByEmail(email) {
 	}
 }
 
+async function checkSignupAvailability(email, username) {
+	if (!email || !username) {
+		throw new Error('MISSING_FIELDS');
+	}
+	return getSignupAvailability(email, username);
+}
+
 async function getUsername(email) {
 	const username = getUserName(email);
 	if (!username)
@@ -57,5 +64,6 @@ export {
 	loginUser,
 	getUsername,
 	codeVerification,
-	getUserByEmail
+	getUserByEmail,
+	checkSignupAvailability
 };
