@@ -173,7 +173,7 @@ export default async function authRoute(fastify, options) {
 			const codeFound = usersCode.find((e) => e.email === email);
 
 			if (!Number.isInteger(resolvedUserId) || resolvedUserId <= 0) {
-				return reply.code(500).send({ success: false, error: 'Invalid user id' });
+				return reply.code(401).send({ success: false, error: 'Invalid user id' });
 			}
 
 			if (codeFound)

@@ -386,14 +386,23 @@ function SoloGamePage() {
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
     if (!sessionId)
       throw new Error('Invalid session ID')
-    const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
-      method: 'GET',
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      const err = await response.json()
-      console.error("API ERROR:", err)
-      throw new Error(err.error || 'Failed to get the next question')
+    try {
+      const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+      if (!response.ok) {
+        console.log("FHJEUHFUEHFUEHUFHEUFHUEU");
+        console.log("Failed to get next question:", response.status, response.statusText)
+        // throw new Error('Failed to get the next question');
+      }
+      console.log("Here is response : ", response)
+
+    }
+    catch (err) {
+      console.log("FHEIUHFEIUHUDHOWIIJOIMOMSOIWNOWNIDNWOD");
+      console.log("API ERROR:", err)
+      throw new Error('Failed to get the next question');
     }
 
     let question_count_str;
