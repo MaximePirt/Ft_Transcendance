@@ -5,6 +5,9 @@ import { privacyContent, termsContent } from '../content/policies'
 import { useTranslation } from 'react-i18next'
 import LanguageSelector from '../content/LanguageSelector'
 import { useAuth } from '../contexts/AuthContext'
+import { runtimeEnv } from '../runtime-env'
+
+const API_BASE = runtimeEnv.API_URL?? 'https://localhost/api'
 
 type LeaderboardPlayer = {
 	id: string
@@ -39,8 +42,8 @@ function HomePage() {
 	const [codeError, setCodeError] = useState('');
 	const [userEmail, setUserEmail] = useState('');
 	const [userUsername, setUserUsername] = useState('');
+  const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
 	const [isSignup2faPending, setIsSignup2faPending] = useState(false);
-	const API_BASE = import.meta.env.AUTH_API_URL || 'https://localhost/api'
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 	const [leaderboardError, setLeaderboardError] = useState(false)

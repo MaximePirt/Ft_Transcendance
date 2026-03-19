@@ -1,3 +1,3 @@
-window.env = {
-  API_URL: "/api"
-};
+// window.env = {
+//   API_URL: "/api"
+// };

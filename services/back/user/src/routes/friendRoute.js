@@ -41,7 +41,7 @@ async function friendRoutes(fastify, options) {
 			});
 		} catch (error) {
 			request.log.error(error);
-			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+			return reply.code(401).send({ ok: false, message: "Internal Server Error" });
 		}
 	});
 
@@ -78,7 +78,7 @@ async function friendRoutes(fastify, options) {
 			return reply.code(res.statusCode).send(res);
 		} catch (error) {
 			request.log.error(error);
-			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+			return reply.code(401).send({ ok: false, message: "Internal Server Error" });
 		}
 	});
 
@@ -139,7 +139,7 @@ async function friendRoutes(fastify, options) {
 			return reply.code(200).send({ ok: true, result });
 		} catch (error) {
 			request.log.error(error);
-			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+			return reply.code(401).send({ ok: false, message: "Internal Server Error" });
 		}
 	});
 
@@ -169,7 +169,7 @@ async function friendRoutes(fastify, options) {
 			return reply.code(200).send({ ok: true, status });
 		} catch (error) {
 			request.log.error(error);
-			return reply.code(500).send({ ok: false, message: "Internal Server Error" });
+			return reply.code(401).send({ ok: false, message: "Internal Server Error" });
 		}
 	});
 }

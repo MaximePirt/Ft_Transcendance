@@ -148,7 +148,7 @@ async function startGameSession(userId, sessionCode)
 	catch (err) {
 		if (err.message.includes("Not enough questions"))
 			return {code: 400, error: 'Not enough questions available to start the game session'};
-		return {code: 500, error: 'Error starting game session', details: err.message};
+		return {code: 401, error: 'Error starting game session', details: err.message};
 	}
 }
 

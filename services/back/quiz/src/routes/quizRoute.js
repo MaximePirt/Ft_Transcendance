@@ -7,7 +7,7 @@ async function quizRoutes(fastify, options) {
 	/**
 	 * @brief Create a new game session
 	 * @input : mode, topic, number of questions, max_players, host_id, powerups
-	 * @return : 200 + game session code if success, 500 if error
+	 * @return : 200 + game session code if success, 401 if error
 	 */
 	fastify.post('/game-sessions', {preHandler: fastify.authenticate, schema: schemas.createGameSessionSchema },
 	async (request, reply) => {
@@ -21,7 +21,7 @@ async function quizRoutes(fastify, options) {
 		}
 		catch (err) {
 			console.error("Error creating game session:", err);
-			return reply.code(err.code || 500).send({ status: 'Error creating game session', error: err.message });
+			return reply.code(err.code || 401).send({ status: 'Error creating game session', error: err.message });
 		}
 	});
 
@@ -29,7 +29,7 @@ async function quizRoutes(fastify, options) {
 	 * @brief Get details of a game session
 	 * 		Details include questions, players, and status of the game session
 	 * @input : game_session_id
-	 * @return : 200 + game session details if success, 500 if not found
+	 * @return : 200 + game session details if success, 401 if not found
 	 */
 	fastify.get('/game-sessions/:id', {preHandler: fastify.authenticate, schema: schemas.GameSessionId},
 	async (request, reply) => {
@@ -55,7 +55,7 @@ async function quizRoutes(fastify, options) {
 	 * @brief Join a game session
 	 * @input : game_session_id
 	 * @rules : only if status is 'waiting' and max_players not reached
-	 * @return : 200 if success, 400 if game session is full or already started, 500 if error
+	 * @return : 200 if success, 400 if game session is full or already started, 401 if error
 	 */
 	fastify.post('/game-sessions/join', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
@@ -77,7 +77,7 @@ async function quizRoutes(fastify, options) {
 				return reply.code(409).send({ status: 'User has already joined this game session' });
 			else {
 				console.error("Error joining game session:", err);
-				return reply.code(500).send({ status: 'Error joining game session', error: err.message });
+				return reply.code(401).send({ status: 'Error joining game session', error: err.message });
 			}
 		}
 	});
@@ -104,7 +104,7 @@ async function quizRoutes(fastify, options) {
 				return reply.code(409).send({ status: 'User has already joined this game session' });
 			else {
 				console.error("Error joining game session:", err);
-				return reply.code(500).send({ status: 'Error joining game session', error: err.message });
+				return reply.code(401).send({ status: 'Error joining game session', error: err.message });
 			}
 		}
 	});
@@ -122,7 +122,7 @@ async function quizRoutes(fastify, options) {
 	 * 		 400 if not allowed, not enough players, or game session already started,
 	 * 		 404 if session doesn't exist
 	 * 		 403 if not host,
-	 * 		 500 if error
+	 * 		 401 if error
 	 */
 	fastify.post(`/game-sessions/start`, {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
 	async (request, reply) => {
@@ -143,7 +143,7 @@ async function quizRoutes(fastify, options) {
 				return reply.code(403).send({ error: 'Only the host can start the game session' });
 			else {
 				console.error("Error starting game session:", err);
-				return reply.code(500).send({ error: 'Error starting game session', error: err.message });
+				return reply.code(401).send({ error: 'Error starting game session', error: err.message });
 			}
 		}
 	});
@@ -165,7 +165,7 @@ async function quizRoutes(fastify, options) {
 			return reply.code(200).send({ status: 'Current question retrieved', question: question, remaining_ms, game_status: status });
 		} catch (err) {
 			console.error("Error retrieving current question for game session:", err);
-			return reply.code(500).send({ error: 'Error retrieving current question', error: err.message });
+			return reply.code(401).send({ error: 'Error retrieving current question', error: err.message });
 		}
 	});
 
@@ -184,7 +184,7 @@ async function quizRoutes(fastify, options) {
 			return reply.code(200).send({ status: 'Next question retrieved', question: question, remaining_ms, game_status: status });
 		} catch (err) {
 			console.error("Error retrieving next question for game session:", err);
-			return reply.code(500).send({ error: 'Error retrieving next question', error: err.message });
+			return reply.code(401).send({ error: 'Error retrieving next question', error: err.message });
 		}
 	});
 
@@ -213,7 +213,7 @@ async function quizRoutes(fastify, options) {
 				return reply.code(404).send({ error: err.message });
 			else if (err.message.includes("not a player") || err.message.includes("not in progress"))
 				return reply.code(400).send({ error: err.message });
-			return reply.code(500).send({ error: 'Error submitting answer', error: err.message });
+			return reply.code(401).send({ error: 'Error submitting answer', error: err.message });
 		}
 	});
 
@@ -232,7 +232,7 @@ async function quizRoutes(fastify, options) {
 				return reply.code(404).send({ error: err.message });
 			else if (err.message.includes("not a player"))
 				return reply.code(400).send({ error: err.message });
-			return reply.code(500).send({ error: 'Error leaving game session', error: err.message });
+			return reply.code(401).send({ error: 'Error leaving game session', error: err.message });
 		}
 	
 	});
@@ -251,7 +251,7 @@ async function quizRoutes(fastify, options) {
 			console.error("Error retrieving leaderboard for game session:", err);
 			if (err.message.includes("not found"))
 				return reply.code(404).send({ error: err.message });
-			return reply.code(500).send({ error: 'Error retrieving leaderboard', error: err.message });
+			return reply.code(401).send({ error: 'Error retrieving leaderboard', error: err.message });
 		}
 	});
 
