@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
 
 async function sendExportMail(json: any, id: number) {
@@ -41,8 +43,10 @@ async function getPlayerInfo() {
 }
 
 const DataRequester = () => {
+    const { t } = useTranslation()
+
     return (
-        <button className="btn-data-request" onClick={() => getPlayerInfo()}>REQUEST DATA</button>
+        <button className="btn-data-request" onClick={() => getPlayerInfo()}>{t('request_data_button')}</button>
     )
 }
 

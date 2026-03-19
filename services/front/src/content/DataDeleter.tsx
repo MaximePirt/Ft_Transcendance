@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
@@ -37,6 +38,7 @@ async function handleDeletion(id: number) {
 const DataDeleter = () => {
     const [open, setOpen] = useState(false);
     const [forbidden, setForbidden] = useState(false);
+    const { t } = useTranslation();
 
     const navigate = useNavigate()
     const { logout } = useAuth();
@@ -79,29 +81,29 @@ const DataDeleter = () => {
 
     return (
         <>
-            <button className="btn-data-delete" onClick={() => openModal()}>DELETE ACCOUNT</button>
+            <button className="btn-data-delete" onClick={() => openModal()}>{t('delete_account_button')}</button>
 
             {open && !forbidden && (
             <div className="login-overlay" role="dialog" aria-modal="true">
                 <div className="login-card">
 
                     <div className="login-card__head">
-                        <h2 style={{textAlign:"center"}}>Delete your account?</h2>
+                        <h2 style={{textAlign:"center"}}>{t('delete_account_title')}</h2>
                         <button className="close" onClick={() => setOpen(false)}>
                             x
                         </button>
                     </div>
 
-                    <p style={{textAlign:"center"}}>Are you sure you want to delete your account ?</p>
-                    <p style={{textAlign:"center"}}>You will not be able to recover your data after this.</p>
+                    <p style={{textAlign:"center"}}>{t('delete_account_confirm')}</p>
+                    <p style={{textAlign:"center"}}>{t('delete_account_warning')}</p>
 
                     <div style={{display:"flex", gap:"55%", marginTop:"20px"}}>
                         <button className="btn ghost" onClick={() => setOpen(false)}>
-                            No
+                            {t('no')}
                         </button>
 
                         <button className="btn danger" onClick={requestDeletion}>
-                            Yes
+                            {t('yes')}
                         </button>
                     </div>
 
@@ -119,11 +121,11 @@ const DataDeleter = () => {
                     </div>
 
                     <div style={{textAlign:"center"}}>
-                        <h2>Your are currently in a game</h2>
-                        <h3>Finish it before you can proceed.</h3>
+                        <h2>{t('in_game_forbidden_title')}</h2>
+                        <h3>{t('in_game_forbidden_desc')}</h3>
 
                         <button className="btn danger" onClick={() => setOpen(false)}>
-                            Close
+                            {t('close')}
                         </button>
                     </div>
                 </div>

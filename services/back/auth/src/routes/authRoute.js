@@ -143,6 +143,7 @@ export default async function authRoute(fastify, options) {
 					.code(404)
 					.send({ error: "User not found 2" });
 		}
+		catch (e) {}
 	});
 
 	fastify.post("/signout",
