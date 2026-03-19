@@ -862,10 +862,10 @@
 			"id": "games.league_of_legends.headquarters_country",
 			"question": "في أي بلد يقع مقر Riot Games, المطور של League of Legends ?",
 			"type": "texte",
-			"réponse": "États-Unis",
+			"réponse": "United States",
 			"variantes": [
-				"USA",
-				"Amérique",
+				"North Korea",
+				"Japan",
 				"United States"
 			],
 			"difficulté": "easy"
@@ -972,19 +972,6 @@
 					"Resignation"
 				],
 				"difficulté": "medium"
-			},
-			{
-				"id": "chess.special_move_rook",
-				"question": "ماذا تسمى الحركة الخاصة التي تتضمن الملك والرخ (Rook)؟",
-				"type": "qcm",
-				"réponse": "Castling",
-				"options": [
-					"En passant",
-					"Promotion",
-					"Castling",
-					"Pinning"
-				],
-				"difficulté": "easy"
 			},
 			{
 				"id": "chess.en_passant",
