@@ -13,7 +13,8 @@ type Player = {
 
 function MultiPlayerCodeRoom() {
 	const navigate = useNavigate()
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
+	const isRtl = i18n.dir() === 'rtl'
 	const { roomCode } = useParams()
 	const [code, setCode] = useState<string>('')
 	const [isHost, setIsHost] = useState(false)
@@ -301,7 +302,7 @@ if (error) {
 }
 
 return (
-	<main className="page">
+	<main className="page" dir={i18n.dir()}>
 		<div className="shell">
 			<p className="eyebrow">Quiz Sprint - {t("create_room")}</p>
 			<div className="hero">
@@ -333,7 +334,7 @@ return (
 					</div>
 
 
-					<div style={{ textAlign: 'left', marginBottom: '2rem' }}>
+					<div style={{ textAlign: isRtl ? 'right' : 'left', marginBottom: '2rem' }}>
 						<p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
 						{t("players_connected")} ({players.length})
 						</p>
