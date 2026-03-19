@@ -30,7 +30,7 @@ async function listFriendsHandler(userId)
 		return { statusCode: 200, ok: true, friends };
 	}
 	catch (error) {
-		return { statusCode:500, ok:false, message: "Internal Server Error." };
+		return { statusCode:401, ok:false, message: "Internal Server Error." };
 	}
 }
 
@@ -44,7 +44,7 @@ async function listFriendRequestsHandler(userId)
 		return { statusCode: 200, ok: true, received, sent };
 	}
 	catch (error) {
-		return { statusCode:500, ok:false, message: "Internal Server Error." };
+		return { statusCode:401, ok:false, message: "Internal Server Error." };
 	}
 }
 
