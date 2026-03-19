@@ -72,6 +72,8 @@
   "login_button": "Se connecter",
   "signup_button": "Créer un compte",
   "signup_error_password_mismatch": "Le mot de passe et la confirmation ne correspondent pas",
+  "signup_error_email_taken": "Cette adresse email est déjà utilisée",
+  "signup_error_username_taken": "Ce pseudo est déjà pris",
   "signup_error_username_format": "Le pseudo doit contenir 3 à 16 caractères alphanumériques (underscore autorisé)",
   "signup_error_password_format": "Le mot de passe doit contenir au moins 12 caractères, une majuscule, un chiffre et un caractère spécial",
   "email_placeholder": "user@example.com",

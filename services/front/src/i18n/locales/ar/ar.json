@@ -66,6 +66,8 @@
   "login_button": "تسجيل الدخول",
   "signup_button": "إنشاء حساب",
   "signup_error_password_mismatch": "كلمة المرور وتأكيدها غير متطابقين",
+  "signup_error_email_taken": "عنوان البريد الإلكتروني هذا مستخدم بالفعل",
+  "signup_error_username_taken": "اسم المستخدم هذا محجوز بالفعل",
   "signup_error_username_format": "يجب أن يكون اسم المستخدم بين 3 و16 حرفاً أو رقماً (ويُسمح بـ _)",
   "signup_error_password_format": "يجب أن تحتوي كلمة المرور على 12 حرفاً على الأقل، وحرف كبير، ورقم، ورمز خاص",
   "email_placeholder": "user@example.com",

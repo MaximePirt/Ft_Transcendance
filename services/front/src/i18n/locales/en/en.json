@@ -66,6 +66,8 @@
   "login_button": "Sign in",
   "signup_button": "Create account",
   "signup_error_password_mismatch": "Password and confirmation do not match",
+  "signup_error_email_taken": "This email address is already used",
+  "signup_error_username_taken": "This username is already taken",
   "signup_error_username_format": "Username must be 3 to 16 alphanumeric characters (underscore allowed)",
   "signup_error_password_format": "Password must be at least 12 characters and include an uppercase letter, a number and a special character",
   "email_placeholder": "user@example.com",

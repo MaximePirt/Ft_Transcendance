@@ -46,8 +46,11 @@ function HomePage() {
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 	const [leaderboardError, setLeaderboardError] = useState(false)
 
-	const mapSignupError = (message?: string) => {
+	const mapSignupError = (message?: string, errorCode?: string) => {
 		const normalized = String(message || '').toLowerCase()
+		const normalizedCode = String(errorCode || '').toUpperCase()
+		if (normalizedCode === 'EMAIL_EXISTS' || normalized.includes('email already exists')) return t('signup_error_email_taken')
+		if (normalizedCode === 'USERNAME_TAKEN' || normalized.includes('username already taken')) return t('signup_error_username_taken')
 		if (normalized.includes('password != confirm password')) return t('signup_error_password_mismatch')
 		if (normalized.includes('username should count between 3 & 16')) return t('signup_error_username_format')
 		if (normalized.includes('password must be 12+ chars')) return t('signup_error_password_format')
@@ -253,7 +256,7 @@ function HomePage() {
 			const data = await response.json();
 
 			if (!response.ok) {
-				setSignupError(mapSignupError(data.error));
+				setSignupError(mapSignupError(data.error, data.errorCode));
 				console.log("data error: ", data.error);
 				return
 			} else {

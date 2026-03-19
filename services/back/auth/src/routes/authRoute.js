@@ -11,7 +11,10 @@ const ERROR_CODES = {
 	MISSING_FIELDS: { status: 400, message: 'Email and password are required' },
 	PASSWORD_TOO_SHORT: { status: 400, message: 'Password must be at least 12 characters' },
 	EMAIL_EXISTS: { status: 409, message: 'Email already exists' },
+	USERNAME_TAKEN: { status: 409, message: 'Username already taken' },
 	INVALID_CREDENTIALS: { status: 401, message: 'Invalid email or password' },
+	DATABASE_READ_ONLY: { status: 503, message: 'Database is read-only' },
+	DATABASE_BUSY: { status: 503, message: 'Database is temporarily unavailable' },
 	DATABASE_ERROR: { status: 500, message: 'Internal server error' },
 	DEFAULT: { status: 500, message: 'An unexpected error occurred' }
 }
@@ -152,11 +155,23 @@ export default async function authRoute(fastify, options) {
 			});
 			return reply.code(200).send({ ok: true, message: "Signup successful" });
 		} catch (e) {
-			const errorInfo = ERROR_CODES[e.message] || ERROR_CODES.DEFAULT
+			let errorKey = e?.message;
+			const rawError = String(e || '');
+			const lower = rawError.toLowerCase();
 
-			return rep.code(errorInfo.status).send({
+			if (!ERROR_CODES[errorKey]) {
+				if (rawError.includes('users.email')) errorKey = 'EMAIL_EXISTS';
+				else if (rawError.includes('users.username')) errorKey = 'USERNAME_TAKEN';
+				else if (lower.includes('readonly')) errorKey = 'DATABASE_READ_ONLY';
+				else if (lower.includes('database is locked') || lower.includes('database is busy')) errorKey = 'DATABASE_BUSY';
+			}
+
+			const errorInfo = ERROR_CODES[errorKey] || ERROR_CODES.DEFAULT
+
+			return reply.code(errorInfo.status).send({
 				success: false,
-				error: errorInfo.message
+				error: errorInfo.message,
+				errorCode: errorKey || 'DEFAULT'
 			})
 		}
 	})
