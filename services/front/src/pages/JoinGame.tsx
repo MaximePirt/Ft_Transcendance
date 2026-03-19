@@ -46,14 +46,12 @@ function JoinGame() {
         navigate('/')
         return
       }
-      localStorage.removeItem("questionCount");
-      localStorage.removeItem("sessionId");
-      localStorage.removeItem(STORAGE_KEY);
       const checkcode = await fetch(`https://localhost/api/quiz/game-sessions/code/${roomCode}`)
       if (!checkcode.ok) {
         throw new Error('Game session not found')
       }
       const checkCodeJson = await checkcode.json()
+      
       const session = checkCodeJson.sessionData
       const res = await fetch('https://localhost/api/quiz/game-sessions/join', {
         method: 'POST',
@@ -64,15 +62,20 @@ function JoinGame() {
       .then(res => {
         if (res.ok) {
           getUserId();
+          localStorage.removeItem("questionCount");
+          localStorage.removeItem("sessionId");
+          localStorage.removeItem(STORAGE_KEY);
           localStorage.setItem("sessionId", String(session.id));
           localStorage.setItem("sessionCode", String(roomCode));
           navigate(`/quiz/multi`)
         } else {
+          console.log("Failed to join game session")
           setError(t('join_error'))
         }
       })
     }
     catch (err) {
+      console.log("Error joining game session:", err)
       setError(t('join_error'))
       return
     }

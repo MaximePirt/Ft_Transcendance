@@ -209,9 +209,13 @@ function SoloGamePage() {
         }
       }
       else if (msg.type === "next_question") {
-        const question_count_str = await localStorage.getItem("questionCount");
-        if (!question_count_str) {
-          throw new Error('No question count found in localStorage')
+        let question_count_str;
+        try{
+          question_count_str = await localStorage.getItem("questionCount");
+        }
+        catch(err) {
+          console.log('Error accessing localStorage for question count:', err)
+          question_count_str = null
         }
         let question_count = Number(question_count_str) || 0;
         const isLastQuestion = currentQuestionIndex === question_count - 1
@@ -351,7 +355,6 @@ function SoloGamePage() {
       });
       if (!response.ok) {
         const err = await response.json()
-        //console.error("API ERROR:", err)
         throw new Error(err.error || 'Failed to get the answer')
       }
 
@@ -392,12 +395,17 @@ function SoloGamePage() {
       console.error("API ERROR:", err)
       throw new Error(err.error || 'Failed to get the next question')
     }
-    const question_count_str = await localStorage.getItem("questionCount");
-    if (!question_count_str) {
-      throw new Error('No question count found in localStorage')
+
+    let question_count_str;
+    try{
+      question_count_str = await localStorage.getItem("questionCount");
+    }
+    catch(err)    {
+      console.log('Error accessing localStorage for question count:', err)
+      question_count_str = null
     }
     let question_count = Number(question_count_str) || 0;
-    const isLastQuestion = currentQuestionIndex === question_count - 1
+    const isLastQuestion = currentQuestionIndex >= question_count - 1
 
     if (isLastQuestion) {
       console.log("Quiz terminé, score final:", score)
@@ -530,10 +538,18 @@ function SoloGamePage() {
     )
   }
 
-  const question_count_str = localStorage.getItem("questionCount");
+
+  let question_count_str;
+  try{
+    question_count_str = localStorage.getItem("questionCount");
+  }
+  catch(err)
+  {
+    console.log('Error accessing localStorage for question count:', err)
+    question_count_str = null
+  }
   if (!question_count_str) {
     console.log('No question count found in localStorage')
-    throw new Error('No question count found in localStorage')
   }
   let question_count = Number(question_count_str) || 0;
 
