@@ -51,6 +51,7 @@ services:
       - "3001:3001"
     volumes:
       - db:/db
+      - user_uploads:/app/uploads
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
     depends_on:
@@ -182,4 +183,6 @@ volumes:
       type: tmpfs
       device: tmpfs
   db:
+    driver: local
+  user_uploads:
     driver: local

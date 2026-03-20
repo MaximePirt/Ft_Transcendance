@@ -53,14 +53,16 @@ async function updateAvatar(userId, data) {
 		throw new Error("Invalid file type, only PNG and JPEG are allowed");
 	}
 	const ext = data.mimetype === "image/png" ? "png" : "jpg";
-	const filePath = `/uploads/user/avatars/${userId}-${Date.now()}.${ext}`;
+	const fileName = `${userId}-${Date.now()}.${ext}`;
+	const filePath = `/uploads/user/avatars/${fileName}`;
 
 	const uploadDir = path.join(__dirname, "../../uploads/user/avatars");
 	if (!fs.existsSync(uploadDir)) {
 		fs.mkdirSync(uploadDir, { recursive: true });
 	}
 
-	await pipeline(data.file, fs.createWriteStream(`.${filePath}`));
+	const outputPath = path.join(uploadDir, fileName);
+	await pipeline(data.file, fs.createWriteStream(outputPath));
 
 	await updateUser(userId, { avatarUrl: filePath });
 	return { message: "Avatar uploaded", avatarUrl: filePath };
