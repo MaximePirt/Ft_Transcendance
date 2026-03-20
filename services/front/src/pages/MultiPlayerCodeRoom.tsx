@@ -13,7 +13,8 @@ type Player = {
 
 function MultiPlayerCodeRoom() {
 	const navigate = useNavigate()
-	const { t } = useTranslation()
+	const { t, i18n } = useTranslation()
+	const isRtl = i18n.dir() === 'rtl'
 	const { roomCode } = useParams()
 	const [code, setCode] = useState<string>('')
 	const [isHost, setIsHost] = useState(false)
@@ -47,12 +48,12 @@ async function handleStartGame() {
 	const sessionId = sessionIdstr ? Number(sessionIdstr) : null;
 	if (!sessionId) {
 		console.error('Invalid session ID in localStorage:', sessionIdstr)
-		alert(t("Failed to start the game. Invalid session ID. Please try again Later."))
+			alert(t('start_game_invalid_session'))
 		return
 	}
 	try{
 		if (players.length < 2) {
-			alert(t("Game requires at least 2 players to start."))
+				alert(t('start_game_min_players'))
 			return
 		}
 		const res = await fetch(
@@ -74,7 +75,7 @@ async function handleStartGame() {
 		navigate('/quiz/game', { state: { sessionId: data.sessionId, isHost: true } })
 	} catch (err: any) {
 		console.error('Error starting game:', err)
-		alert(t("Error starting the game. Please try again."))
+		alert(t('start_game_error'))
 	}
 }
 
@@ -83,7 +84,7 @@ async function handleLeaveRoom() {
 	const sessionId = sessionIdstr ? Number(sessionIdstr) : null;
 	if (!sessionId) {
 		console.error('Invalid session ID in localStorage:', sessionIdstr)
-		alert(t("Failed to leave the room. Invalid session ID. Please try again Later."))
+			alert(t('leave_room_invalid_session'))
 		return
 	}
 	try{
@@ -182,7 +183,7 @@ useEffect(() => {
 		catch(err)
 		{
 			console.error("Failed to fetch user ID:", err)
-			setError(t("Failed to retrieve user data. Please try again Later."))
+			setError(t('user_data_fetch_error'))
 			return
 		}
 
@@ -193,7 +194,7 @@ useEffect(() => {
 		let session = await getSession();
 		if (!session)
 		{
-			setError(t("Failed to retrieve session data. Please try again Later."))
+			setError(t('session_data_fetch_error'))
 			return
 		}
 
@@ -204,7 +205,7 @@ useEffect(() => {
 			const newCode = session.code
 			if (!newCode) {
 			console.error('Failed to retrieve room code')
-			setError(t("Failed to retrieve room code. Please try again Later."))
+			setError(t('room_code_fetch_error'))
 			return
 			}
 			localStorage.setItem("sessionCode", newCode)
@@ -220,7 +221,7 @@ useEffect(() => {
 	catch(err)
 	{
 		console.error('Error in MultiPlayerCodeRoom:', err)
-		setError(t("An error occurred while setting up the room. Please try again Later"))
+		setError(t('room_setup_error'))
 	}
 	finally {
 		setLoading(false)
@@ -237,7 +238,7 @@ useEffect(() => {
 		if (session && Array.isArray(session.players)) {
 		setPlayers(
 			session.players.map((p: any) => ({
-			name: p.username || 'Joueur inconnu',
+			name: p.username || t('unknown_player'),
 			joined_at: p.joined_at || '',
 			}))
 		)
@@ -256,8 +257,8 @@ if (loading) {
 			<p className="eyebrow">Quiz Sprint</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Chargement...</h1>
-				<p className="lede">Préparation de la room.</p>
+				<h1>{t('loading')}</h1>
+				<p className="lede">{t('room_preparing')}</p>
 			</div>
 			</div>
 		</div>
@@ -272,7 +273,7 @@ if (error) {
 			<p className="eyebrow">Quiz Sprint</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Erreur</h1>
+				<h1>{t('error_title')}</h1>
 				<p className="lede">{error}</p>
 				<div className="actions">
 					{isHost && (
@@ -286,7 +287,7 @@ if (error) {
 						}}
 					>
 						{t("start_game")}
-						{players.length < 2 && ' (min. 2 joueurs)'}
+						{players.length < 2 && ` ${t('min_players_note')}`}
 					</button>
 					)}
 					<button className="btn ghost" onClick={() => navigate('/quiz')}>
@@ -301,7 +302,7 @@ if (error) {
 }
 
 return (
-	<main className="page">
+	<main className="page" dir={i18n.dir()}>
 		<div className="shell">
 			<p className="eyebrow">Quiz Sprint - {t("create_room")}</p>
 			<div className="hero">
@@ -333,13 +334,13 @@ return (
 					</div>
 
 
-					<div style={{ textAlign: 'left', marginBottom: '2rem' }}>
+					<div style={{ textAlign: isRtl ? 'right' : 'left', marginBottom: '2rem' }}>
 						<p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
 						{t("players_connected")} ({players.length})
 						</p>
 						{players.length === 0 ? (
 						<p style={{ opacity: 0.7, padding: '0.5rem' }}>
-							En attente de joueurs...
+							{t('waiting_players')}
 						</p>
 						) : (
 						<div className="leaderboardCard">
@@ -347,8 +348,8 @@ return (
 								<thead>
 									<tr>
 										<th className="colRank">#</th>
-										<th className="colPlayer">Joueur</th>
-										<th className="colMeta">Rejoins</th>
+										<th className="colPlayer">{t('leaderboard_player')}</th>
+										<th className="colMeta">{t('leaderboard_joined')}</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -358,7 +359,7 @@ return (
 										<td className="colPlayer">
 										<span className="playerName">{p.name}</span>
 										</td>
-										<td className="colMeta">{p.joined_at ? new Date(p.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</td>
+										<td className="colMeta">{p.joined_at ? new Date(p.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : t('na_short')}</td>
 									</tr>
 									))}
 								</tbody>

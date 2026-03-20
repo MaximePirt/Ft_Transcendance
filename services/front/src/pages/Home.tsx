@@ -44,6 +44,7 @@ function HomePage() {
 	const [userUsername, setUserUsername] = useState('');
   const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
 	const [isSignup2faPending, setIsSignup2faPending] = useState(false);
+	const [signupSelectedLanguage, setSignupSelectedLanguage] = useState('en');
 	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
 	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 	const [leaderboardError, setLeaderboardError] = useState(false)
@@ -67,9 +68,14 @@ function HomePage() {
 		return t('auth_error_generic')
 	}
 
+	const normalizeLang = (lang?: string) => {
+		const normalized = String(lang || 'en').toLowerCase().split('-')[0]
+		return normalized === 'fr' || normalized === 'ar' ? normalized : 'en'
+	}
+
 	const persistSignupLanguage = async (username: string, language: string) => {
 		try {
-			const lang = String(language || 'en').split('-')[0]
+			const lang = normalizeLang(language)
 			if (!username || !lang) return
 
 			const idResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, {
@@ -197,15 +203,27 @@ function HomePage() {
 
 			const data = await send.json();
 			if (data.success) {
+				const shouldRedirectToProfile = isSignup2faPending
 				const verifiedUsername = data?.user?.username || userUsername;
+				if (isSignup2faPending) {
+					const signupLang = normalizeLang(signupSelectedLanguage || i18n.language)
+					await persistSignupLanguage(verifiedUsername, signupLang)
+					await i18n.changeLanguage(signupLang)
+					localStorage.setItem('language', signupLang)
+					document.documentElement.dir = i18n.dir(signupLang)
+					document.documentElement.lang = signupLang
+				}
 				if (await login(userEmail, verifiedUsername)) {
 					if (isSignup2faPending) {
-						await persistSignupLanguage(verifiedUsername, i18n.language)
 						setIsSignup2faPending(false)
+						setSignupSelectedLanguage('en')
 					}
 					setUserUsername('');
 					setUserEmail('');
 					setShow2fa(false);
+					if (shouldRedirectToProfile) {
+						navigate('/profile')
+					}
 				} else {
 					setCodeError(t('auth_error_generic'));
 				}
@@ -251,8 +269,9 @@ function HomePage() {
 	const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setSignupError('')
-		const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
-		const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
+		const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		const username_regex = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u;
+		const password_regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*\W).{12,}$/;
 		const form = e.currentTarget
 		const email = (form.elements.namedItem('email') as HTMLInputElement).value
 		const username = (form.elements.namedItem('username') as HTMLInputElement).value
@@ -260,7 +279,7 @@ function HomePage() {
 		const confirmPassword = (form.elements.namedItem('confirmPassword') as HTMLInputElement).value
 		const newUser = {
 			email: email,
-			username: username,
+			username: username.trim(),
 			password: password
 		}
 
@@ -270,7 +289,10 @@ function HomePage() {
 		if (password !== confirmPassword) {
 			setSignupError(t('signup_error_password_mismatch'));
 			return
-		} else if (!username_regex.test(username)) {
+		} else if (!email_regex.test(email)) {
+			setSignupError(t('signup_error_email_mismatch'));
+		} else if (!username_regex.test(username.trim())) {
+			console.log("coucou");
 			setSignupError(t('signup_error_username_format'));
 			return
 		} else if (!password_regex.test(password)) {
@@ -336,6 +358,7 @@ function HomePage() {
 				const data = await authMail.json();
 
 				if (authMail.ok) {
+					setSignupSelectedLanguage(normalizeLang(i18n.language))
 					setIsSignup2faPending(true);
 					setUserUsername(username);
 					setUserEmail(email);
@@ -440,33 +463,6 @@ function HomePage() {
 				</aside>
 			</div>
 
-			{!isAuthenticated && <LanguageSelector />}
-			<div className="login-bar">
-				{isAuthenticated ? (
-					<>
-						<div className="login-welcome">
-							<span className="login-welcome__text">
-								{t('welcome')}, {user?.username}!
-							</span>
-							<a className="login-welcome__logout" onClick={() => void handleLogout()}>
-								{t("logout")}
-							</a>
-						</div>
-						<button className="btn login" onClick={() => navigate('/profile')}>
-							{t("profile")}
-						</button>
-					</>
-				) : (
-					<>
-						<button className="btn login" onClick={() => setShowLogin(true)}>
-							{t("connect")}
-						</button>
-						<button className="btn primary" onClick={() => setShowSignup(true)}>
-							{t("signup")}
-						</button>
-					</>
-				)}
-			</div>
 			<footer className="footer">
 				<div className="footer__inner">
 					<div>
@@ -585,8 +581,8 @@ function HomePage() {
 			)}
 
 			{showSignup && (
-				<div className="login-overlay" role="dialog" aria-modal="true">
-					<div className="login-card">
+				<div className="login-overlay signup-overlay" role="dialog" aria-modal="true">
+					<div className="login-card signup-card">
 						<div className="login-card__head">
 							<div>
 								<p className="eyebrow small">{t("signup_title")}</p>

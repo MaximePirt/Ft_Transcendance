@@ -19,7 +19,7 @@ function PolicyModal({ policy, onClose }: PolicyModalProps) {
             </p>
             <h2>{policy === 'privacy' ? t("privacy_policy") : t("terms")}</h2>
           </div>
-          <button className="close" aria-label="Fermer" onClick={onClose}>
+          <button className="close" aria-label={t('close')} onClick={onClose}>
             ×
           </button>
         </div>

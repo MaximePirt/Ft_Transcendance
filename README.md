@@ -355,6 +355,10 @@ tdausque: used to implement a full authentication module to able a client to con
 #### Pipi Tristan
 
 #### Godart Victor
+Project Manager
+la page de profil utilisateur
+la traduction du site
+Gamification, adchievement, profil card.
 
 #### Dausque Thibault
 

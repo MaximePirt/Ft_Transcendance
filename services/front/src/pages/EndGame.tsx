@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { useTranslation } from 'react-i18next'
 import "../App.css"
 
 
@@ -24,6 +25,7 @@ let sessionId = null as number | null;
 
 export default  function EndGame() {
 	const navigate = useNavigate()
+	const { t } = useTranslation()
 	const [leaderboard, setLeaderboard] = useState<LeaderboardRow[] | null>(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -62,7 +64,7 @@ export default  function EndGame() {
 			}
 			catch (err: any) {
 				if (err.name === "AbortError") return
-				setError(err.message ?? "Erreur lors du chargement du résultat")
+				setError(err.message ?? t('error_loading_results'))
 			} 
 			finally {
 				setLoading(false)
@@ -80,8 +82,8 @@ if (loading) {
 			<p className="eyebrow">Quiz Sprint</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Chargement...</h1>
-				<p className="lede">Récupération de votre score final.</p>
+				<h1>{t('loading')}</h1>
+				<p className="lede">{t('final_score_loading')}</p>
 			</div>
 			</div>
 		</div>
@@ -96,11 +98,11 @@ if (error) {
 			<p className="eyebrow">Quiz Sprint</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Erreur</h1>
-				<p className="lede">{error ?? "Aucun résultat à afficher."}</p>
+				<h1>{t('error_title')}</h1>
+				<p className="lede">{error ?? t('no_results_to_display')}</p>
 				<div className="actions">
 				<button className="btn ghost" onClick={() => navigate("/quiz")}>
-					Retour au Quiz
+					{t('back_to_quiz')}
 				</button>
 				</div>
 			</div>
@@ -110,6 +112,7 @@ if (error) {
 	)
 }
 
+	const rows = leaderboard ?? []
 
 	return (
 	<main className="page">
@@ -117,26 +120,26 @@ if (error) {
 			<p className="eyebrow">Quiz Sprint</p>
 
 			<div className="copy">
-				<h1>Fin de partie</h1>
+				<h1>{t('endgame_title')}</h1>
 				<p className="lede">
-					Bravo à tous les participants — voici le classement final.
+					{t('endgame_subtitle')}
 				</p>
-				{leaderboard.length === 0 ? (
-				<div className="emptyState">Aucun joueur dans cette session.</div>
+				{rows.length === 0 ? (
+				<div className="emptyState">{t('endgame_no_players')}</div>
 				) : (
 				<div className="leaderboardCard">
 					<table className="leaderboardTable">
 					<thead>
 						<tr>
 						<th className="colRank">#</th>
-						<th className="colPlayer">Joueur</th>
-						<th className="colScore">Score</th>
-						<th className="colMeta">Bonne Réponses</th>
-						<th className="colMeta">Rejoins</th>
+						<th className="colPlayer">{t('leaderboard_player')}</th>
+						<th className="colScore">{t('score_label')}</th>
+						<th className="colMeta">{t('leaderboard_correct_answers')}</th>
+						<th className="colMeta">{t('leaderboard_joined')}</th>
 						</tr>
 					</thead>
 					<tbody>
-						{leaderboard.map((p, idx) => (
+						{rows.map((p, idx) => (
 						<tr key={p.id}>
 							<td className="colRank">{idx + 1}</td>
 							<td className="colPlayer">
@@ -157,10 +160,10 @@ if (error) {
 
 			<div className="actions">
 			<button className="btn primary" onClick={() => navigate("/quiz")}>
-				Rejouer
+					{t('play_again')}
 			</button>
 			<button className="btn ghost" onClick={() => navigate("/")}>
-				Accueil
+					{t('home')}
 			</button>
 			</div>
 		</div>

@@ -1,6 +1,8 @@
 import { runtimeEnv } from '../runtime-env'
+import { useTranslation } from 'react-i18next'
 
 const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
+
 
 async function sendExportMail(json: any, id: number) {
     const res = await fetch(`${API_BASE}/user/export-data/mail`, {
@@ -43,8 +45,10 @@ async function getPlayerInfo() {
 }
 
 const DataRequester = () => {
+    const { t } = useTranslation()
+
     return (
-        <button className="btn-data-request" onClick={() => getPlayerInfo()}>REQUEST DATA</button>
+        <button className="btn-data-request" onClick={() => getPlayerInfo()}>{t('request_data_button')}</button>
     )
 }
 

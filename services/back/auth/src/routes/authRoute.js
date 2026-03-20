@@ -195,8 +195,9 @@ export default async function authRoute(fastify, options) {
 
 	fastify.post('/signup', async function (request, reply) {
 		try {
-			const username_regex = /^[a-zA-Z0-9_]{3,16}$/;
-			const password_regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{12,}$/;
+			const email_regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			const username_regex = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u;
+			const password_regex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*\W).{12,}$/;
 			const email = await request.body.email;
 			const username = await request.body.username;
 			const password = await request.body.password;
@@ -207,7 +208,8 @@ export default async function authRoute(fastify, options) {
 			if (codeFound)
 				usersCode = usersCode.filter((user) => user.email !== email);
 
-
+			if (!email_regex.test(email))
+				return reply.code(401).send({ success: false, error: 'Bad email format' });
 			if (!password_regex.test(password))
 				return reply.code(401).send({ success: false, error: 'Password must be 12+ chars, include an uppercase, a number, and a special character.' })
 			else if (!username_regex.test(username))

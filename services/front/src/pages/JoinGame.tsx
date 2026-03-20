@@ -106,7 +106,7 @@ function JoinGame() {
     catch(err)
     {
       console.error('Error in MultiPlayerCodeRoom:', err)
-      setError(t("An error occurred while setting up the room. Please try again Later"))
+      setError(t('room_setup_error'))
     }
     finally {
       setLoading(false)
@@ -121,8 +121,8 @@ if (loading) {
 			<p className="eyebrow">Quiz Sprint</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Chargement...</h1>
-				<p className="lede">Préparation de la room.</p>
+        <h1>{t('loading')}</h1>
+        <p className="lede">{t('room_preparing')}</p>
 			</div>
 			</div>
 		</div>
@@ -137,7 +137,7 @@ if (error) {
 			<p className="eyebrow">Quiz Sprint</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Erreur</h1>
+        <h1>{t('error_title')}</h1>
 				<p className="lede">{error}</p>
 				<div className="actions">
 					<button className="btn ghost" onClick={() => navigate('/quiz')}>

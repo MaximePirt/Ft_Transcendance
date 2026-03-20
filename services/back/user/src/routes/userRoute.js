@@ -31,7 +31,7 @@ if (!AUTH_URL) {
 	process.exit(1);
 }
 
-const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,16}$/;
+const USERNAME_REGEX = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u;
 
 const sanitizeUser = (user) => {
 	if (!user) return user;
@@ -84,7 +84,7 @@ async function userRoutes(fastify, options) {
 	})
 
 
-	fastify.get("/me_id", {onRequest: [fastify.authenticate]}, async (request, reply) => {
+	fastify.get("/me_id", { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const userId = request.user.id;
 		console.log("Authenticated user ID:", userId);
 		if (!userId) {
@@ -415,13 +415,13 @@ async function userRoutes(fastify, options) {
 		try {
 			const { userId } = request.body;
 			if (!userId) {
-  				return reply.code(400).send({ error: "BAD_REQUEST" });
+				return reply.code(400).send({ error: "BAD_REQUEST" });
 			}
 
 			const user = await userController.getUserById(userId);
-		    if (!user) {
-      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
-    		}
+			if (!user) {
+				return reply.code(404).send({ error: "USER_NOT_FOUND" });
+			}
 
 			const lang = user.lang;
 			const html = await render(React.createElement(AccountDeletionEmail, { username: user.username, lang: lang }));
@@ -441,7 +441,7 @@ async function userRoutes(fastify, options) {
 		}
 	});
 
-	
+
 
 	fastify.delete("/delete-user", async (request, reply) => {
 		try {

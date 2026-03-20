@@ -1064,7 +1064,7 @@ function ProfilUser() {
 		if (!canEdit || !user) return
 		const friendUsername = friendSearchInput.trim()
 		if (!friendUsername) return
-		const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+		const usernameRegex = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u;
 		setFriendActionError('')
 		setFriendActionSuccess('')
 		if (!usernameRegex.test(friendUsername)) {
@@ -1676,10 +1676,10 @@ function ProfilUser() {
 					)}
 				</div>
 				{canEdit && (
-					<>
+					<div className="profile-data-actions">
 						<DataRequester />
 						<DataDeleter />
-					</>
+					</div>
 				)}
 			</div>
 		</main>

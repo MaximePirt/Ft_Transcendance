@@ -499,8 +499,8 @@ function SoloGamePage() {
           <p className="eyebrow">Quiz Sprint - Mode Solo</p>
           <div className="hero">
             <div className="copy">
-              <h1>Chargement...</h1>
-              <p className="lede">Les questions se chargent...</p>
+              <h1>{t('loading')}</h1>
+              <p className="lede">{t('solo_questions_loading')}</p>
             </div>
           </div>
         </div>
@@ -515,11 +515,11 @@ function SoloGamePage() {
           <p className="eyebrow">Quiz Sprint - Mode Solo</p>
           <div className="hero">
             <div className="copy">
-              <h1>Erreur</h1>
+              <h1>{t('error_title')}</h1>
               <p className="lede">{error}</p>
               <div className="actions">
                 <button className="btn ghost" onClick={() => navigate('/quiz')}>
-                  Retour au Quiz
+                  {t('back_to_quiz')}
                 </button>
               </div>
             </div>
@@ -536,11 +536,11 @@ function SoloGamePage() {
           <p className="eyebrow">Quiz Sprint - Mode Solo</p>
           <div className="hero">
             <div className="copy">
-              <h1>Aucune question disponible</h1>
-              <p className="lede">Il n'y a pas de questions pour le moment.</p>
+              <h1>{t('no_question_available')}</h1>
+              <p className="lede">{t('no_question_available_desc')}</p>
               <div className="actions">
                 <button className="btn ghost" onClick={() => navigate('/quiz')}>
-                  Retour au Quiz
+                  {t('back_to_quiz')}
                 </button>
               </div>
             </div>
@@ -577,11 +577,11 @@ function SoloGamePage() {
                 return exitBtn && (
                   <button
                     onClick={() => {
-                      if (window.confirm("Êtes-vous sûr de vouloir quitter la partie ? Votre progression ne sera pas sauvegardée.")) {
+                      if (window.confirm(t('leave_game_confirm'))) {
                         leaveGame()
                       }
                     }}
-                    title="Quitter la partie"
+                    title={t('leave_game_title')}
                   >
                     {exitBtn.url ? (
                       <img src={exitBtn.url} alt={exitBtn.symbol} />
@@ -618,7 +618,7 @@ function SoloGamePage() {
                   }))
                 }}
               >
-                {p ?? "Powerup Slot"}
+                {p ?? t('powerup_slot')}
               </button>
             )
           })}
@@ -626,9 +626,9 @@ function SoloGamePage() {
 
         {/* Zone de Titre */}
         <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
-          <h1>Partie Solo en cours</h1>
+          <h1>{t('solo_game_in_progress')}</h1>
           <p className="lede" style={{ border: 'none', padding: 0, textAlign: 'center' }}>
-            Question <strong>{currentQuestionIndex + 1}</strong> sur <strong>{question_count}</strong> • Score : <strong>{score}</strong>
+            {t('question_progress', { current: currentQuestionIndex + 1, total: question_count, score })}
           </p>
         </div>
 
@@ -692,7 +692,7 @@ function SoloGamePage() {
                 <input
                   type="text"
                   className="game-input-field"
-                  placeholder="Tapez votre réponse ici..."
+                  placeholder={t('answer_placeholder')}
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !showAnswer && handleValidateAnswer()}
@@ -708,12 +708,12 @@ function SoloGamePage() {
                 />
                 {!showAnswer && hint && (
                   <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                    Indice : {hint}
+                    {t('hint_label')}: {hint}
                   </p>
                 )}
                 {showAnswer && !isCorrect && (
                   <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                    Bonne réponse : {rightAnswer}
+                    {t('correct_answer_label')}: {rightAnswer}
                   </p>
                 )}
               </div>
@@ -729,11 +729,11 @@ function SoloGamePage() {
                 onClick={handleValidateAnswer}
                 disabled={question.type === 'mcq' ? !selectedOption : !userAnswer}
               >
-                Valider
+                {t('validate')}
               </button>
             ) : (
               <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
-                {currentQuestionIndex === question_count - 1 ? 'Terminer le Quiz' : 'Question suivante →'}
+                {currentQuestionIndex === question_count - 1 ? t('finish_quiz') : t('next_question')}
               </button>
             )}
           </div>
