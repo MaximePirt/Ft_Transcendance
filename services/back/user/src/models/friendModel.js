@@ -77,7 +77,7 @@ function addFriend(userId, friendId) {
       return {
         ok: false,
         created: false,
-        statusCode: 500,
+        statusCode: 401,
         message: "Insert conflicted, unknown error.",
       };
     if (init_user.status === "accepted")
@@ -97,7 +97,7 @@ function addFriend(userId, friendId) {
       return {
         ok: false,
         created: false,
-        statusCode: 500,
+        statusCode: 401,
         message: "Error while accepting friend request.",
       };
     }
@@ -111,7 +111,7 @@ function addFriend(userId, friendId) {
       };
     }
     default:
-      return { ok: false, created: false, statusCode: 500, message: "Unknown error." };
+      return { ok: false, created: false, statusCode: 401, message: "Unknown error." };
   }
 }
 

@@ -533,7 +533,6 @@ The site therefore uses the same color palette and typography throughout. These 
 	◦ Detailed breakdown of what each team member contributed.
 	◦ Specific features, modules, or components implemented by each person.
 	◦ Any challenges faced and how they were overcome.
-tdausque: used to implement a full authentication module to able a client to connect to the quizz website, fetching his email, username and the password when signup. For a persistent security it's important to hash the password and put it in the database. Implementing a complet 2fa security part, sending to the client email adress using the smtp protocol a 6 digits code when signup and signin. The JWT (Json Web Token) was also an important part of the job, in fact, this tool can give a state to the front server, keeping it with specific data the user had to interact with. Because we can't stop to think with security it's important we have to put this token in a specific and protected space of the browser called the cookies. The cookies work like a localStorage with a security asset. We can't compile js script inside, so we avoid xss attack. We can't stock the token inside the database, the back server auth microservice is returning the JWT using a specific algorithm when the user is authenticate. The challenge was technical, with deep web concept like 2fa, jwt, password hash algorithm and read the documentation was a big part of the job.
 
 #### Pipi Tristan
 I started the project on the front side of it with vgodart. I immediately focused on the translation on the website since a quiz has a lot of text, it seemed really logical.
@@ -552,12 +551,16 @@ Those worked both for the solo and multi part of the game. The main problem whil
 
 
 #### Godart Victor
-Project Manager
-la page de profil utilisateur
-la traduction du site
-Gamification, adchievement, profil card.
+Implemented a central WebSocket gateway to handle live interactions. This allows for instantaneous friend request notifications, game invitations, and real-time "Accept/Decline" logic without page refreshes. Developed a synchronization layer that tracks and broadcasts user "Online/Offline" status across the entire platform. The friend list and pending requests UI are automatically updated via socket events. Configured Vite’s Hot Module Replacement to work seamlessly behind an Nginx reverse proxy, resolving complex WebSocket handshake issues (WSS) and ensuring a stable development-to-production pipeline.
+
+Engineered a high-performance ranking system that fetches and displays the Top 5 players globally, providing immediate competitive feedback to the user. Designed a comprehensive stats module using KPI (Key Performance Indicator) cards. It calculates and visualizes mission-critical data such as: Accuracy of answers over time. Total answers provided vs. successful wins. Created a scalable rewards architecture where "Titles" were refactored into "Badges." These are dynamically unlocked based on progression milestones and displayed with a custom global status bar.
+
+Optimized the deployment workflow by implementing a multi-stage Docker build. This significantly reduces image size by separating the build environment from the production-ready Nginx static server.
+
+Integrated a multi-language framework supporting English, French, and Arabic. Beyond simple translation, the UI was specifically refactored for Arabic support, including mirrored layouts for theme selection, question counters, and power-up modules to respect RTL design standards. User language choices are now captured at the landing page and seamlessly synchronized with the user profile upon account finalization.
 
 #### Dausque Thibault
+I used to implement a full authentication module to able a client to connect to the quizz website, fetching his email, username and the password when signup. For a persistent security it's important to hash the password and put it in the database. Implementing a complet 2fa security part, sending to the client email adress using the smtp protocol a 6 digits code when signup and signin. The JWT (Json Web Token) was also an important part of the job, in fact, this tool can give a state to the front server, keeping it with specific data the user had to interact with. Because we can't stop to think with security it's important we have to put this token in a specific and protected space of the browser called the cookies. The cookies work like a localStorage with a security asset. We can't compile js script inside, so we avoid xss attack. We can't stock the token inside the database, the back server auth microservice is returning the JWT using a specific algorithm when the user is authenticate. The challenge was technical, with deep web concept like 2fa, jwt, password hash algorithm and read the documentation was a big part of the job.
 
 #### Pierrot Maxime
 My contribution to the project focused on both defining its architectural foundation and implementing essential application features.

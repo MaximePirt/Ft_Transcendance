@@ -20,11 +20,12 @@
 					"question": "Qui a découvert l'Amérique ?",
 					"type": "texte",
 					"réponse": "Christophe Colomb",
-					"options": [
-						"Christophe Colomb",
-						"Vladimir Putin",
-						"Thierry Henry"
-					],
+                    "variantes": [
+                        "Colomb",
+                        "Christopher Columbus",
+                        "Christophe Colombe",
+                        "Cristóbal Colón"
+                    ],
 					"difficulté": "easy"
 				},
 				{
@@ -134,13 +135,12 @@
 				{
 					"id": "history.cleopatra",
 					"question": "Qui était la célèbre reine de l'Égypte antique qui a eu des relations avec Jules César et Marc Antoine ?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "Cléopâtre",
-					"options": [
-						"Néfertiti",
-						"Hatchepsout",
-						"Cléopâtre",
-						"Boudicca"
+					"variantes": [
+						"Cleopatre",
+						"Cleopatra",
+						"Cléopâtre"
 					],
 					"difficulté": "easy"
 				},
@@ -160,14 +160,14 @@
 				{
 					"id": "history.longest_french_monarch",
 					"question": "Qui a été le monarque au règne le plus long de l'histoire de France ?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "Louis XIV",
-					"options": [
-						"Louis XVI",
-						"Napoléon Bonaparte",
-						"Charlemagne",
+					"variantes": [
 						"Louis XIV",
-						"tata"
+						"louis quatorze",
+						"louis 14",
+						"louis the fourteenth",
+						"Le Roi Soleil"
 					],
 					"difficulté": "hard"
 				},
@@ -193,7 +193,7 @@
 						"Brigitte Macron",
 						"Kim Jon Hun",
 						"Archiduc François-Ferdinand",
-						"toto"
+						"Józef Piłsudski"
 					],
 					"difficulté": "easy"
 				}
@@ -231,10 +231,10 @@
 					"type": "qcm",
 					"réponse": "Michael Jackson",
 					"options": [
-						"Prince",
-						"Elvis Presley",
 						"Michael Jackson",
-						"Stevie Wonder"
+						"Elton John",
+						"Prince",
+						"David Bowie"
 					],
 					"difficulté": "easy"
 				},
@@ -371,13 +371,13 @@
 				{
 					"id": "music.beethoven_deaf",
 					"question": "Quel célèbre compositeur classique a continué à écrire de la musique même après être devenu complètement sourd ?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "Ludwig van Beethoven",
-					"options": [
-						"Wolfgang Amadeus Mozart",
-						"Johann Sebastian Bach",
-						"Ludwig van Beethoven",
-						"Frédéric Chopin"
+					"variantes": [
+						"Beethoven",
+						"Ludwig",
+						"Ludwig Beethoven",
+						"Beethoven Ludwig"
 					],
 					"difficulté": "easy"
 				},
@@ -893,13 +893,11 @@
 				{
 					"id": "games.battle_royale.popular_game",
 					"question": "Quel jeu vidéo a popularisé le genre Battle Royale ?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "PlayerUnknown's Battlegrounds (PUBG)",
-					"options": [
-						"Fortnite",
-						"Apex Legends",
-						"PlayerUnknown's Battlegrounds (PUBG)",
-						"Call of Duty: Warzone"
+					"variantes": [
+						"PlayerUnknown's Battlegrounds",
+						"PUBG"
 					],
 					"difficulté": "easy"
 				},
@@ -1060,13 +1058,11 @@
 				{
 					"id": "chess.lasker_reign",
 					"question": "Qui détient le record du plus long règne ininterrompu en tant que champion du monde officiel (27 ans) ?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "Emanuel Lasker",
-					"options": [
-						"Bobby Fischer",
-						"Alexander Alekhine",
-						"Mikhaïl Botvinnik",
-						"Emanuel Lasker"
+					"variantes": [
+						"Emanuel Lasker",
+						"Lasker"
 					],
 					"difficulté": "hard"
 				}

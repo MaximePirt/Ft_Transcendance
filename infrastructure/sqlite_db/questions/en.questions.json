@@ -9,7 +9,7 @@
 					"réponse": "Neuwirth Law",
 					"options": [
 						"SRU Law",
-						"Grenelle Agreements",
+						"Grenelle Accords",
 						"Badinter Law",
 						"Neuwirth Law"
 					],
@@ -20,7 +20,12 @@
 					"question": "Who discovered America?",
 					"type": "texte",
 					"réponse": "Christopher Columbus",
-					"options": [],
+                    "variantes": [
+                        "Columbus",
+                        "Christopher Columbus",
+                        "Christophe Colomb",
+                        "Cristóbal Colón"
+                    ],
 					"difficulté": "easy"
 				},
 				{
@@ -32,7 +37,7 @@
 						"Thomas Jefferson",
 						"Abraham Lincoln",
 						"George Washington",
-						"John Adams"
+						"Jeffrey Epstein"
 					],
 					"difficulté": "easy"
 				},
@@ -130,13 +135,12 @@
 				{
 					"id": "history.cleopatra",
 					"question": "Who was the famous Queen of Ancient Egypt who had relationships with Julius Caesar and Mark Antony?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "Cleopatra",
-					"options": [
-						"Nefertiti",
-						"Hatshepsut",
+					"variantes": [
 						"Cleopatra",
-						"Boudicca"
+						"Cleopatra",
+						"Cleopatra"
 					],
 					"difficulté": "easy"
 				},
@@ -156,13 +160,14 @@
 				{
 					"id": "history.longest_french_monarch",
 					"question": "Who was the longest-reigning monarch in French history?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "Louis XIV",
-					"options": [
-						"Louis XVI",
-						"Napoleon Bonaparte",
-						"Charlemagne",
-						"Louis XIV"
+					"variantes": [
+						"Louis XIV",
+						"louis fourteen",
+						"louis 14",
+						"louis the fourteenth",
+						"The Sun King"
 					],
 					"difficulté": "hard"
 				},
@@ -185,9 +190,10 @@
 					"type": "qcm",
 					"réponse": "Archduke Franz Ferdinand",
 					"options": [
+						"Brigitte Macron",
+						"Kim Jong Un",
 						"Archduke Franz Ferdinand",
-						"toto",
-						"tutu"
+						"Józef Piłsudski"
 					],
 					"difficulté": "easy"
 				}
@@ -225,10 +231,10 @@
 					"type": "qcm",
 					"réponse": "Michael Jackson",
 					"options": [
-						"Prince",
-						"Elvis Presley",
 						"Michael Jackson",
-						"Stevie Wonder"
+						"Elton John",
+						"Prince",
+						"David Bowie"
 					],
 					"difficulté": "easy"
 				},
@@ -365,13 +371,13 @@
 				{
 					"id": "music.beethoven_deaf",
 					"question": "Which famous classical composer continued to write music even after going completely deaf?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "Ludwig van Beethoven",
-					"options": [
-						"Wolfgang Amadeus Mozart",
-						"Johann Sebastian Bach",
-						"Ludwig van Beethoven",
-						"Frederic Chopin"
+					"variantes": [
+						"Beethoven",
+						"Ludwig",
+						"Ludwig Beethoven",
+						"Beethoven Ludwig"
 					],
 					"difficulté": "easy"
 				},
@@ -448,8 +454,8 @@
 					"options": [
 						"Her age",
 						"Her favorite colors",
-						"Cities she lived in",
-						"Relationships"
+						"Cities where she lived",
+						"Her relationships"
 					],
 					"difficulté": "easy"
 				},
@@ -474,10 +480,10 @@
 					"type": "qcm",
 					"réponse": "France",
 					"options": [
-						"Brésil",
-						"Allemagne",
+						"Brazil",
+						"Germany",
 						"France",
-						"Argentine"
+						"Argentina"
 					],
 					"difficulté": "easy"
 				},
@@ -823,12 +829,12 @@
 					"id": "cinema.burton.victor",
 					"question": "Which Tim Burton film features a young boy named Victor who finds himself in the world of the dead?",
 					"type": "qcm",
-					"réponse": "Les Noces Funèbres",
+					"réponse": "Corpse Bride",
 					"options": [
-						"L'Étrange Noël de Monsieur Jack",
-						"Les Noces Funèbres",
-						"Charlie et la Chocolaterie",
-						"Alice au Pays des Merveilles"
+						"The Nightmare Before Christmas",
+						"Corpse Bride",
+						"Charlie and the Chocolate Factory",
+						"Alice in Wonderland"
 					],
 					"difficulté": "hard"
 				}
@@ -838,7 +844,7 @@
 					"id": "games.esport.first_game",
 					"question": "What is the first game in which esports appeared?",
 					"type": "texte",
-					"réponse": "The Intergalactic Space War",
+					"réponse": "Spacewar!",
 					"variantes": [
 						"Space War",
 						"The Space War",
@@ -848,7 +854,7 @@
 				},
 				{
 					"id": "games.esport.game_awards_2025",
-					"question": "Which game won the Game Award for Esports Game of the Year in 2025?",
+					"question": "Which game won the Game Awards prize for Best Esports Game in 2025?",
 					"type": "qcm",
 					"réponse": "Counter-Strike 2",
 					"options": [
@@ -861,12 +867,12 @@
 				},
 				{
 					"id": "games.league_of_legends.headquarters_country",
-					"question": "In which country is the headquarters of Riot Games, the developer of League of Legends, located?",
+					"question": "In which country is the headquarters of Riot Games, the developer of League of Legends?",
 					"type": "texte",
-					"réponse": "États-Unis",
+					"réponse": "United States",
 					"variantes": [
 						"USA",
-						"Amérique",
+						"America",
 						"United States"
 					],
 					"difficulté": "easy"
@@ -887,13 +893,11 @@
 				{
 					"id": "games.battle_royale.popular_game",
 					"question": "Which video game popularized the Battle Royale genre?",
-					"type": "qcm",
+					"type": "texte",
 					"réponse": "PlayerUnknown's Battlegrounds (PUBG)",
-					"options": [
-						"Fortnite",
-						"Apex Legends",
-						"PlayerUnknown's Battlegrounds (PUBG)",
-						"Call of Duty: Warzone"
+					"variantes": [
+						"PlayerUnknown's Battlegrounds",
+						"PUBG"
 					],
 					"difficulté": "easy"
 				},
@@ -903,8 +907,8 @@
 					"type": "texte",
 					"réponse": "Link",
 					"variantes": [
-						"Laink",
-						"Linque"
+						"Link",
+						"Link"
 					],
 					"difficulté": "easy"
 				},
@@ -912,7 +916,7 @@
 					"id": "games.minecraft.creeper_inspiration",
 					"question": "Which animal inspired the creation of the creeper in Minecraft?",
 					"type": "texte",
-					"réponse": "Cochon",
+					"réponse": "Pig",
 					"variantes": [
 						"Pig",
 						"Pork"
@@ -936,7 +940,7 @@
 				},
 				{
 					"id": "chess.total_squares",
-					"question": "How many squares are there on a standard chessboard?",
+					"question": "How many squares are on a standard chessboard?",
 					"type": "qcm",
 					"réponse": "64",
 					"options": [
@@ -962,7 +966,7 @@
 				},
 				{
 					"id": "chess.stalemate",
-					"question": "What is it called when a player is not in check but has no legal moves left?",
+					"question": "What is the situation called when a player is not in check but has no legal moves remaining?",
 					"type": "qcm",
 					"réponse": "Stalemate",
 					"options": [
@@ -975,7 +979,7 @@
 				},
 				{
 					"id": "chess.special_move_rook",
-					"question": "What is the special move involving the King and a Rook called?",
+					"question": "What is the special move called that involves the King and a Rook?",
 					"type": "qcm",
 					"réponse": "Castling",
 					"options": [
@@ -1014,7 +1018,7 @@
 				},
 				{
 					"id": "chess.highest_title",
-					"question": "What is the highest title a chess player can attain, awarded by FIDE?",
+					"question": "What is the highest title a chess player can achieve, awarded by FIDE?",
 					"type": "qcm",
 					"réponse": "Grandmaster",
 					"options": [
@@ -1027,7 +1031,7 @@
 				},
 				{
 					"id": "chess.strongest_female",
-					"question": "Who is widely considered the strongest female chess player of all time?",
+					"question": "Who is widely regarded as the strongest female chess player of all time?",
 					"type": "qcm",
 					"réponse": "Judit Polgár",
 					"options": [
@@ -1040,7 +1044,7 @@
 				},
 				{
 					"id": "chess.carlsen_2013",
-					"question": "Who became the World Chess Champion in 2013 by defeating Viswanathan Anand?",
+					"question": "Who became World Chess Champion in 2013 by defeating Viswanathan Anand?",
 					"type": "qcm",
 					"réponse": "Magnus Carlsen",
 					"options": [
@@ -1053,14 +1057,12 @@
 				},
 				{
 					"id": "chess.lasker_reign",
-					"question": "Who holds the record for the longest undisputed reign as World Chess Champion (27 years)?",
-					"type": "qcm",
+					"question": "Who holds the record for the longest uninterrupted reign as world chess champion (27 years)?",
+					"type": "texte",
 					"réponse": "Emanuel Lasker",
-					"options": [
-						"Bobby Fischer",
-						"Alexander Alekhine",
-						"Mikhail Botvinnik",
-						"Emanuel Lasker"
+					"variantes": [
+						"Emanuel Lasker",
+						"Lasker"
 					],
 					"difficulté": "hard"
 				}
@@ -1068,7 +1070,7 @@
 			"Informatique": [
 				{
 					"id": "informatics.ios_primary_language",
-					"question": "What programming language is primarily used for developing iOS applications?",
+					"question": "Which programming language is primarily used for developing iOS applications?",
 					"type": "qcm",
 					"réponse": "Swift",
 					"options": [
@@ -1081,7 +1083,7 @@
 				},
 				{
 					"id": "informatics.internet_security_protocol",
-					"question": "What protocol is used to secure communications on the internet by encrypting data exchanged between the browser and the web server?",
+					"question": "Which protocol is used to secure communications on the Internet by encrypting data exchanged between the browser and web server?",
 					"type": "qcm",
 					"réponse": "HTTPS",
 					"options": [
@@ -1094,7 +1096,7 @@
 				},
 				{
 					"id": "informatics.linux_kernel",
-					"question": "What is the name of the most widely used open-source operating system kernel in the world?",
+					"question": "What is the name of the open-source operating system kernel most used in the world?",
 					"type": "texte",
 					"réponse": "Linux",
 					"variantes": [
@@ -1105,7 +1107,7 @@
 				},
 				{
 					"id": "cs.first_programmer",
-					"question": "Who is widely considered to be the first computer programmer?",
+					"question": "Who is widely considered the first computer programmer?",
 					"type": "qcm",
 					"réponse": "Ada Lovelace",
 					"options": [
@@ -1209,7 +1211,7 @@
 				},
 				{
 					"id": "cs.github_acquisition",
-					"question": "Which tech company acquired GitHub in 2018?",
+					"question": "Which technology company acquired GitHub in 2018?",
 					"type": "qcm",
 					"réponse": "Microsoft",
 					"options": [
@@ -1222,7 +1224,7 @@
 				},
 				{
 					"id": "cs.first_iphone",
-					"question": "In what year did Apple release the very first iPhone?",
+					"question": "In what year did Apple release the first iPhone ever?",
 					"type": "qcm",
 					"réponse": "2007",
 					"options": [
