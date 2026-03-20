@@ -1,11 +1,3 @@
-/**
- * User Routes :
- * In this route will be defined user id, global information, avatar
- * TODO: remove settings from here and create a specific settings file as for friend
- */
-
-
-// Route : 127.0.0.1:3000/users/
 const React = require("react");
 const { render } = require("@react-email/render");
 const { createZohoTransporter } = require("../services/userServices.js");

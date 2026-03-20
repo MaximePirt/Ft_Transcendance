@@ -184,7 +184,6 @@ const defaultAchievements: AchievementPayload = {
 }
 
 
-// truc a la con avec les stickers a tout moment ca degage
 const stickerPalette = [
 	{ id: 'spark', symbol: '✨' },
 	{ id: 'zap', symbol: '⚡' },
@@ -509,8 +508,6 @@ function ProfilUser() {
 		}
 	}, [user, isPublicView])
 
-	// Supprimé: la logique d'application automatique du thème/font d'un autre utilisateur
-	// causait des conflits et bugs de timing
 
 	useEffect(() => {
 		if (!routeUserId && !profileUsername) return
@@ -586,8 +583,6 @@ function ProfilUser() {
 						if (userData.theme) localStorage.setItem('theme', userData.theme)
 						if (userData.font) localStorage.setItem('font', userData.font)
 					}
-
-					// Note: On n'applique plus le thème/font d'un utilisateur visité pour éviter les conflits
 
 					return
 				}

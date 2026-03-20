@@ -1,15 +1,3 @@
-// services/user/src/app.js
-// This microservice is here to handle :
-/*
-- User data management (CRUD operations)
-- User profile management as avatar
-- User friends
-- User stats
-
-It listen on porte 3001
-
-*/
-
 const fastify = require("fastify")({ logger: true });
 const path = require("path");
 const fastifyJwt = require("@fastify/jwt");

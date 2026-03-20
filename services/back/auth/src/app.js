@@ -4,7 +4,6 @@ import fastifyView from "@fastify/view";
 import fastifyCookie from "@fastify/cookie";
 import fastifyJwt from "@fastify/jwt";
 import ejs from "ejs";
-// const fastify = require("fastify")({ logger: true });
 import Fastify from "fastify"
 import multipart from "@fastify/multipart"
 import authRoute from './routes/authRoute.js';
