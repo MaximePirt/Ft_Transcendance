@@ -278,36 +278,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const login = async (email: string, _username: string): Promise<boolean> => {
 		const rawIdentifier = email.trim()
 
-		// let signedIn = false
-		// for (const username of candidateUsernames) {
-		// 	const signinResponse = await fetch(`${API_BASE}/auth/signin`, {
-		// 		method: 'POST',
-		// 		headers: {
-		// 			'Content-Type': 'application/json',
-		// 		},
-		// 		credentials: 'include',
-		// 		body: JSON.stringify({ username, password }),
-		// 	})
-		// 	if (signinResponse.ok) {
-		// 		signedIn = true
-		// 		break
-		// 	}
-		// }
-		//
-		// if (!signedIn) {
-		// 	return false
-		// }
-
-		// const meResponse = await fetch(`${API_BASE}/auth/me`, {
-		// 	method: 'GET',
-		// 	credentials: 'include',
-		// })
-		//
-		// if (!meResponse.ok) {
-		// 	return false
-		// }
-
-		// const me = await meResponse.json()
 		let userData: User | null = null
 
 		try {

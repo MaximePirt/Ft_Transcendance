@@ -11,7 +11,6 @@ async function quizRoutes(fastify, options) {
 	 */
 	fastify.post('/game-sessions', {preHandler: fastify.authenticate, schema: schemas.createGameSessionSchema },
 	async (request, reply) => {
-		// userId = 1;
 		const userId = request.user.id;
 		console.log("User ID", userId, "is creating a new game session with settings:", request.body);
 		try {
@@ -81,34 +80,6 @@ async function quizRoutes(fastify, options) {
 			}
 		}
 	});
-
-	// This route is for testing purposes only, to bypass authentication and use a hardcoded user ID
-	// TODO: Remove this route before deploying to production
-	fastify.post('/game-sessions/joinbis', {preHandler: fastify.authenticate, schema: schemas.GameSessionCode},
-	async (request, reply) => {
-		const userId = request.user.id;
-		console.log("User ID", userId, "is trying to join game session with code:", request.body.code);
-		const { code } = request.body;
-		try {
-			const res = await quizController.joinGameSession(userId, code);
-			return reply.code(200).send({ status: 'joined', gameSessionId: res.session_id });
-		}
-		catch (err)
-		{
-			if (err.message.includes("not found"))
-				return reply.code(404).send({ status: 'Game session not found' });
-			else if (err.message.includes("already started")
-				|| err.message.includes("full"))
-				return reply.code(400).send({ status: 'Cannot join game session', error: err.message });
-			else if (err.message.includes("already joined"))
-				return reply.code(409).send({ status: 'User has already joined this game session' });
-			else {
-				console.error("Error joining game session:", err);
-				return reply.code(401).send({ status: 'Error joining game session', error: err.message });
-			}
-		}
-	});
-
 
 	/**
 	 * @brief Start a game session
@@ -194,7 +165,6 @@ async function quizRoutes(fastify, options) {
 	 * @input : game_session_id, question_id, answer
 	 * @rules : only if user is a player in the game session and status is 'in_progress'
 	 */
-	//TODO: Add schema validation for answer submission (question_id, answer)
 	fastify.post('/game-sessions/:id/answer', {preHandler: fastify.authenticate},
 	async (request, reply) => {
 		const userId = Number(request.user.id);

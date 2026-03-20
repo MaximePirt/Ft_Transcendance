@@ -1,5 +1,4 @@
 // services/back/user/src/routes/friendRoute.js
-// TODO: Modificate cookies in a function instead of repeating code
 const friendController = require("../controllers/friendController");
 const friendWsHub = require("../ws/friendWsHub");
 

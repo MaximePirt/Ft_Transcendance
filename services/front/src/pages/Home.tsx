@@ -285,7 +285,6 @@ function HomePage() {
 
 		setUserEmail(email);
 		setUserUsername(username);
-		// password !== username
 		if (password !== confirmPassword) {
 			setSignupError(t('signup_error_password_mismatch'));
 			return

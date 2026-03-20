@@ -11,9 +11,6 @@ async function findUser(username, password) {
 	if (!db.prepare('SELECT username FROM users WHERE username = ?').get(username))
 		return 'unknown user'
 	const bddpass = await db.prepare('SELECT password FROM users WHERE username = ?').get(username);
-	// const match = await bcrypt.compare(password, bddpass.password);
-	// if (!match)
-	// 	return "bad password"
 }
 
 function findUserById(id) {

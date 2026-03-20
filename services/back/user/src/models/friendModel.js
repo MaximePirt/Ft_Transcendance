@@ -129,7 +129,6 @@ function removeFriend(userId, friendId) {
   if (!status || (status.status !== "accepted" && status.status !== "pending"))
     return { ok: false, message: "No existing friendship or invitation." };
 
-  //TODO: Check if possibilities to add a verification action (not sure)
   const info = deleteFriend.run(min, max);
   if (info.changes === 1) return { ok: true, info };
   return { ok: false, message: "Error while removing friend." };
