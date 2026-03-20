@@ -23,7 +23,7 @@ async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = fal
       return applyTheme('default', signal, true)
     }
     if (!isRetry && themeName !== 'default') {
-      console.warn(`Erreur lors du chargement du thème "${themeName}"`, err)
+      console.log(`Erreur lors du chargement du thème "${themeName}"`, err)
     }
     return
   }
@@ -52,7 +52,7 @@ async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false
       return applyFont('default', signal, true)
     }
     if (!isRetry && fontName !== 'default') {
-      console.warn(`Erreur lors du chargement de la police "${fontName}"`, err)
+      console.log(`Erreur lors du chargement de la police "${fontName}"`, err)
     }
     return
   }

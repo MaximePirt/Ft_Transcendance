@@ -123,7 +123,6 @@ function SoloGameSetup() {
         power_ups: Array.from(selectedPowerUps),
       };
 
-      console.log("PAYLOAD SENT:", payload);
 
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
         method: "POST",
@@ -133,8 +132,6 @@ function SoloGameSetup() {
       });
 
       const data = await session.json();
-      console.log("stocking : Session ID:", data.sessionId);
-
       localStorage.setItem("sessionId", String(data.sessionId));
       localStorage.setItem("questionCount", String(count));
       getUserId();

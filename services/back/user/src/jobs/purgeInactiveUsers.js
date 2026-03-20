@@ -5,6 +5,7 @@ function cron_gdpr() {
     DELETE FROM users
     WHERE lastConnexion IS NOT NULL
       AND lastConnexion < datetime('now', '-2 years')
+      AND onlineStatus = 0
   `);
   const info = stmt.run();
   console.log(`[purgeInactiveUsers] Deleted users: ${info.changes}`);

@@ -31,7 +31,7 @@ async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false
       return applyFont('default', signal, true)
     }
     if (!isRetry && fontName !== 'default') {
-      console.warn(`Erreur lors du chargement de la police "${fontName}"`, err)
+      console.log(`Erreur lors du chargement de la police "${fontName}"`, err)
     }
     return
   }

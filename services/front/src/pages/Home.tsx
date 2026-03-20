@@ -291,7 +291,6 @@ function HomePage() {
 		} else if (!email_regex.test(email)) {
 			setSignupError(t('signup_error_email_mismatch'));
 		} else if (!username_regex.test(username.trim())) {
-			console.log("coucou");
 			setSignupError(t('signup_error_username_format'));
 			return
 		} else if (!password_regex.test(password)) {

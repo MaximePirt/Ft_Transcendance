@@ -441,9 +441,15 @@ export default async function authRoute(fastify, options) {
 					});
 				}
 			} else {
-				const verifiedUser = await getUserByEmail(email);
-				resolvedUserId = Number(verifiedUser?.id);
-				resolvedUsername = verifiedUser?.username;
+				try
+				{
+					const verifiedUser = await getUserByEmail(email);
+					resolvedUserId = Number(verifiedUser?.id);
+					resolvedUsername = verifiedUser?.username;
+				}
+				catch(e) {
+					return rep.code(200).send({ success: false, error: "User not found" });
+				}
 			}
 
 			if (!Number.isInteger(Number(resolvedUserId)) || Number(resolvedUserId) <= 0 || !resolvedUsername) {

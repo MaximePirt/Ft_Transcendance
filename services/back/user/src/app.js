@@ -35,7 +35,7 @@ try {
   fastify.register(websocketPlugin);
   websocketEnabled = true;
 } catch (error) {
-  fastify.log.warn("@fastify/websocket not found, websocket routes disabled");
+  fastify.log.info("@fastify/websocket not found, websocket routes disabled");
 }
 
 if (websocketEnabled) {
@@ -71,10 +71,9 @@ const purgeTask = new AsyncTask(
 );
 
 // Schedule job timing at 3 AM daily
-// TODO: Change to 3AM, currently every 2 minutes for testing
 const purgeJob = new CronJob(
   {
-	cronExpression: "*/20 * * * *",
+	cronExpression: "0 3 * * *",
   },
   purgeTask
 );

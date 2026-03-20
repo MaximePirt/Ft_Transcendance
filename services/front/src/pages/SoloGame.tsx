@@ -113,7 +113,7 @@ function SoloGamePage() {
           return
         }
       } catch (err) {
-        console.warn('[SoloGame] failed to restore saved state', err)
+        console.log('[SoloGame] failed to restore saved state', err)
       }
     }
 
@@ -306,7 +306,7 @@ function SoloGamePage() {
       localStorage.removeItem(STORAGE_KEY)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     } catch (err) {
-      console.warn('[SoloGame] failed to persist state', err)
+      console.log('[SoloGame] failed to persist state', err)
     }
   }, [question, currentQuestionIndex, userAnswer, selectedOption, powerups, showAnswer, isCorrect, rightAnswer, hint, score])
 
@@ -385,7 +385,7 @@ function SoloGamePage() {
         setScore(data.current_score)
       }
     } catch (err) {
-      console.warn('[SoloGame] failed to get the answer', err)
+      console.log('[SoloGame] failed to get the answer', err)
     }
   }
 
@@ -424,7 +424,6 @@ function SoloGamePage() {
     const isLastQuestion = currentQuestionIndex >= question_count - 1
 
     if (isLastQuestion) {
-      console.log("Quiz terminé, score final:", score)
       localStorage.removeItem(STORAGE_KEY)
       localStorage.removeItem("questionCount")
       navigate("/quiz/end", { state: { score, total: question_count, mode: "solo" } })
