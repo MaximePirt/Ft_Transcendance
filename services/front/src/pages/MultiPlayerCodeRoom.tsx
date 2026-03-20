@@ -141,6 +141,15 @@ useEffect(() => {
 				joined_at: new Date().toISOString(),
 			}
 			setPlayers((prev) => prev.filter((p) => p.name !== newPlayer.name))
+			let session = await getSession();
+			if (!session)
+			{
+				setError(t('session_data_fetch_error'))
+				return
+			}
+			if (session.host_id === user?.id)
+				setIsHost(true)
+
 			console.log(`Player left: ${newPlayer.name}`)
 		}
 		else if (msg.type === "game_started") {
