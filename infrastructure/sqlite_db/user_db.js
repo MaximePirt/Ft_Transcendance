@@ -91,39 +91,6 @@ const insertUser = db.prepare(
 );
 
 console.log("Checking seed data...");
-const userCount = db.prepare('SELECT COUNT(*) as cnt FROM users').get().cnt;
-if (userCount === 0) {
-  console.log("Create fake data...");
-  const insertUser = db.prepare(
-    "INSERT INTO users (username, email, password, avatarUrl) VALUES (?, ?, ?, ?)");
-  const users = [
-    [
-      "alice",
-      "alice@example.com",
-      "password123",
-      "/avatar/Default.png",
-    ],
-    [
-      "bob",
-      "bob@example.com",
-      "password456",
-      "/avatar/Default.png",
-    ],
-    [
-      "charlie",
-      "charlie@example.com",
-      "password789",
-      "/avatar/Default.png",
-    ],
-  ];
-  for (const user of users) {
-    insertUser.run(...user);
-  }
-    console.log("Fake users created.");
-}
-else {
-  console.log("Seed data already exists. Skipping fake data creation.");
-}
 
 db.close();
 console.log("Database initialized successfully!");
