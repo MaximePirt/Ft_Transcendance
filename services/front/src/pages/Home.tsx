@@ -468,9 +468,6 @@ function HomePage() {
 						<p className="footer__lede">{t("footer_tagline")}</p>
 					</div>
 					<div className="footer__links">
-						<a href="#">{t("about")}</a>
-						<a href="#">{t("faq")}</a>
-						<a href="#">{t("contact")}</a>
 						<a
 							href="#"
 							onClick={(e) => {

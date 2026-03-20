@@ -47,10 +47,7 @@ export const PrivacyPolicyComponent = () => {
       />
       <PolicySection title={privacy.section4.title} content={privacy.section4.content} />
       <PolicySection title={privacy.section5.title} content={privacy.section5.content} />
-      <PolicySection title={privacy.section6.title} content={privacy.section6.content} />
-      <PolicySection title={privacy.section7.title} content={privacy.section7.content} />
-      <PolicySection title={privacy.section8.title} content={privacy.section8.content} />
-      <PolicySection title={privacy.section9.title} content={privacy.section9.content} />
+      <PolicySection title={privacy.section6.title} content={privacy.section6.intro} items={privacy.section6.items}/>
     </div>
   )
 }
@@ -65,14 +62,9 @@ export const TermsOfUseComponent = () => {
       <h3>{terms.title}</h3>
       <p>{terms.intro}</p>
       <PolicySection title={terms.section1.title} content={terms.section1.content} />
-      <PolicySection title={terms.section2.title} content={terms.section2.content} />
-      <PolicySection title={terms.section3.title} content={terms.section3.content} />
+      <PolicySection title={terms.section2.title} content={terms.section2.intro} items={terms.section2.items} />
+      <PolicySection title={terms.section3.title} content={terms.section3.intro} items={terms.section3.items}/>
       <PolicySection title={terms.section4.title} content={terms.section4.content} />
-      <PolicySection title={terms.section5.title} content={terms.section5.content} />
-      <PolicySection title={terms.section6.title} content={terms.section6.content} />
-      <PolicySection title={terms.section7.title} content={terms.section7.content} />
-      <PolicySection title={terms.section8.title} content={terms.section8.content} />
-      <PolicySection title={terms.section9.title} content={terms.section9.content} />
     </div>
   )
 }
