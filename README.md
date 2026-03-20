@@ -109,9 +109,191 @@ On the one hand, the use of WebSocket allows for the efficient management of rea
 On the other hand, the use of separate APIs deployed in separate containers promotes a modular approach, in line with the principles of distributed architectures.
 
 #### Database Schema:
-	◦ Visual representation or description of the database structure.
-	◦ Tables/collections and their relationships.
-	◦ Key fields and data types.
+
+
+```mermaid
+
+erDiagram
+    direction LR
+
+    USERS {
+        INTEGER id PK
+        TEXT username
+        TEXT email
+        TEXT password
+        TEXT avatarUrl
+        TEXT lang
+        DATETIME created_at
+        DATETIME lastConnexion
+        BOOLEAN onlineStatus
+        TEXT theme
+        TEXT font
+    }
+
+    FRIENDS {
+        INTEGER user_id PK, FK
+        INTEGER friend_id PK, FK
+        TEXT status
+        INTEGER initiator_id FK
+    }
+
+    GAME_SESSIONS {
+        INTEGER id PK
+        TEXT code
+        DATETIME started_at
+        DATETIME ended_at
+        TEXT status
+        TEXT mode
+        TEXT topic
+        TEXT power_ups
+        INTEGER question_count
+        INTEGER max_players
+        INTEGER host_id FK
+        INTEGER is_solo
+        INTEGER current_question_order
+        DATETIME current_question_time
+    }
+
+    GAME_PLAYERS {
+        INTEGER game_session_id PK, FK
+        INTEGER user_id PK, FK
+        DATETIME joined_at
+        INTEGER answered_count
+        INTEGER correct_answers
+        INTEGER powerups_count
+        INTEGER score
+        DATETIME current_question_time
+        BOOLEAN is_winner
+        BOOLEAN is_active
+        DATETIME disconnected_at
+    }
+
+    GAME_POWERUPS {
+        INTEGER id PK
+        INTEGER game_session_id FK
+        INTEGER user_id FK
+        INTEGER question_order
+        TEXT powerup_type
+        BOOLEAN used
+        DATETIME used_at
+        DATETIME granted_at
+    }
+
+    GAME_SESSION_QUESTIONS {
+        INTEGER id PK
+        INTEGER game_session_id FK
+        INTEGER question_id FK
+        INTEGER question_order
+    }
+
+    GAME_ANSWERS {
+        INTEGER id PK
+        INTEGER game_session_id FK
+        INTEGER user_id FK
+        INTEGER question_id FK
+        TEXT answer_given
+        BOOLEAN is_correct
+        INTEGER time_taken
+        DATETIME answered_at
+    }
+
+    LANGUAGES {
+        TEXT code PK
+        TEXT name
+    }
+
+    CATEGORIES {
+        INTEGER id PK
+        TEXT slug
+    }
+
+    CATEGORY_TRANSLATIONS {
+        INTEGER category_id PK, FK
+        TEXT lang PK, FK
+        TEXT name
+    }
+
+    QUESTIONS {
+        INTEGER id PK
+        TEXT external_id
+        INTEGER category_id FK
+        TEXT type
+        TEXT difficulty
+        TEXT created_at
+        TEXT updated_at
+    }
+
+    QUESTION_TRANSLATIONS {
+        INTEGER question_id PK, FK
+        TEXT lang PK, FK
+        TEXT question_text
+    }
+
+    MCQ_QUESTIONS {
+        INTEGER question_id PK, FK
+        INTEGER correct_option_position
+    }
+
+    MCQ_OPTIONS {
+        INTEGER id PK
+        INTEGER question_id FK
+        INTEGER position
+    }
+
+    MCQ_OPTION_TRANSLATIONS {
+        INTEGER option_id PK, FK
+        TEXT lang PK, FK
+        TEXT label
+    }
+
+    TEXT_QUESTIONS {
+        INTEGER question_id PK, FK
+    }
+
+    TEXT_ANSWER_TRANSLATIONS {
+        INTEGER question_id PK, FK
+        TEXT lang PK, FK
+        TEXT answer
+        TEXT variants_json
+    }
+
+    USERS ||--o{ GAME_SESSIONS : hosts
+    USERS ||--o{ GAME_PLAYERS : participates
+    GAME_SESSIONS ||--o{ GAME_PLAYERS : contains
+
+    USERS ||--o{ GAME_POWERUPS : owns
+    GAME_SESSIONS ||--o{ GAME_POWERUPS : grants
+
+    GAME_SESSIONS ||--o{ GAME_SESSION_QUESTIONS : selects
+    QUESTIONS ||--o{ GAME_SESSION_QUESTIONS : appears_in
+
+    GAME_SESSIONS ||--o{ GAME_ANSWERS : stores
+    USERS ||--o{ GAME_ANSWERS : submits
+    QUESTIONS ||--o{ GAME_ANSWERS : concerns
+
+    USERS ||--o{ FRIENDS : user_side
+    USERS ||--o{ FRIENDS : friend_side
+    USERS ||--o{ FRIENDS : initiates
+
+    CATEGORIES ||--o{ QUESTIONS : groups
+    CATEGORIES ||--o{ CATEGORY_TRANSLATIONS : translated_by
+    LANGUAGES ||--o{ CATEGORY_TRANSLATIONS : uses
+
+    QUESTIONS ||--o{ QUESTION_TRANSLATIONS : translated_by
+    LANGUAGES ||--o{ QUESTION_TRANSLATIONS : uses
+
+    QUESTIONS ||--o| MCQ_QUESTIONS : mcq_extension
+    QUESTIONS ||--o| TEXT_QUESTIONS : text_extension
+
+    QUESTIONS ||--o{ MCQ_OPTIONS : has
+    MCQ_OPTIONS ||--o{ MCQ_OPTION_TRANSLATIONS : translated_by
+    LANGUAGES ||--o{ MCQ_OPTION_TRANSLATIONS : uses
+
+    QUESTIONS ||--o{ TEXT_ANSWER_TRANSLATIONS : accepts
+    LANGUAGES ||--o{ TEXT_ANSWER_TRANSLATIONS : uses
+
+
+```
 
 ---
 
