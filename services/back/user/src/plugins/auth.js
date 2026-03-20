@@ -26,19 +26,6 @@ module.exports = fp(async function authPlugin(fastify) {
 				return reply.code(401).send({ error: "User no longer exists" });
 			}
 
-			const data = await res.json();
-			if (data.username !== decoded.username)
-			{
-				reply.clearCookie("token", {
-					path: "/",
-					httpOnly: true,
-					secure: true,
-					sameSite: "lax"
-				});
-				return reply.code(401).send({ error: "Wrong cookie used" });
-
-			}
-
 			request.user = decoded;
 
 		} catch (e) {
