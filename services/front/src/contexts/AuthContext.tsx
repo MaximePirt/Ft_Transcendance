@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react'
+import { runtimeEnv } from '../runtime-env'
 import type { ReactNode } from 'react'
+
 import i18n from '../i18n'
 
 interface User {
@@ -21,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const supportedLanguages = ['en', 'fr', 'ar'] as const
 
 // @ts-ignore
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
 
 async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = false) {
 	try {

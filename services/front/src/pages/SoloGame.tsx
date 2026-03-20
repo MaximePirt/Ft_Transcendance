@@ -95,8 +95,11 @@ function SoloGamePage() {
           setUserAnswer(parsed.userAnswer ?? '')
           setSelectedOption(parsed.selectedOption ?? null)
           setScore(parsed.score ?? 0)
-          setShowAnswer(false)
-          setIsCorrect(false)
+          setShowAnswer(parsed.showAnswer ?? false)
+          setIsCorrect(parsed.isCorrect ?? false)
+          setRightAnswer(parsed.rightAnswer ?? undefined)
+          setHint(parsed.hint ?? null)
+          setRemovedOptions(parsed.removedOptions ?? [])
           setLoading(false)
           setPowerups(parsed.powerups ?? Array(MAX_SLOTS).fill(null))
           return
@@ -156,14 +159,13 @@ function SoloGamePage() {
       if (msg.type === "powerups_granted") {
         const userIdStr = localStorage.getItem("userId")
         const userId = userIdStr ? Number(userIdStr) : null
-        const newTypes: string[] = msg.payload.powerups
-          .filter((p: any) => p.user_id === userId)
-          .map((p: any) => p.powerup_type)
+        const newTypes = msg.payload.powerups.filter((p: any) => p.user_id === userId).map((p: any) => p.powerup_type)
+
 
         setPowerups(prev => {
           const updated = [...prev]
 
-          newTypes.forEach((type: string) => {
+          newTypes.forEach(type => {
             const emptyIndex = updated.findIndex(p => p === null)
             if (emptyIndex !== -1) {
               updated[emptyIndex] = type
@@ -201,16 +203,20 @@ function SoloGamePage() {
           }
           else {
             let answer: AnswerMCQ = msg.payload.correct_answer
-            setRightAnswer(answer.answer[0])
+            setRightAnswer(answer.answer)
           }
           setIsCorrect(true)
           setShowAnswer(true)
         }
       }
       else if (msg.type === "next_question") {
-        const question_count_str = await localStorage.getItem("questionCount");
-        if (!question_count_str) {
-          throw new Error('No question count found in localStorage')
+        let question_count_str;
+        try{
+          question_count_str = await localStorage.getItem("questionCount");
+        }
+        catch(err) {
+          console.log('Error accessing localStorage for question count:', err)
+          question_count_str = null
         }
         let question_count = Number(question_count_str) || 0;
         const isLastQuestion = currentQuestionIndex === question_count - 1
@@ -281,6 +287,10 @@ function SoloGamePage() {
       userAnswer,
       selectedOption,
       powerups,
+      showAnswer,
+      isCorrect,
+      rightAnswer,
+      hint,
       score,
     }
 
@@ -290,7 +300,7 @@ function SoloGamePage() {
     } catch (err) {
       console.warn('[SoloGame] failed to persist state', err)
     }
-  }, [question, currentQuestionIndex, userAnswer, selectedOption, powerups, loading, error, score])
+  }, [question, currentQuestionIndex, userAnswer, selectedOption, powerups, showAnswer, isCorrect, rightAnswer, hint, score])
 
   useEffect(() => {
   if (!routeState) return;
@@ -321,7 +331,7 @@ function SoloGamePage() {
     let id: number = question.id
 
     if (question.type == "mcq") {
-      ;(question.options ?? []).map((optionObj: Option, index: number) => {
+      question.options.map((optionObj: Option, index: number) => {
         let option = optionObj.label
 
         if (selectedOption === option)
@@ -348,7 +358,6 @@ function SoloGamePage() {
       });
       if (!response.ok) {
         const err = await response.json()
-        //console.error("API ERROR:", err)
         throw new Error(err.error || 'Failed to get the answer')
       }
 
@@ -360,7 +369,7 @@ function SoloGamePage() {
         setRightAnswer(answer.answer[0])
       } else {
         let answer: AnswerMCQ = data.correct_answers
-        setRightAnswer(answer.answer[0])
+        setRightAnswer(answer.answer)
       }
       setIsCorrect(Boolean(data.is_correct))
       setShowAnswer(true)
@@ -380,21 +389,35 @@ function SoloGamePage() {
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
     if (!sessionId)
       throw new Error('Invalid session ID')
-    const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
-      method: 'GET',
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      const err = await response.json()
-      console.error("API ERROR:", err)
-      throw new Error(err.error || 'Failed to get the next question')
+    try {
+      const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+      if (!response.ok) {
+        console.log("FHJEUHFUEHFUEHUFHEUFHUEU");
+        console.log("Failed to get next question:", response.status, response.statusText)
+        // throw new Error('Failed to get the next question');
+      }
+      console.log("Here is response : ", response)
+
     }
-    const question_count_str = await localStorage.getItem("questionCount");
-    if (!question_count_str) {
-      throw new Error('No question count found in localStorage')
+    catch (err) {
+      console.log("FHEIUHFEIUHUDHOWIIJOIMOMSOIWNOWNIDNWOD");
+      console.log("API ERROR:", err)
+      throw new Error('Failed to get the next question');
+    }
+
+    let question_count_str;
+    try{
+      question_count_str = await localStorage.getItem("questionCount");
+    }
+    catch(err)    {
+      console.log('Error accessing localStorage for question count:', err)
+      question_count_str = null
     }
     let question_count = Number(question_count_str) || 0;
-    const isLastQuestion = currentQuestionIndex === question_count - 1
+    const isLastQuestion = currentQuestionIndex >= question_count - 1
 
     if (isLastQuestion) {
       console.log("Quiz terminé, score final:", score)
@@ -527,10 +550,18 @@ function SoloGamePage() {
     )
   }
 
-  const question_count_str = localStorage.getItem("questionCount");
+
+  let question_count_str;
+  try{
+    question_count_str = localStorage.getItem("questionCount");
+  }
+  catch(err)
+  {
+    console.log('Error accessing localStorage for question count:', err)
+    question_count_str = null
+  }
   if (!question_count_str) {
     console.log('No question count found in localStorage')
-    throw new Error('No question count found in localStorage')
   }
   let question_count = Number(question_count_str) || 0;
 

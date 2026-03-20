@@ -2,8 +2,10 @@ import { useState } from "react"
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../contexts/AuthContext'
+import { runtimeEnv } from '../runtime-env'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+
+const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
 
 async function sendDeletionMail(id: number) {
     const res = await fetch(`${API_BASE}/user/delete-data/mail`, {
@@ -72,10 +74,11 @@ const DataDeleter = () => {
         })
 
         const me_user = await res.json();
-        logout();
-        navigate("/");
         await sendDeletionMail(me_user.id);
         await handleDeletion(me_user.id);
+        
+        logout();
+        navigate("/");
         setOpen(false);
     }
 

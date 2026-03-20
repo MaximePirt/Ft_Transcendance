@@ -30,11 +30,11 @@ services:
     container_name: front
     networks:
       - ft_transcendance
-    # Port 5173 exposed for consistency with internal config, but not needed publicly
-    # ports:
-    #   - "5173:5173"
-    environment:
-      - FRONT_URL=https://localhost/
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully
+    expose:
+      - 5173
     volumes:
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
@@ -49,8 +49,6 @@ services:
       - ft_transcendance
     ports:
       - "3001:3001"
-    environment:
-      - API_URL=https://localhost:3001
     volumes:
       - db:/db
       - vault-secrets:/secrets:ro
@@ -69,8 +67,6 @@ services:
     ports:
       - "3003:3003"
       - "1025:1025"
-    environment:
-      - API_URL=https://localhost:3003
     volumes:
     - db:/db
     - vault-secrets:/secrets:ro
@@ -90,8 +86,6 @@ services:
         - ft_transcendance
       ports:
         - "3002:3002"
-      environment:
-        - API_URL=https://localhost:3002
       volumes:
         - db:/db
         - vault-secrets:/secrets:ro
@@ -99,6 +93,8 @@ services:
       depends_on:
         sqlite_db:
           condition: service_completed_successfully 
+        vault_agent:
+          condition: service_healthy
       command: node src/app.js
     
 

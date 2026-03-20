@@ -1,6 +1,8 @@
+import { runtimeEnv } from '../runtime-env'
 import { useTranslation } from 'react-i18next'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
+
 
 async function sendExportMail(json: any, id: number) {
     const res = await fetch(`${API_BASE}/user/export-data/mail`, {

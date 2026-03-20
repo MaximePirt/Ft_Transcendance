@@ -110,11 +110,15 @@ function SoloGameSetup() {
       if (topic.includes('all')) {
         topic = [];
       }
-
+      let count = questionCount;
+      if (count < MIN_Q)
+        count = MIN_Q;
+      else if (count > MAX_Q)
+        count = MAX_Q;
       const payload = {
         mode: "random",
         topic,
-        question_count: questionCount,
+        question_count: count,
         is_solo: 1,
         power_ups: Array.from(selectedPowerUps),
       };
@@ -129,17 +133,14 @@ function SoloGameSetup() {
       });
 
       const data = await session.json();
-      // if (!session.ok) {
-      //   throw new Error("Session couldn't start");
-      // }
       console.log("stocking : Session ID:", data.sessionId);
 
       localStorage.setItem("sessionId", String(data.sessionId));
-      localStorage.setItem("questionCount", String(questionCount));
+      localStorage.setItem("questionCount", String(count));
       getUserId();
       navigate('/quiz/game', { state: {
         sessionId: data.sessionId,
-        questionCount,
+        questionCount: count,
         themes: Array.from(selectedThemes),
         powerups: Array.from(selectedPowerUps),
       }, });

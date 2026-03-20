@@ -6,10 +6,12 @@ import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
 import DataRequester from '../content/DataRequester'
 import DataDeleter from '../content/DataDeleter'
+import { runtimeEnv } from '../runtime-env'
+
 import '../App.css'
 
 // @ts-ignore
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
 
 async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = false) {
 	try {
