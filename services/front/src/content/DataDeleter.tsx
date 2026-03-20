@@ -47,39 +47,38 @@ const DataDeleter = () => {
 
     async function openModal() {
         setOpen(true);
-
-        const res = await fetch(`${API_BASE}/auth/me`, {
-            method: "GET",
-            credentials: "include",
-        })
-        const me_user = await res.json();
-
-        const isUserInGame = await fetch(`${API_BASE}/user/user-ingame/${me_user.id}`, {
-            method: "GET",
-            credentials: "include",
-        })
-        const json = await isUserInGame.json();
-        if (json.ingame)
-            setForbidden(true);
-        else
-            setForbidden(false);
+        setForbidden(false);
     }
 
-    async function requestDeletion() {
-        if (forbidden) return ;
+    async function requestDeletion() {     
+        try {   
+            const res = await fetch(`${API_BASE}/auth/me`, {
+                    method: "GET",
+                    credentials: "include",
+            })
+            const me_user = await res.json();
 
-        const res = await fetch(`${API_BASE}/auth/me`, {
+            const isUserInGame = await fetch(`${API_BASE}/user/user-ingame/${me_user.id}`, {
                 method: "GET",
                 credentials: "include",
-        })
+            })
+            const json = await isUserInGame.json();
+            const isInGame = json.ingame;
+            setForbidden(isInGame);
 
-        const me_user = await res.json();
-        await sendDeletionMail(me_user.id);
-        await handleDeletion(me_user.id);
-        
-        logout();
-        navigate("/");
-        setOpen(false);
+            if (!isInGame) {
+                setOpen(false);
+
+                await sendDeletionMail(me_user.id);
+                await handleDeletion(me_user.id);
+                
+                navigate("/");
+                logout();
+            }
+        } catch (error) {
+            navigate("/");
+            logout();
+        }
     }
 
     return (
