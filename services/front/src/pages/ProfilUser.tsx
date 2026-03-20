@@ -5,14 +5,24 @@ import { useAuth } from '../contexts/AuthContext'
 import ThemeSelector from '../content/ThemeSelector'
 import FontSelector from '../content/FontSelector'
 import DataRequester from '../content/DataRequester'
+import DataDeleter from '../content/DataDeleter'
+import { runtimeEnv } from '../runtime-env'
+
 import '../App.css'
 
 // @ts-ignore
-const API_BASE = import.meta.env.VITE_API_URL || 'https://localhost/api'
+const API_BASE = runtimeEnv.API_URL ?? 'https://localhost/api'
 
-async function applyTheme(themeName: string, signal?: AbortSignal) {
+async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = false) {
 	try {
 		const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
+		if (!res.ok) {
+			if (!isRetry && themeName !== 'default') {
+				return applyTheme('default', signal, true)
+			}
+			return
+		}
+
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -21,15 +31,26 @@ async function applyTheme(themeName: string, signal?: AbortSignal) {
 		})
 	} catch (err) {
 		if (err instanceof Error && err.name === 'AbortError') return
-		console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
-		if (themeName !== 'default') return applyTheme('default', signal)
+		if (!isRetry && themeName !== 'default') {
+			return applyTheme('default', signal, true)
+		}
+		if (!isRetry && themeName !== 'default') {
+			console.log(`Erreur lors du chargement du thème "${themeName}"`, err)
+		}
 		return
 	}
 }
 
-async function applyFont(fontName: string, signal?: AbortSignal) {
+async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false) {
 	try {
 		const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
+		if (!res.ok) {
+			if (!isRetry && fontName !== 'default') {
+				return applyFont('default', signal, true)
+			}
+			return
+		}
+
 		const themeToApply = await res.json()
 
 		const root = document.documentElement
@@ -38,8 +59,12 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
 		})
 	} catch (err) {
 		if (err instanceof Error && err.name === 'AbortError') return
-		console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
-		if (fontName !== 'default') return applyFont('default', signal)
+		if (!isRetry && fontName !== 'default') {
+			return applyFont('default', signal, true)
+		}
+		if (!isRetry && fontName !== 'default') {
+			console.log(`Erreur lors du chargement de la police "${fontName}"`, err)
+		}
 		return
 	}
 }
@@ -53,9 +78,9 @@ const languages = [
 
 //en attendant la data base
 const defaultUserProfile = {
-	username: 'PlayerOne',
-	email: 'player@quiz.sprint',
-	joinYear: 2024,
+	username: '',
+	email: '',
+	joinYear: new Date().getFullYear(),
 	favorites: ['cinema', 'music', 'computer_science'],
 }
 
@@ -72,6 +97,15 @@ type FriendRequest = {
 	type: 'received' | 'sent'
 }
 
+type FriendsWsMessage = {
+	type?: string
+	payload?: {
+		userId?: string | number
+		online?: boolean
+		reason?: string
+	}
+}
+
 type Sticker = {
 	id: string
 	symbol: string
@@ -80,9 +114,10 @@ type Sticker = {
 	y: number
 }
 
-type TitleOption = {
+type BadgeOption = {
 	id: string
 	text: string
+	requiredAchievementKey?: string
 }
 
 type RecentMatch = {
@@ -132,12 +167,6 @@ type AchievementPayload = {
 	all: Achievement[]
 }
 
-type LeaderboardPlayer = {
-	id: string
-	username: string
-	wins: number
-}
-
 const defaultGameStats: GameStats = {
 	totalMatches: 0,
 	wins: 0,
@@ -164,7 +193,6 @@ const defaultAchievements: AchievementPayload = {
 }
 
 
-// truc a la con avec les stickers a tout moment ca degage
 const stickerPalette = [
 	{ id: 'spark', symbol: '✨' },
 	{ id: 'zap', symbol: '⚡' },
@@ -178,37 +206,44 @@ const stickerPalette = [
 
 const bgPresets = ['#0f0f10', '#111827', '#1f2937', '#0b5fff', '#8b5cf6', '#10b981', '#eab308']
 
-const titleOptions: TitleOption[] = [
+const badgeOptions: BadgeOption[] = [
 	{ id: 'cinema', text: 'profile_title_cinema' },
 	{ id: 'quiz_master', text: 'profile_title_quiz_master' },
 	{ id: 'speedrunner', text: 'profile_title_speedrunner' },
 	{ id: 'pixel', text: 'profile_title_pixel' },
 	{ id: 'music', text: 'profile_title_music' },
+	{ id: 'first_match', text: 'achievement_first_match_title', requiredAchievementKey: 'first_match' },
+	{ id: 'winning_start', text: 'achievement_winning_start_title', requiredAchievementKey: 'winning_start' },
+	{ id: 'accuracy_pro', text: 'achievement_accuracy_pro_title', requiredAchievementKey: 'accuracy_pro' },
 ]
 
 const DEFAULT_AVATAR = '/avatar/Default.png'
 const DEFAULT_AVATAR_CHOICES = ['/avatar/Default.png', '/avatar/Default2.png', '/avatar/Default3.png']
 
 const MAX_STICKERS = 3
-const MAX_TITLES = 2
+const MAX_BADGES = 2
 
 function ProfilUser() {
 	const navigate = useNavigate()
-	const { username: routeUsername } = useParams()
+	const { username: routeUsername, userId: routeUserId } = useParams()
 	const { t, i18n } = useTranslation()
-	const { user, isAuthenticated, isAuthReady } = useAuth()
-	const isPublicView = Boolean(routeUsername) && routeUsername !== user?.username
+	const { user, isAuthenticated, isAuthReady, updateUser } = useAuth()
+	const hasProfileParam = Boolean(routeUsername || routeUserId)
+	const isPublicView = hasProfileParam && (!routeUsername || routeUsername !== user?.username)
 	const canEdit = !isPublicView
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
 	const avatarInputRef = useRef<HTMLInputElement | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
-	const [titles, setTitles] = useState<string[]>([titleOptions[0].id, titleOptions[1].id])
+	const [badges, setBadges] = useState<string[]>([])
 	const [description, setDescription] = useState('')
 	const [isSaving, setIsSaving] = useState(false)
 	const [saveError, setSaveError] = useState('')
 	const [saveSuccess, setSaveSuccess] = useState(false)
+	const [usernameInput, setUsernameInput] = useState('')
+	const [usernameError, setUsernameError] = useState('')
+	const [usernameSuccess, setUsernameSuccess] = useState('')
 	const [avatarUrl, setAvatarUrl] = useState('')
 	const [selectedAvatarFileName, setSelectedAvatarFileName] = useState('')
 	const [avatarUploading, setAvatarUploading] = useState(false)
@@ -225,13 +260,22 @@ function ProfilUser() {
 	const [achievementsLoading, setAchievementsLoading] = useState(false)
 	const [recentMatches, setRecentMatches] = useState<RecentMatch[]>([])
 	const [recentMatchesLoading, setRecentMatchesLoading] = useState(false)
-	const [leaderboard, setLeaderboard] = useState<LeaderboardPlayer[]>([])
-	const [leaderboardLoading, setLeaderboardLoading] = useState(false)
-	const [leaderboardError, setLeaderboardError] = useState(false)
+	const [profileNotFound, setProfileNotFound] = useState(false)
+	const [resolvedProfileUserId, setResolvedProfileUserId] = useState<number | null>(null)
+	const [profileResolutionDone, setProfileResolutionDone] = useState(false)
+
 	const totalQuestions = gameStats.answered
 	const correctAnswers = gameStats.correct
 	const accuracy = Number.isFinite(gameStats.accuracy) ? Math.round(gameStats.accuracy) : 0
 	const safeAccuracy = Math.max(0, Math.min(100, accuracy))
+	const achievementByKey = new Map(achievements.all.map((achievement) => [achievement.key, achievement]))
+	const isBadgeUnlocked = (badge: BadgeOption) => {
+		if (!badge.requiredAchievementKey) return true
+		return Boolean(achievementByKey.get(badge.requiredAchievementKey)?.unlocked)
+	}
+	const selectableBadgeSet = new Set(badgeOptions.filter((badge) => isBadgeUnlocked(badge)).map((badge) => badge.id))
+	const activeBadges = badges.filter((id) => selectableBadgeSet.has(id)).slice(0, MAX_BADGES)
+	const visibleBadges = activeBadges
 
 	const formatMatchDate = (dateValue?: string) => {
 		if (!dateValue) return '-'
@@ -255,6 +299,43 @@ function ProfilUser() {
 		if (normalized.includes('no auth cookie') || normalized.includes('unauthorized')) return t('save_error_not_authenticated')
 		return ''
 	}
+
+	const applyPresenceToSocialLists = (targetUserId: string, online: boolean) => {
+		const nextStatus: Friend['status'] = online ? 'online' : 'offline'
+		setFriends((current) => current.map((friend) => (
+			friend.id === targetUserId ? { ...friend, status: nextStatus } : friend
+		)))
+		setFriendRequests((current) => current.map((request) => (
+			request.id === targetUserId ? { ...request, status: nextStatus } : request
+		)))
+	}
+
+	const removeUserFromSocialLists = (targetUserId: string) => {
+		setFriends((current) => current.filter((friend) => friend.id !== targetUserId))
+		setFriendRequests((current) => current.filter((request) => request.id !== targetUserId))
+	}
+
+	const resolveUserId = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
+		const numericUserId = Number(userId)
+		if (Number.isInteger(numericUserId) && numericUserId > 0) return numericUserId
+
+		const normalizedUsername = String(username || '').trim()
+		if (!normalizedUsername) {
+			throw new Error('Missing user identifier')
+		}
+
+		const userIdResponse = await fetch(`${API_BASE}/user/userid/soft/${encodeURIComponent(normalizedUsername)}`, { signal })
+		if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
+		const { id } = await userIdResponse.json()
+		if (id === null || id === undefined) throw new Error('User not found')
+		const resolvedId = Number(id)
+		if (!Number.isInteger(resolvedId) || resolvedId <= 0) throw new Error('Invalid user id')
+		return resolvedId
+	}
+
+	const isUserNotFoundError = (error: unknown) => (
+		error instanceof Error && error.message.includes('User not found')
+	)
 
 	const loadFriends = async (username: string, signal?: AbortSignal) => {
 		const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
@@ -297,12 +378,10 @@ function ProfilUser() {
 		setFriendRequests([...normalizedReceived, ...normalizedSent])
 	}
 
-	const loadRecentMatches = async (username: string, signal?: AbortSignal) => {
+	const loadRecentMatches = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		setRecentMatchesLoading(true)
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for match history')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const historyResponse = await fetch(`${API_BASE}/user/${id}/matches?limit=3`, { signal })
 			if (!historyResponse.ok) throw new Error('Failed to load match history')
@@ -333,18 +412,17 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
-			console.warn('[Profile] failed to load recent matches', error)
+			if (isUserNotFoundError(error)) return
+			console.log('[Profile] failed to load recent matches', error)
 			setRecentMatches([])
 		} finally {
 			setRecentMatchesLoading(false)
 		}
 	}
 
-	const loadGameStats = async (username: string, signal?: AbortSignal) => {
+	const loadGameStats = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for game stats')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const statsResponse = await fetch(`${API_BASE}/user/${id}/stats`, { signal })
 			if (!statsResponse.ok) throw new Error('Failed to load game stats')
@@ -362,17 +440,16 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
-			console.warn('[Profile] failed to load game stats', error)
+			if (isUserNotFoundError(error)) return
+			console.log('[Profile] failed to load game stats', error)
 			setGameStats(defaultGameStats)
 		}
 	}
 
-	const loadAchievements = async (username: string, signal?: AbortSignal) => {
+	const loadAchievements = async ({ username, userId }: { username?: string; userId?: string | number }, signal?: AbortSignal) => {
 		setAchievementsLoading(true)
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(username)}`, { signal })
-			if (!userIdResponse.ok) throw new Error('Failed to resolve user id for achievements')
-			const { id } = await userIdResponse.json()
+			const id = await resolveUserId({ username, userId }, signal)
 
 			const response = await fetch(`${API_BASE}/user/${id}/achievements`, { signal })
 			if (!response.ok) throw new Error('Failed to load achievements')
@@ -395,39 +472,10 @@ function ProfilUser() {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
-			console.warn('[Profile] failed to load achievements', error)
-			setAchievements(defaultAchievements)
+			if (isUserNotFoundError(error)) return
+			console.log('[Profile] failed to load achievements', error)
 		} finally {
 			setAchievementsLoading(false)
-		}
-	}
-
-	const loadLeaderboard = async (signal?: AbortSignal) => {
-		setLeaderboardLoading(true)
-		setLeaderboardError(false)
-		try {
-			const response = await fetch(`${API_BASE}/user/leaderboard/wins?limit=5`, { signal })
-			if (!response.ok) throw new Error('Failed to load leaderboard')
-			const data = await response.json()
-			const list = Array.isArray(data?.result) ? data.result : []
-			const normalized: LeaderboardPlayer[] = list.slice(0, 5).map((player: {
-				id: string | number
-				username?: string
-				wins?: number
-			}) => ({
-				id: String(player.id),
-				username: String(player.username || '-'),
-				wins: Number(player.wins || 0),
-			}))
-			setLeaderboard(normalized)
-		} catch (error) {
-			if (error instanceof Error && error.name === 'AbortError') return
-			if (error instanceof TypeError) return
-			console.warn('[Profile] failed to load leaderboard', error)
-			setLeaderboard([])
-			setLeaderboardError(true)
-		} finally {
-			setLeaderboardLoading(false)
 		}
 	}
 
@@ -464,32 +512,37 @@ function ProfilUser() {
 				joinYear: new Date().getFullYear(),
 				favorites: ['cinema', 'music', 'computer_science'],
 			})
+			setUsernameInput(user.username)
 		}
 	}, [user, isPublicView])
 
-	// Supprimé: la logique d'application automatique du thème/font d'un autre utilisateur
-	// causait des conflits et bugs de timing
 
 	useEffect(() => {
-		if (!profileUsername) return
+		if (!routeUserId && !profileUsername) return
 		const abortController = new AbortController()
 		let isActive = true
+		setProfileNotFound(false)
+		setResolvedProfileUserId(null)
+		setProfileResolutionDone(false)
 
 		// Charger les données depuis le serveur en priorité
 		const loadProfileCard = async () => {
 			try {
-				const userIdResponse = await fetch(`${API_BASE}/user/userid/${profileUsername}`, {
-					signal: abortController.signal,
-				})
-				if (!userIdResponse.ok) throw new Error('Failed to resolve user id')
-				const { id } = await userIdResponse.json()
+				const id = await resolveUserId({ username: profileUsername, userId: routeUserId }, abortController.signal)
 
-				const response = await fetch(`${API_BASE}/user/users/${id}`, {
+				const response = await fetch(`${API_BASE}/user/users/soft/${id}`, {
 					signal: abortController.signal,
 				})
 				if (response.ok) {
 					if (!isActive) return
-					const userData = await response.json()
+					const payload = await response.json()
+					const userData = payload?.user || null
+					if (!userData) {
+						throw new Error('User not found')
+					}
+					setProfileNotFound(false)
+					setResolvedProfileUserId(id)
+					setProfileResolutionDone(true)
 					setUserProfile({
 						username: userData.username || profileUsername,
 						email: userData.email || '',
@@ -499,8 +552,17 @@ function ProfilUser() {
 					setAvatarUrl(normalizeAvatarUrl(userData.avatarUrl))
 					setBgColor(userData.profileCardBgColor || '#0f0f10')
 					setStickers([])
-					setTitles([titleOptions[0].id, titleOptions[1].id])
+					setBadges([])
 					setDescription(String(userData.profileCardDescription || '').slice(0, 40))
+
+					if (canEdit && typeof userData.lang === 'string' && userData.lang) {
+						const normalizedLang = userData.lang.split('-')[0]
+						if (normalizedLang && normalizedLang !== i18n.language.split('-')[0]) {
+							await i18n.changeLanguage(normalizedLang)
+							document.documentElement.dir = i18n.dir(normalizedLang)
+							document.documentElement.lang = normalizedLang
+						}
+					}
 
 					// Charger les données de personnalisation depuis le serveur
 					if (userData.profileCardStickers) {
@@ -510,7 +572,7 @@ function ProfilUser() {
 								setStickers(parsed)
 							}
 						} catch (e) {
-							console.warn('Failed to parse stickers', e)
+							console.log('Failed to parse stickers', e)
 						}
 					}
 
@@ -518,10 +580,10 @@ function ProfilUser() {
 						try {
 							const parsed = JSON.parse(userData.profileCardTitles)
 							if (Array.isArray(parsed) && parsed.length) {
-								setTitles(parsed.slice(0, MAX_TITLES))
+								setBadges(parsed.slice(0, MAX_BADGES))
 							}
 						} catch (e) {
-							console.warn('Failed to parse titles', e)
+							console.log('Failed to parse badges', e)
 						}
 					}
 
@@ -530,25 +592,32 @@ function ProfilUser() {
 						if (userData.font) localStorage.setItem('font', userData.font)
 					}
 
-					// Note: On n'applique plus le thème/font d'un utilisateur visité pour éviter les conflits
-
 					return
 				}
 			} catch (e) {
 				if (e instanceof DOMException && e.name === 'AbortError') return
 				if (e instanceof TypeError) return
-				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
+				if (isUserNotFoundError(e)) {
+					setProfileNotFound(true)
+					setResolvedProfileUserId(null)
+					setProfileResolutionDone(true)
+					navigate('/', { replace: true })
+					return
+				}
+				setProfileResolutionDone(true)
+				console.log('[ProfileCard] failed to load from server, trying localStorage', e)
 				try {
 					const stored = localStorage.getItem('profileCard')
 					if (stored && canEdit) {
 						const data = JSON.parse(stored)
 						if (data.stickers) setStickers(data.stickers)
-						if (data.titles) setTitles(data.titles)
+						if (data.badges) setBadges(data.badges)
+						if (data.titles) setBadges(data.titles)
 						if (data.bgColor) setBgColor(data.bgColor)
 						if (data.description) setDescription(data.description)
 					}
 				} catch (e) {
-					console.warn('[ProfileCard] failed to load from localStorage', e)
+					console.log('[ProfileCard] failed to load from localStorage', e)
 				}
 			}
 		}
@@ -559,7 +628,7 @@ function ProfilUser() {
 			isActive = false
 			abortController.abort()
 		}
-	}, [profileUsername, canEdit, isPublicView])
+	}, [profileUsername, routeUserId, canEdit, isPublicView, navigate])
 
 	useEffect(() => {
 		if (!user || !canEdit) return
@@ -570,17 +639,11 @@ function ProfilUser() {
 			} catch (e) {
 				if (e instanceof Error && e.name === 'AbortError') return
 				if (e instanceof TypeError) return
-				console.warn('[Profile] failed to load social data', e)
+				console.log('[Profile] failed to load social data', e)
 			}
 		}
 
 		void refreshFriends()
-
-		const refreshInterval = window.setInterval(() => {
-			if (document.visibilityState === 'visible') {
-				void refreshFriends()
-			}
-		}, 10000)
 
 		const onVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
@@ -592,30 +655,93 @@ function ProfilUser() {
 
 		return () => {
 			abortController.abort()
-			window.clearInterval(refreshInterval)
 			document.removeEventListener('visibilitychange', onVisibilityChange)
 		}
 	}, [user, canEdit])
 
 	useEffect(() => {
-		if (!profileUsername) {
+		if (!user || !canEdit || !isAuthReady || !isAuthenticated) return
+
+		const onFriendsWsMessage = async (event: Event) => {
+			try {
+				const customEvent = event as CustomEvent<FriendsWsMessage>
+				const msg = customEvent.detail
+				if (!msg) return
+
+				if (msg.type === 'presence_updated') {
+					const targetUserId = String(msg.payload?.userId || '')
+					if (targetUserId) {
+						applyPresenceToSocialLists(targetUserId, Boolean(msg.payload?.online))
+					}
+					return
+				}
+
+				if (msg.type === 'friend_updated' && msg.payload?.reason === 'account_deleted') {
+					const removedUserId = String(msg.payload?.userId || '')
+					if (removedUserId) {
+						removeUserFromSocialLists(removedUserId)
+					}
+					return
+				}
+
+				if (msg.type === 'friend_updated' || msg.type === 'friend_request_received') {
+					await Promise.all([loadFriends(user.username), loadFriendRequests()])
+				}
+			} catch (error) {
+				console.log('[Profile] Friends WebSocket message error', error)
+			}
+		}
+
+		window.addEventListener('friends-ws-message', onFriendsWsMessage as EventListener)
+
+		return () => {
+			window.removeEventListener('friends-ws-message', onFriendsWsMessage as EventListener)
+		}
+	}, [user, canEdit, isAuthReady, isAuthenticated])
+
+	useEffect(() => {
+		if (profileNotFound) {
 			setRecentMatches([])
 			setGameStats(defaultGameStats)
 			setAchievements(defaultAchievements)
-			setLeaderboard([])
-			setLeaderboardError(false)
+			return
+		}
+
+		if (hasProfileParam) {
+			if (!profileResolutionDone) return
+			if (!resolvedProfileUserId) {
+				setRecentMatches([])
+				setGameStats(defaultGameStats)
+				setAchievements(defaultAchievements)
+				return
+			}
+		}
+
+		if (!routeUserId && !profileUsername) {
+			setRecentMatches([])
+			setGameStats(defaultGameStats)
+			if (isAuthenticated) {
+				setAchievements(defaultAchievements)
+			}
 			return
 		}
 		const abortController = new AbortController()
-		void loadRecentMatches(profileUsername, abortController.signal)
-		void loadGameStats(profileUsername, abortController.signal)
-		void loadAchievements(profileUsername, abortController.signal)
-		void loadLeaderboard(abortController.signal)
+		const resolvedUserIdForTarget = resolvedProfileUserId ?? undefined
+		const profileTarget = hasProfileParam
+			? { userId: resolvedUserIdForTarget }
+			: { username: profileUsername, userId: routeUserId }
+		void loadRecentMatches(profileTarget, abortController.signal)
+		void loadGameStats(profileTarget, abortController.signal)
+		void loadAchievements(profileTarget, abortController.signal)
 		return () => abortController.abort()
-	}, [profileUsername])
+	}, [profileUsername, routeUserId, hasProfileParam, resolvedProfileUserId, profileResolutionDone, profileNotFound, isAuthenticated])
 
 	useEffect(() => {
-		document.body.dir = i18n.dir()
+		setBadges((prev) => prev.filter((id) => selectableBadgeSet.has(id)).slice(0, MAX_BADGES))
+	}, [achievements.all])
+
+	useEffect(() => {
+		document.documentElement.dir = i18n.dir()
 	}, [i18n, i18n.language])
 
 	// Auto-save désactivé (sauvegarde manuelle uniquement)
@@ -625,9 +751,44 @@ function ProfilUser() {
 		setIsSaving(true)
 		setSaveError('')
 		setSaveSuccess(false)
+		setUsernameError('')
+		setUsernameSuccess('')
 		try {
-			const res = await saveProfileToServer()
-			if (!res.ok) throw new Error(res.error || t('save_error_generic'))
+			const nextUsername = usernameInput.trim()
+			const usernameRegex = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u
+			if (!usernameRegex.test(nextUsername)) {
+				setUsernameError(t('signup_error_username_format'))
+				return
+			}
+
+			const userResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(user.username)}`)
+			if (!userResponse.ok) {
+				const text = await userResponse.text()
+				throw new Error(t('save_error_user_id', { status: userResponse.status, detail: text || '-' }))
+			}
+			const { id } = await userResponse.json()
+
+			const response = await saveProfileToServer(id, nextUsername)
+			if (!response.ok) {
+				const payload = await response.json().catch(() => null)
+				const detail = payload?.error || payload?.message || '-'
+				if (response.status === 409) {
+					const conflictMessage = String(detail)
+					if (conflictMessage.toLowerCase().includes('username')) {
+						setUsernameError(conflictMessage)
+						return
+					}
+					throw new Error(conflictMessage)
+				}
+				throw new Error(t('save_error_api', { status: response.status, detail }))
+			}
+
+			if (nextUsername !== user.username) {
+				updateUser({ username: nextUsername })
+				setUserProfile((prev) => ({ ...prev, username: nextUsername }))
+				setUsernameSuccess(t('save_success'))
+			}
+
 			setSaveSuccess(true)
 		} catch (e) {
 			setSaveError(e instanceof Error ? e.message : t('save_error_generic'))
@@ -649,7 +810,7 @@ function ProfilUser() {
 			setSelectedAvatarFileName('')
 			return
 		}
-		if (!['image/png', 'image/jpeg'].includes(file.type)) {
+		if (!['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
 			setAvatarError(t('profile_avatar_error_type'))
 			e.target.value = ''
 			setSelectedAvatarFileName('')
@@ -667,6 +828,7 @@ function ProfilUser() {
 			formData.append('file', file)
 			const uploadResponse = await fetch(`${API_BASE}/user/${id}/avatar`, {
 				method: 'PATCH',
+				credentials: 'include',
 				body: formData,
 			})
 			if (!uploadResponse.ok) {
@@ -704,6 +866,7 @@ function ProfilUser() {
 			const { id } = await userResponse.json()
 			const updateResponse = await fetch(`${API_BASE}/user/${id}`, {
 				method: 'PATCH',
+				credentials: 'include',
 				headers: {
 					'Content-Type': 'application/json',
 				},
@@ -724,44 +887,26 @@ function ProfilUser() {
 		}
 	}
 
-	const saveProfileToServer = async (): Promise<{ ok: boolean; error?: string }> => {
-		if (!user) return { ok: false, error: t('save_error_not_authenticated') }
+	const saveProfileToServer = async (userId: number | string, usernameToSave: string): Promise<Response> => {
 		const langToSave = i18n.language
-		const userResponse = await fetch(`${API_BASE}/user/userid/${user.username}`)
-		if (!userResponse.ok) {
-			const text = await userResponse.text()
-			return {
-				ok: false,
-				error: t('save_error_user_id', { status: userResponse.status, detail: text || '-' }),
-			}
-		}
-		const { id } = await userResponse.json()
 
-		const response = await fetch(`${API_BASE}/user/${id}`, {
+		return fetch(`${API_BASE}/user/${userId}`, {
 			method: 'PATCH',
+			credentials: 'include',
 			headers: {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
+				username: usernameToSave,
 				profileCardBgColor: bgColor,
 				profileCardStickers: JSON.stringify(stickers),
-				profileCardTitles: JSON.stringify(titles),
+				profileCardTitles: JSON.stringify(badges),
 				profileCardDescription: description,
-				preferredLanguage: langToSave,
+				lang: langToSave,
 				theme: localStorage.getItem('theme') || 'default',
 				font: localStorage.getItem('font') || 'default',
 			})
 		})
-
-		if (!response.ok) {
-			const text = await response.text()
-			return {
-				ok: false,
-				error: t('save_error_api', { status: response.status, detail: text || '-' }),
-			}
-		}
-
-		return { ok: true }
 	}
 
 	type StickerPayload = { symbol: string; url?: string }
@@ -788,9 +933,7 @@ function ProfilUser() {
 		try {
 			const raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain')
 			if (raw) payload = JSON.parse(raw)
-		} catch (err) {
-			console.warn('[ProfileCard] drop parse failed', err)
-		}
+		} catch (err) {		}
 		if (!payload || !payload.symbol || !dropZoneRef.current) return
 		const rect = dropZoneRef.current.getBoundingClientRect()
 		const x = Math.min(Math.max(((e.clientX - rect.left) / rect.width) * 100, 0), 100)
@@ -802,7 +945,7 @@ function ProfilUser() {
 		if (!canEdit) return
 		setStickers([])
 		setBgColor('#0f0f10')
-		setTitles([titleOptions[0].id, titleOptions[1].id])
+		setBadges([])
 		setDescription('')
 		localStorage.setItem('theme', 'default')
 		localStorage.setItem('font', 'default')
@@ -811,12 +954,14 @@ function ProfilUser() {
 		window.dispatchEvent(new CustomEvent('theme-font-reset'))
 	}
 
-	const toggleTitle = (id: string) => {
+	const toggleBadge = (id: string) => {
 		if (!canEdit) return
-		setTitles((prev) => {
-			if (prev.includes(id)) return prev.filter((t) => t !== id)
-			if (prev.length >= MAX_TITLES) return prev
-			return [...prev, id]
+		if (!selectableBadgeSet.has(id)) return
+		setBadges((prev) => {
+			const sanitized = prev.filter((badgeId) => selectableBadgeSet.has(badgeId)).slice(0, MAX_BADGES)
+			if (sanitized.includes(id)) return sanitized.filter((badgeId) => badgeId !== id)
+			if (sanitized.length >= MAX_BADGES) return sanitized
+			return [...sanitized, id]
 		})
 	}
 
@@ -891,14 +1036,19 @@ function ProfilUser() {
 		if (!canEdit || !user) return
 		const friendUsername = friendSearchInput.trim()
 		if (!friendUsername) return
+		const usernameRegex = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u;
 		setFriendActionError('')
 		setFriendActionSuccess('')
+		if (!usernameRegex.test(friendUsername)) {
+			setFriendActionError(t('signup_error_username_format'))
+			return
+		}
 		if (friendUsername === user.username) {
 			setFriendActionError(t('save_error_generic'))
 			return
 		}
 		try {
-			const userIdResponse = await fetch(`${API_BASE}/user/userid/${encodeURIComponent(friendUsername)}`)
+			const userIdResponse = await fetch(`${API_BASE}/user/userid/soft/${encodeURIComponent(friendUsername)}`)
 			if (!userIdResponse.ok) {
 				let backendMessage = ''
 				const payload = await userIdResponse.json().catch(() => null)
@@ -909,6 +1059,10 @@ function ProfilUser() {
 				return
 			}
 			const { id: friendId } = await userIdResponse.json()
+			if (!friendId) {
+				setFriendActionError(t('profile_friend_user_not_found'))
+				return
+			}
 			const response = await fetch(`${API_BASE}/user/${friendId}/friends`, {
 				method: 'POST',
 				credentials: 'include',
@@ -935,15 +1089,15 @@ function ProfilUser() {
 	const changeLanguage = async (lang: string) => {
 		try {
 			await i18n.changeLanguage(lang)
-			document.body.dir = i18n.dir(lang)
+			document.documentElement.dir = i18n.dir(lang)
 			document.documentElement.lang = lang
 		} catch (e) {
-			console.warn('[Profile] failed to change language', e)
+			console.log('[Profile] failed to change language', e)
 		}
 	}
 
-	const openUserProfile = (username: string) => {
-		navigate(`/profile/${encodeURIComponent(username)}`)
+	const openUserProfile = (userId: string) => {
+		navigate(`/profile/id/${encodeURIComponent(userId)}`)
 	}
 
 	return (
@@ -983,8 +1137,8 @@ function ProfilUser() {
 							<h2 className="profile-card-name">{userProfile.username}</h2>
 							{description && <p className="profile-card-tagline">{description}</p>}
 							<div className="profile-card-meta">
-								{titles.slice(0, MAX_TITLES).map((id) => {
-									const found = titleOptions.find((opt) => opt.id === id)
+								{visibleBadges.map((id) => {
+									const found = badgeOptions.find((opt) => opt.id === id)
 									if (!found) return null
 									return <span key={id}>{t(found.text)}</span>
 								})}
@@ -1007,7 +1161,7 @@ function ProfilUser() {
 							<p className="control-label">{t('profile_language_label')}</p>
 							<div className="chip-row">
 								{languages.map((lng) => {
-									const active = i18n.language === lng.code
+									const active = i18n.language.split('-')[0] === lng.code
 									return (
 										<button
 											key={lng.code}
@@ -1015,7 +1169,7 @@ function ProfilUser() {
 											onClick={() => changeLanguage(lng.code)}
 											className={`chip ${active ? 'chip-active' : ''}`}
 										>
-											{lng.lang}
+												{lng.lang}
 										</button>
 									)
 								})}
@@ -1056,27 +1210,6 @@ function ProfilUser() {
 									<p className="stat-value">{gameStats.wins}</p>
 								</div>
 							</div>
-						</div>
-
-						<div className="control-group">
-							<p className="control-label">{t('profile_leaderboard_title')}</p>
-							{leaderboardLoading ? (
-								<p className="pref-desc">{t('profile_leaderboard_loading')}</p>
-							) : leaderboardError ? (
-								<p className="pref-desc">{t('profile_leaderboard_unavailable')}</p>
-							) : leaderboard.length === 0 ? (
-								<p className="pref-desc">{t('profile_leaderboard_empty')}</p>
-							) : (
-								leaderboard.map((player, index) => (
-									<p key={player.id} className="pref-desc">
-										{t('profile_leaderboard_row', {
-											rank: index + 1,
-											username: player.username,
-											wins: player.wins,
-										})}
-									</p>
-								))
-							)}
 						</div>
 
 						<div className="control-group">
@@ -1149,6 +1282,24 @@ function ProfilUser() {
 						<section className="profile-card-controls">
 							<div className="panel-title">{t('profile_customize')}</div>
 							<div className="control-group">
+								<label className="control-label" htmlFor="profile-username-edit">
+									{t('username')}
+								</label>
+								<div className="control-row">
+									<input
+										id="profile-username-edit"
+										type="text"
+										value={usernameInput}
+										onChange={(e) => setUsernameInput(e.target.value)}
+										placeholder={t('username_placeholder')}
+										className="profile-desc-input"
+										disabled={isSaving}
+									/>
+								</div>
+								{usernameError && <p className="pref-desc" style={{ color: '#b91c1c' }}>{usernameError}</p>}
+								{usernameSuccess && <p className="pref-desc" style={{ color: '#059669' }}>{usernameSuccess}</p>}
+							</div>
+							<div className="control-group">
 								<label className="control-label" htmlFor="avatar-upload">
 									{t('profile_avatar_label')}
 								</label>
@@ -1157,7 +1308,7 @@ function ProfilUser() {
 										ref={avatarInputRef}
 										id="avatar-upload"
 										type="file"
-										accept="image/png,image/jpeg"
+										accept="image/png,image/jpeg,image/gif"
 										onChange={handleAvatarChange}
 										disabled={avatarUploading}
 										style={{ display: 'none' }}
@@ -1276,20 +1427,27 @@ function ProfilUser() {
 							</div>
 
 							<div className="control-group">
-								<p className="control-label">{t('profile_titles_label', { max: MAX_TITLES })}</p>
+								<p className="control-label">{t('profile_badges_label', { max: MAX_BADGES })}</p>
 								<div className="chip-row">
-									{titleOptions.map((opt) => {
-										const active = titles.includes(opt.id)
-										const blocked = !active && titles.length >= MAX_TITLES
+									{badgeOptions.map((opt) => {
+										const active = badges.includes(opt.id)
+										const locked = !isBadgeUnlocked(opt)
+										const blocked = !active && activeBadges.length >= MAX_BADGES
+										const achievement = opt.requiredAchievementKey ? achievementByKey.get(opt.requiredAchievementKey) : null
+										const questText = opt.requiredAchievementKey
+											? t(`achievement_${opt.requiredAchievementKey}_desc`, { target: achievement?.target || 0 })
+											: ''
 										return (
 											<button
 												key={opt.id}
 												type="button"
-												onClick={() => toggleTitle(opt.id)}
-												disabled={blocked}
+												onClick={() => toggleBadge(opt.id)}
+												disabled={locked || blocked}
+												title={locked ? t('profile_badge_unlock_tooltip', { quest: questText }) : undefined}
 												className={`chip ${active ? 'chip-active' : ''}`}
+												style={locked ? { opacity: 0.45, filter: 'grayscale(0.8)', cursor: 'not-allowed' } : undefined}
 											>
-												{t(opt.text)}
+												{locked ? `🔒 ${t(opt.text)}` : t(opt.text)}
 											</button>
 										)
 									})}
@@ -1334,6 +1492,7 @@ function ProfilUser() {
 										id="friend-search"
 										type="text"
 										value={friendSearchInput}
+										maxLength={16}
 										onChange={(e) => setFriendSearchInput(e.target.value)}
 										placeholder={t('profile_username_placeholder')}
 										className="profile-desc-input"
@@ -1368,9 +1527,9 @@ function ProfilUser() {
 														<div>
 															<span
 																className="friend-name"
-																onClick={() => openUserProfile(request.username)}
+																onClick={() => openUserProfile(request.id)}
 																onKeyDown={(e) => {
-																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.id)
 																}}
 																role="button"
 																tabIndex={0}
@@ -1423,9 +1582,9 @@ function ProfilUser() {
 														<div>
 															<span
 																className="friend-name"
-																onClick={() => openUserProfile(request.username)}
+																onClick={() => openUserProfile(request.id)}
 																onKeyDown={(e) => {
-																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.username)
+																	if (e.key === 'Enter' || e.key === ' ') openUserProfile(request.id)
 																}}
 																role="button"
 																tabIndex={0}
@@ -1456,9 +1615,9 @@ function ProfilUser() {
 													<div>
 														<span
 															className="friend-name"
-															onClick={() => openUserProfile(friend.username)}
+															onClick={() => openUserProfile(friend.id)}
 															onKeyDown={(e) => {
-																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.username)
+																if (e.key === 'Enter' || e.key === ' ') openUserProfile(friend.id)
 															}}
 															role="button"
 															tabIndex={0}
@@ -1488,9 +1647,12 @@ function ProfilUser() {
 						</section>
 					)}
 				</div>
-				<label>
-				</label>
-				<DataRequester />
+				{canEdit && (
+					<div className="profile-data-actions">
+						<DataRequester />
+						<DataDeleter />
+					</div>
+				)}
 			</div>
 		</main>
 	)

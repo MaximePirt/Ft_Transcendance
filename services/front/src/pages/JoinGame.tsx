@@ -14,6 +14,22 @@ function JoinGame() {
   const { user, isAuthenticated, isAuthReady } = useAuth()
   
 
+  const STORAGE_KEY = 'soloGameState:v1'
+
+  async function getUserId() {
+    localStorage.removeItem("userId");
+    const response = await fetch(`https://localhost/api/user/me_id`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      console.error("Failed to fetch user ID")
+      return
+    }
+    const currentUserId = await response.json();
+    localStorage.setItem("userId", String(currentUserId.id));
+  }
+
   const handleJoin = async () => {
     if (roomCode.trim().length !== 6) {
       setError(t('code_error'))
@@ -35,23 +51,31 @@ function JoinGame() {
         throw new Error('Game session not found')
       }
       const checkCodeJson = await checkcode.json()
+      
       const session = checkCodeJson.sessionData
       const res = await fetch('https://localhost/api/quiz/game-sessions/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ code: roomCode.trim() })
       })
       .then(res => {
         if (res.ok) {
+          getUserId();
+          localStorage.removeItem("questionCount");
+          localStorage.removeItem("sessionId");
+          localStorage.removeItem(STORAGE_KEY);
           localStorage.setItem("sessionId", String(session.id));
           localStorage.setItem("sessionCode", String(roomCode));
           navigate(`/quiz/multi`)
         } else {
+          console.log("Failed to join game session")
           setError(t('join_error'))
         }
       })
     }
     catch (err) {
+      console.log("Error joining game session:", err)
       setError(t('join_error'))
       return
     }
@@ -82,7 +106,7 @@ function JoinGame() {
     catch(err)
     {
       console.error('Error in MultiPlayerCodeRoom:', err)
-      setError(t("An error occurred while setting up the room. Please try again Later"))
+      setError(t('room_setup_error'))
     }
     finally {
       setLoading(false)
@@ -93,12 +117,12 @@ function JoinGame() {
 if (loading) {
 	return (
 		<main className="page">
-		<div className="shell">
-			<p className="eyebrow">Quiz Sprint</p>
+    <div className="shell">
+      <p className="eyebrow">{t('app_name')}</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Chargement...</h1>
-				<p className="lede">Préparation de la room.</p>
+        <h1>{t('loading')}</h1>
+        <p className="lede">{t('room_preparing')}</p>
 			</div>
 			</div>
 		</div>
@@ -109,27 +133,13 @@ if (loading) {
 if (error) {
 	return (
 		<main className="page">
-		<div className="shell">
-			<p className="eyebrow">Quiz Sprint</p>
+    <div className="shell">
+      <p className="eyebrow">{t('app_name')}</p>
 			<div className="hero">
 			<div className="copy">
-				<h1>Erreur</h1>
+        <h1>{t('error_title')}</h1>
 				<p className="lede">{error}</p>
 				<div className="actions">
-					{isHost && (
-					<button 
-						className="btn primary" 
-						onClick={handleStartGame}
-						disabled={players.length < 2}
-						style={{
-						opacity: players.length < 2 ? 0.5 : 1,
-						cursor: players.length < 2 ? 'not-allowed' : 'pointer'
-						}}
-					>
-						{t("start_game")}
-						{players.length < 2 && ' (min. 2 joueurs)'}
-					</button>
-					)}
 					<button className="btn ghost" onClick={() => navigate('/quiz')}>
 					{t("leave_room")}
 					</button>
@@ -144,7 +154,7 @@ if (error) {
   return (
     <main className="page">
       <div className="shell">
-        <p className="eyebrow">Quiz Sprint - {t("join_room")}</p>
+        <p className="eyebrow">{t('app_name')} - {t("join_room")}</p>
         <div className="hero">
           <div className="copy">
             <h1>{t("join_title")}</h1>

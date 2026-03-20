@@ -1,8 +1,7 @@
-import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import '../App.css'
-import { log } from 'node:console'
 
 const exitbutton = [
   { id: 'musiques', symbol: '🚪', url: '/custom-assets/music-exit-icon.png' },
@@ -51,12 +50,22 @@ interface AnswerResult {
 		total_answered: number
 }
 
+interface GameState {
+  sessionId: number
+  questionCount: number
+  themes: string[]
+  powerups: string[] | null
+}
+
 const STORAGE_KEY = 'soloGameState:v1'
 const MAX_SLOTS = 2
 
 function SoloGamePage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
+  const routeState = location.state as GameState | null;
+
   const [question, setQuestion] = useState<Question>()
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -71,7 +80,15 @@ function SoloGamePage() {
   const [hint, setHint] = useState<string | null>(null)
   const [removedOptions, setRemovedOptions] = useState<removedOption[]>([])
   const [powerups, setPowerups] = useState<(string | null)[]>(Array(MAX_SLOTS).fill(null))
-  
+
+  const powerupLabel = (powerupId: string | null) => {
+    if (!powerupId) return t('powerup_slot')
+    if (powerupId === 'skip') return t('pu_skip')
+    if (powerupId === 'hint') return t('pu_hint')
+    if (powerupId === 'fifty') return t('pu_5050')
+    return powerupId
+  }
+
   useEffect(() => {
     const abortController = new AbortController()
     
@@ -86,13 +103,17 @@ function SoloGamePage() {
           setUserAnswer(parsed.userAnswer ?? '')
           setSelectedOption(parsed.selectedOption ?? null)
           setScore(parsed.score ?? 0)
-          setShowAnswer(false)
-          setIsCorrect(false)
+          setShowAnswer(parsed.showAnswer ?? false)
+          setIsCorrect(parsed.isCorrect ?? false)
+          setRightAnswer(parsed.rightAnswer ?? undefined)
+          setHint(parsed.hint ?? null)
+          setRemovedOptions(parsed.removedOptions ?? [])
           setLoading(false)
+          setPowerups(parsed.powerups ?? Array(MAX_SLOTS).fill(null))
           return
         }
       } catch (err) {
-        console.warn('[SoloGame] failed to restore saved state', err)
+        console.log('[SoloGame] failed to restore saved state', err)
       }
     }
 
@@ -101,10 +122,8 @@ function SoloGamePage() {
       try {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-        if (!sessionId) {
-          //console.log('Invalid session ID in localStorage:', sessionIdStr)
+        if (!sessionId)
           throw new Error('Invalid session ID')
-        }
         const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
           signal: abortController.signal,
         })
@@ -132,19 +151,24 @@ function SoloGamePage() {
     useEffect(() => {
     const sessionIdStr = localStorage.getItem("sessionId")
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null
-    if (!sessionId) return
-
-    const socket = new WebSocket(`ws://localhost:3002/ws/game-sessions/${sessionId}`)
+    if (!sessionId)
+      return
+    const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const socket = new WebSocket(
+      `${proto}//${window.location.host}/ws/quiz/game-sessions/${sessionId}`
+    );
     socket.onopen = () => {
       console.log("WebSocket connected")
     }
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       const msg = JSON.parse(event.data)
-      console.log(msg);
 
       if (msg.type === "powerups_granted") {
-        const newTypes = msg.payload.powerups.map((p: any) => p.powerup_type)
+        const userIdStr = localStorage.getItem("userId")
+        const userId = userIdStr ? Number(userIdStr) : null
+        const newTypes = msg.payload.powerups.filter((p: any) => p.user_id === userId).map((p: any) => p.powerup_type)
+
 
         setPowerups(prev => {
           const updated = [...prev]
@@ -179,13 +203,79 @@ function SoloGamePage() {
         }
         if (usedType === "fifty") {
           setRemovedOptions(msg.payload.removed_options);
-          console.log("his options :", msg.payload.removed_options);
-          
         }
         if (usedType === "skip") {
-          handleNextQuestion();
+          if (msg.payload.correct_answer.type === "text") {
+            let answer: AnswerText = msg.payload.correct_answer
+            setRightAnswer(answer.answer[0])
+          }
+          else {
+            let answer: AnswerMCQ = msg.payload.correct_answer
+            setRightAnswer(answer.answer)
+          }
+          setIsCorrect(true)
+          setShowAnswer(true)
         }
       }
+      else if (msg.type === "next_question") {
+        let question_count_str;
+        try{
+          question_count_str = await localStorage.getItem("questionCount");
+        }
+        catch(err) {
+          console.log('Error accessing localStorage for question count:', err)
+          question_count_str = null
+        }
+        let question_count = Number(question_count_str) || 0;
+        const isLastQuestion = currentQuestionIndex === question_count - 1
+
+        if (isLastQuestion) {
+          console.log("Quiz terminé, score final:", score)
+          localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem("questionCount")
+          navigate("/quiz/end", { state: { score, total: question_count, mode: "solo" } })
+          return
+        }
+
+        setCurrentQuestionIndex(prev => {
+          const next = prev + 1
+          return next
+        })
+        setUserAnswer('')
+        setSelectedOption(null)
+        setShowAnswer(false)
+        setIsCorrect(false)
+        setHint(null)
+        setRemovedOptions([])
+        try {
+            const sessionIdStr = await localStorage.getItem("sessionId");
+            const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+            if (!sessionId)
+              throw new Error('Invalid session ID')
+            const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
+            })
+            if (!response.ok) {
+              throw new Error('Failed to fetch question')
+            }
+
+            const { question } = await response.json()
+            const data: Question = question
+            setLoading(false)
+            setQuestion(data)
+          }
+          catch (err) {
+              if (err instanceof Error && err.name === 'AbortError') return
+              setError(err instanceof Error ? err.message : t('error_occurred'))
+              setLoading(false)
+          }
+        }
+        else if (msg.type === "session_completed" || msg.type === "session_ended") {
+
+          console.log("Quiz terminé, score final:", score)
+          localStorage.removeItem(STORAGE_KEY)
+          localStorage.removeItem("questionCount")
+          navigate("/quiz/end", { state: { score, total: msg.payload.question_count, mode: "solo" } })
+        }
     }
 
     socket.onerror = (err) => {
@@ -196,7 +286,6 @@ function SoloGamePage() {
     return () => socket.close()
   }, [])
 
-  //  UPDATE LE LOCALSTORAGE A CHAQUE CHANGEMENT SUR LA PAGE
   useEffect(() => {
     if (loading || error || !question) return
 
@@ -205,18 +294,47 @@ function SoloGamePage() {
       currentQuestionIndex,
       userAnswer,
       selectedOption,
+      powerups,
+      showAnswer,
+      isCorrect,
+      rightAnswer,
+      hint,
       score,
     }
 
     try {
+      localStorage.removeItem(STORAGE_KEY)
       localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
     } catch (err) {
-      console.warn('[SoloGame] failed to persist state', err)
+      console.log('[SoloGame] failed to persist state', err)
     }
-  }, [question, currentQuestionIndex, userAnswer, selectedOption, loading, error, score])
+  }, [question, currentQuestionIndex, userAnswer, selectedOption, powerups, showAnswer, isCorrect, rightAnswer, hint, score])
+
+  useEffect(() => {
+  if (!routeState) return;
+
+  const initialGameState = {
+    sessionId: routeState.sessionId,
+    questionCount: routeState.questionCount,
+    themes: routeState.themes,
+    powerups: routeState.powerups,
+    questions: null,
+    currentQuestionIndex: 0,
+    userAnswers: "",
+    selectedOptions: null,
+    scores: 0,
+    mode: "solo",
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(initialGameState));
+}, [routeState]);
+
+
 
   // REPONSE CHECK
   const handleValidateAnswer = async () => {
+    if (!question) return
+
     let playerAnswer: string | number = 0
     let id: number = question.id
 
@@ -234,11 +352,9 @@ function SoloGamePage() {
     try {
       const sessionIdStr = await localStorage.getItem("sessionId");
       const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-      //console.log("Session ID from localStorage:", sessionId);
-      if (!sessionId) {
-        //console.log('Invalid session ID in localStorage:', sessionIdStr)
+      console.log("Session ID from localStorage:", sessionIdStr);
+      if (!sessionId)
         throw new Error('Invalid session ID')
-      }
       const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/answer`, {
         method: 'POST',
         credentials: 'include',
@@ -250,7 +366,6 @@ function SoloGamePage() {
       });
       if (!response.ok) {
         const err = await response.json()
-        //console.error("API ERROR:", err)
         throw new Error(err.error || 'Failed to get the answer')
       }
 
@@ -264,13 +379,13 @@ function SoloGamePage() {
         let answer: AnswerMCQ = data.correct_answers
         setRightAnswer(answer.answer)
       }
-      setIsCorrect(data.is_correct)
+      setIsCorrect(Boolean(data.is_correct))
       setShowAnswer(true)
-      if (data.is_correct) {
+      if (Boolean(data.is_correct)) {
         setScore(data.current_score)
       }
     } catch (err) {
-      console.warn('[SoloGame] failed to get the answer', err)
+      console.log('[SoloGame] failed to get the answer', err)
     }
   }
 
@@ -280,32 +395,35 @@ function SoloGamePage() {
 
     const sessionIdStr = await localStorage.getItem("sessionId");
     const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-    //console.log("Session ID from localStorage:", sessionId);
-    if (!sessionId) {
-      //console.log('Invalid session ID in localStorage:', sessionIdStr)
+    if (!sessionId)
       throw new Error('Invalid session ID')
+    try {
+      const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
+        method: 'GET',
+        credentials: 'include',
+      })
+      if (!response.ok) {
+        console.log("Failed to get next question:", response.status, response.statusText)
+        return ;
+      }
+
     }
-    const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/next-question`, {
-      method: 'GET',
-      credentials: 'include',
-    })
-    if (!response.ok) {
-      const err = await response.json()
-      console.error("API ERROR:", err)
-      throw new Error(err.error || 'Failed to get the next question')
+    catch (err) {
+      throw new Error('Failed to get the next question');
     }
-    const question_count_str = await localStorage.getItem("questionCount");
-    if (!question_count_str) {
-      //console.log('No question count found in localStorage')
-      throw new Error('No question count found in localStorage')
+
+    let question_count_str;
+    try{
+      question_count_str = await localStorage.getItem("questionCount");
+    }
+    catch(err)    {
+      console.log('Error accessing localStorage for question count:', err)
+      question_count_str = null
     }
     let question_count = Number(question_count_str) || 0;
-    //console.log("Question count from localStorage:", question_count);
-    const isLastQuestion = currentQuestionIndex === question_count - 1
-    //console.log(`Current question index: ${currentQuestionIndex}, Question count: ${question_count}, Is last question: ${isLastQuestion}`)
+    const isLastQuestion = currentQuestionIndex >= question_count - 1
 
     if (isLastQuestion) {
-      console.log("Quiz terminé, score final:", score)
       localStorage.removeItem(STORAGE_KEY)
       localStorage.removeItem("questionCount")
       navigate("/quiz/end", { state: { score, total: question_count, mode: "solo" } })
@@ -322,11 +440,8 @@ function SoloGamePage() {
     try {
         const sessionIdStr = await localStorage.getItem("sessionId");
         const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
-        //console.log("Session ID from localStorage:", sessionId);
-        if (!sessionId) {
-          //console.log('Invalid session ID in localStorage:', sessionIdStr)
+        if (!sessionId)
           throw new Error('Invalid session ID')
-        }
         const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/current-question`, {
           signal: abortController.signal,
         })
@@ -351,15 +466,44 @@ function SoloGamePage() {
     }
   }
 
+  const leaveGame = async () => {
+    const abortController = new AbortController()
+
+    try {
+      const sessionIdStr = await localStorage.getItem("sessionId");
+      const sessionId = sessionIdStr ? Number(sessionIdStr) : null;
+      if (!sessionId)
+        throw new Error('Invalid session ID')
+      const response = await fetch(`https://localhost/api/quiz/game-sessions/${sessionId}/players/me`, {
+        method: 'DELETE',
+        credentials: 'include',
+        signal: abortController.signal,
+      })
+      if (!response.ok) {
+        throw new Error('Failed to fetch question')
+      }
+      setLoading(false)
+      localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem("questionCount")
+      navigate('/quiz')
+    } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        setError(err instanceof Error ? err.message : t('error_occurred'))
+        setLoading(false)
+      }
+    return () => abortController.abort()
+  }
+
+
   if (loading) {
     return (
       <main className="page">
         <div className="shell">
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="hero">
             <div className="copy">
-              <h1>Chargement...</h1>
-              <p className="lede">Les questions se chargent...</p>
+              <h1>{t('loading')}</h1>
+              <p className="lede">{t('solo_questions_loading')}</p>
             </div>
           </div>
         </div>
@@ -371,14 +515,14 @@ function SoloGamePage() {
     return (
       <main className="page">
         <div className="shell">
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="hero">
             <div className="copy">
-              <h1>Erreur</h1>
+              <h1>{t('error_title')}</h1>
               <p className="lede">{error}</p>
               <div className="actions">
                 <button className="btn ghost" onClick={() => navigate('/quiz')}>
-                  Retour au Quiz
+                  {t('back_to_quiz')}
                 </button>
               </div>
             </div>
@@ -392,14 +536,14 @@ function SoloGamePage() {
     return (
       <main className="page">
         <div className="shell">
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="hero">
             <div className="copy">
-              <h1>Aucune question disponible</h1>
-              <p className="lede">Il n'y a pas de questions pour le moment.</p>
+              <h1>{t('no_question_available')}</h1>
+              <p className="lede">{t('no_question_available_desc')}</p>
               <div className="actions">
                 <button className="btn ghost" onClick={() => navigate('/quiz')}>
-                  Retour au Quiz
+                  {t('back_to_quiz')}
                 </button>
               </div>
             </div>
@@ -409,10 +553,18 @@ function SoloGamePage() {
     )
   }
 
-  const question_count_str = localStorage.getItem("questionCount");
+
+  let question_count_str;
+  try{
+    question_count_str = localStorage.getItem("questionCount");
+  }
+  catch(err)
+  {
+    console.log('Error accessing localStorage for question count:', err)
+    question_count_str = null
+  }
   if (!question_count_str) {
     console.log('No question count found in localStorage')
-    throw new Error('No question count found in localStorage')
   }
   let question_count = Number(question_count_str) || 0;
 
@@ -421,17 +573,18 @@ function SoloGamePage() {
       <div className="shell">
         {/* Header du Quiz */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px' }}>
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="ExitButtonContainer">
               {(() => {
                 const exitBtn = exitbutton.find(btn => btn.id === "informatique")
                 return exitBtn && (
                   <button
                     onClick={() => {
-                      localStorage.removeItem(STORAGE_KEY)
-                      navigate('/quiz')
+                      if (window.confirm(t('leave_game_confirm'))) {
+                        leaveGame()
+                      }
                     }}
-                    title="Quitter la partie"
+                    title={t('leave_game_title')}
                   >
                     {exitBtn.url ? (
                       <img src={exitBtn.url} alt={exitBtn.symbol} />
@@ -468,17 +621,17 @@ function SoloGamePage() {
                   }))
                 }}
               >
-                {p ?? "Powerup Slot"}
+                {powerupLabel(p)}
               </button>
             )
-          })};
+          })}
         </div>
 
         {/* Zone de Titre */}
         <div style={{ textAlign: 'center', marginBottom: '1.2rem' }}>
-          <h1>Partie Solo en cours</h1>
+          <h1>{t('solo_game_in_progress')}</h1>
           <p className="lede" style={{ border: 'none', padding: 0, textAlign: 'center' }}>
-            Question <strong>{currentQuestionIndex + 1}</strong> sur <strong>{question_count}</strong> • Score : <strong>{score}</strong>
+            {t('question_progress', { current: currentQuestionIndex + 1, total: question_count, score })}
           </p>
         </div>
 
@@ -542,7 +695,7 @@ function SoloGamePage() {
                 <input
                   type="text"
                   className="game-input-field"
-                  placeholder="Tapez votre réponse ici..."
+                  placeholder={t('answer_placeholder')}
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !showAnswer && handleValidateAnswer()}
@@ -558,12 +711,12 @@ function SoloGamePage() {
                 />
                 {!showAnswer && hint && (
                   <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                    Indice : {hint}
+                    {t('hint_label')}: {hint}
                   </p>
                 )}
                 {showAnswer && !isCorrect && (
                   <p style={{ marginTop: '12px', fontSize: '15px', color: '#4CAF50', fontWeight: 'bold' }}>
-                    Bonne réponse : {rightAnswer}
+                    {t('correct_answer_label')}: {rightAnswer}
                   </p>
                 )}
               </div>
@@ -579,11 +732,11 @@ function SoloGamePage() {
                 onClick={handleValidateAnswer}
                 disabled={question.type === 'mcq' ? !selectedOption : !userAnswer}
               >
-                Valider
+                {t('validate')}
               </button>
             ) : (
               <button className="btn secondary" style={{ minWidth: '280px' }} onClick={handleNextQuestion}>
-                {currentQuestionIndex === 1 ? 'Terminer le Quiz' : 'Question suivante →'}
+                {currentQuestionIndex === question_count - 1 ? t('finish_quiz') : t('next_question')}
               </button>
             )}
           </div>

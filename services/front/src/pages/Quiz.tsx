@@ -2,11 +2,6 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import '../App.css'
 
-// const SpaceZone = [
-//   { label: '\u00A0', value: ' ' }, //genere juste des espaces, plus jolie
-// ]
-
-
 function QuizPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
@@ -14,7 +9,7 @@ function QuizPage() {
   return (
     <main className="page">
       <div className="shell">
-        <p className="eyebrow">Quiz Sprint</p>
+        <p className="eyebrow">{t('app_name')}</p>
         <div className="hero">
           <div className="copy">
             <h1>{t("quiz_title")}</h1>

@@ -1,44 +1,1239 @@
 {
-    "Quiz": [
-        {
-            "Histoire": [
-                {
-                    "id": "history.law.contraceptives",
-                    "question": "ما هو القانون الذي يجيز استخدام وسائل منع الحمل، وخاصة موانع الحمل الفموية؟",
-                    "type": "qcm",
-                    "réponse": "القانون Neuwirth",
-                    "options": [
-                        "قانون SRU",
-                        "اتفاقيات Grenelle",
-                        "القانون badinter",
-                        "القانون Neuwirth"
-                    ],
-                    "difficulté": "medium"
-                },
-                {
-                    "id": "history.discovery.america",
-                    "question": "من اكتشف أمريكا؟",
-                    "type": "texte",
-                    "réponse": "كريستوفر كولومبوس",
-                    "options": [],
-                    "difficulté": "easy"
-                }
-            ],
-            "Musiques": [
-                {
-                    "id": "music.bohemian_rhapsody",
-                    "question": "أي فنان غنى أغنية ”Bohemian Rhapsody“؟",
-                    "type": "qcm",
-                    "réponse": "Queen",
-                    "options": [
-                        "The Beatles",
-                        "Queen",
-                        "Led Zeppelin",
-                        "Pink Floyd"
-                    ],
-                    "difficulté": "medium"
-                }
-            ]
-        }
-    ]
+	"Quiz": [
+		{
+			"Histoire": [
+				{
+					"id": "history.law.contraceptives",
+					"question": "أي قانون يسمح باستخدام موانع الحمل، وخاصة حبوب منع الحمل الفموية؟",
+					"type": "qcm",
+					"réponse": "قانون نيويرث",
+					"options": [
+						"قانون SRU",
+						"اتفاقيات Grenelle",
+						"قانون Badinter",
+						"قانون نيويرث"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.discovery.america",
+					"question": "من اكتشف أمريكا؟",
+					"type": "texte",
+					"réponse": "كريستوفر كولومبوس",
+					"variantes": [
+						"كولومبوس",
+						"كريستوفر كولومبوس",
+						"كريستوف كولومب",
+						"كريستوبال كولون"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.first_us_president",
+					"question": "من كان أول رئيس للولايات المتحدة الأمريكية؟",
+					"type": "qcm",
+					"réponse": "جورج واشنطن",
+					"options": [
+						"توماس جيفرسون",
+						"إبراهام لنكولن",
+						"جورج واشنطن",
+						"جيفري إبشتين"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.ww2_end_year",
+					"question": "في أي سنة انتهت الحرب العالمية الثانية بشكل رسمي؟",
+					"type": "qcm",
+					"réponse": "1945",
+					"options": [
+						"1941",
+						"1943",
+						"1945",
+						"1950"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.first_roman_emperor",
+					"question": "من كان أول إمبراطور للإمبراطورية الرومانية؟",
+					"type": "qcm",
+					"réponse": "أوغسطس",
+					"options": [
+						"يوليوس قيصر",
+						"أوغسطس",
+						"نيرو",
+						"ماركوس أوريليوس"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "history.columbus_1492",
+					"question": "من يُنسب إليه اكتشاف القارات الأمريكية لأوروبا في عام 1492؟",
+					"type": "qcm",
+					"réponse": "كريستوفر كولومبوس",
+					"options": [
+						"فرديناند ماجلان",
+						"فاسكو دا جاما",
+						"كريستوفر كولومبوس",
+						"ماركو بولو"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.french_revolution_start",
+					"question": "ما هي السنة التي بدأت فيها الثورة الفرنسية؟",
+					"type": "qcm",
+					"réponse": "1789",
+					"options": [
+						"1776",
+						"1789",
+						"1812",
+						"1848"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.soviet_leader_ww2",
+					"question": "من كان زعيم الاتحاد السوفييتي أثناء الحرب العالمية الثانية؟",
+					"type": "qcm",
+					"réponse": "جوزيف ستالين",
+					"options": [
+						"فلاديمير لينين",
+						"ليون تروتسكي",
+						"جوزيف ستالين",
+						"نيكيتا خروتشوف"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.giza_pyramids",
+					"question": "أي حضارة قديمة بنت أهرامات الجيزة؟",
+					"type": "qcm",
+					"réponse": "المصريون القدماء",
+					"options": [
+						"الإغريق القدماء",
+						"الحضارة المايا",
+						"المصريون القدماء",
+						"السومريون"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.magna_carta_year",
+					"question": "في أي سنة تم توقيع الماجنا كارتا في إنجلترا؟",
+					"type": "qcm",
+					"réponse": "1215",
+					"options": [
+						"1066",
+						"1215",
+						"1348",
+						"1492"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "history.cleopatra",
+					"question": "من هي الملكة الشهيرة لمصر القديمة التي كانت لها علاقات مع يوليوس قيصر ومارك أنطونيوس؟",
+					"type": "texte",
+					"réponse": "كليوباترا",
+					"variantes": [
+						"كليوباترا",
+						"كليوباترا السابعة",
+						"ملكة مصر"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.cold_war_nations",
+					"question": "كانت الحرب الباردة بشكل أساسي توترًا جيوسياسيًا بين أي دولتين؟",
+					"type": "qcm",
+					"réponse": "الولايات المتحدة والاتحاد السوفييتي",
+					"options": [
+						"الولايات المتحدة والصين",
+						"المملكة المتحدة وألمانيا",
+						"الولايات المتحدة والاتحاد السوفييتي",
+						"الاتحاد السوفييتي والصين"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.longest_french_monarch",
+					"question": "من كان أطول ملك في فترة حكمه في التاريخ الفرنسي؟",
+					"type": "texte",
+					"réponse": "لويس الرابع عشر",
+					"variantes": [
+						"لويس الرابع عشر",
+						"لويس ١٤",
+						"لويس الأربعة عشر",
+						"الملك الشمس"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "history.berlin_wall_fall",
+					"question": "أي جدار معروف سقط عام 1989، معلنًا نهاية الحرب الباردة؟",
+					"type": "qcm",
+					"réponse": "جدار برلين",
+					"options": [
+						"السور العظيم للصين",
+						"جدار هادريان",
+						"جدار برلين",
+						"حائط المبكى"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.ww1_assassination",
+					"question": "اغتيال من في سراييفو عام 1914 أشعل فتيل الحرب العالمية الأولى؟",
+					"type": "qcm",
+					"réponse": "الأرشيدوق فرانز فرديناند",
+					"options": [
+						"بريجيت ماكرون",
+						"كيم جونج أون",
+						"الأرشيدوق فرانز فرديناند",
+						"جوزيف بيلسودسكي"
+					],
+					"difficulté": "easy"
+				}
+			],
+			"Musiques": [
+				{
+					"id": "music.bohemian_rhapsody",
+					"question": "أي فنان غنى أغنية 'Bohemian Rhapsody'؟",
+					"type": "qcm",
+					"réponse": "كوين",
+					"options": [
+						"The Beatles",
+						"كوين",
+						"Led Zeppelin",
+						"Pink Floyd"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.smells_like_teen_spirit",
+					"question": "أي فرقة أطلقت أغنية 'Smells Like Teen Spirit' عام 1991؟",
+					"type": "qcm",
+					"réponse": "نيرفانا",
+					"options": [
+						"Pearl Jam",
+						"نيرفانا",
+						"Soundgarden",
+						"Alice in Chains"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.king_of_pop",
+					"question": "من يُشار إليه عادة باسم 'ملك البوب'؟",
+					"type": "qcm",
+					"réponse": "مايكل جاكسون",
+					"options": [
+						"مايكل جاكسون",
+						"إلتون جون",
+						"برينس",
+						"ديفيد بوي"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.dark_side_of_the_moon",
+					"question": "أي فرقة أطلقت الألبوم الأيقوني 'The Dark Side of the Moon'؟",
+					"type": "qcm",
+					"réponse": "Pink Floyd",
+					"options": [
+						"The Rolling Stones",
+						"The Doors",
+						"Pink Floyd",
+						"The Who"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.beatles_members",
+					"question": "أي من الخيارات التالية لم يكن عضوًا في The Beatles؟",
+					"type": "qcm",
+					"réponse": "ميك جاغر",
+					"options": [
+						"جون لينون",
+						"بول مكارتني",
+						"جورج هاريسون",
+						"ميك جاغر"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.moonwalk",
+					"question": "أي حركة رقص شهرها مايكل جاكسون أثناء عرض عام 1983؟",
+					"type": "qcm",
+					"réponse": "المشي على القمر",
+					"options": [
+						"الروبوت",
+						"المشي على القمر",
+						"الدودة",
+						"الالتواء"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.i_will_always_love_you",
+					"question": "من كتب وسجل أغنية 'I Will Always Love You' في الأصل؟",
+					"type": "qcm",
+					"réponse": "دولي بارتون",
+					"options": [
+						"ويتني هيوستن",
+						"سيلين ديون",
+						"دولي بارتون",
+						"باتسي كلاين"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.ziggy_stardust",
+					"question": "كان Ziggy Stardust شخصية افتراضية لأي موسيقار شهير؟",
+					"type": "qcm",
+					"réponse": "ديفيد بوي",
+					"options": [
+						"إلتون جون",
+						"ديفيد بوي",
+						"فريدي ميركوري",
+						"إيجي بوب"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.woodstock_year",
+					"question": "في أي سنة أقيم مهرجان Woodstock الموسيقي الأصلي؟",
+					"type": "qcm",
+					"réponse": "1969",
+					"options": [
+						"1967",
+						"1968",
+						"1969",
+						"1970"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.abba_country",
+					"question": "فرقة البوب الأسطورية ABBA نشأت من أي دولة؟",
+					"type": "qcm",
+					"réponse": "السويد",
+					"options": [
+						"النرويج",
+						"الدنمارك",
+						"السويد",
+						"فنلندا"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.instrument_jimi_hendrix",
+					"question": "أي آلة موسيقية اشتهر جيمي هندركس بعزفها؟",
+					"type": "qcm",
+					"réponse": "الجيتار",
+					"options": [
+						"الطبول",
+						"الباص",
+						"الجيتار",
+						"لوحة المفاتيح"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.nobel_literature",
+					"question": "أي موسيقار فاز بجائزة نوبل في الأدب عام 2016؟",
+					"type": "qcm",
+					"réponse": "بوب ديلان",
+					"options": [
+						"ليونارد كوهين",
+						"بول مكارتني",
+						"جوني ميتشل",
+						"بوب ديلان"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.spice_girls",
+					"question": "ما هو اسم أول أغنية منفردة للفتيات Spice Girls أطلقت عام 1996؟",
+					"type": "qcm",
+					"réponse": "Wannabe",
+					"options": [
+						"Spice Up Your Life",
+						"Wannabe",
+						"قلها أنك هناك",
+						"توقفي"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.beethoven_deaf",
+					"question": "أي موسيقار كلاسيكي مشهور استمر في كتابة الموسيقى حتى بعد أن أصبح أصم تماما؟",
+					"type": "texte",
+					"réponse": "لودفيج فان بيتهوفن",
+					"variantes": [
+						"بيتهوفن",
+						"لودفيج",
+						"بيتهوفن لودفيج"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.eminem_real_name",
+					"question": "ما هو الاسم الحقيقي للمغني Eminem؟",
+					"type": "qcm",
+					"réponse": "مارشال ماذرز",
+					"options": [
+						"كالفن برودس",
+						"شون كومبز",
+						"مارشال ماذرز",
+						"كيرتس جاكسون"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.queen_of_soul",
+					"question": "من يُعرّف عموما باسم 'ملكة الروح'؟",
+					"type": "qcm",
+					"réponse": "أريثا فرانكلين",
+					"options": [
+						"ديانا روس",
+						"أريثا فرانكلين",
+						"تينا تيرنر",
+						"إيتا جيمس"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.nirvana_frontman",
+					"question": "من كان المغني الرئيسي والعازف للفرقة Nirvana؟",
+					"type": "qcm",
+					"réponse": "كيرت كوبين",
+					"options": [
+						"إدي فيدر",
+						"كريس كورنيل",
+						"كيرت كوبين",
+						"لاين ستالي"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.first_mtv_video",
+					"question": "ما أول مقطع موسيقي يُعرض على MTV عام 1981؟",
+					"type": "qcm",
+					"réponse": "Video Killed the Radio Star",
+					"options": [
+						"Thriller",
+						"Money for Nothing",
+						"Take On Me",
+						"Video Killed the Radio Star"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.rolling_stones_logo",
+					"question": "ما هو الشعار الشهير لفرقة The Rolling Stones؟",
+					"type": "qcm",
+					"réponse": "فم بلسان طويل",
+					"options": [
+						"غواصة صفراء",
+						"فم بلسان طويل",
+						"منشور ينعكس عليه الضوء",
+						"صاعقة برق"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.adele_albums",
+					"question": "ألبومات Adele الثلاثة الأولى سميت باسم ماذا؟",
+					"type": "qcm",
+					"réponse": "عمرها",
+					"options": [
+						"عمرها",
+						"ألوانها المفضلة",
+						"المدن التي عاشت فيها",
+						"علاقاتها"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.miles_davis",
+					"question": "مايلز ديفس كان شخصية أسطورية في أي نوع من الموسيقى؟",
+					"type": "qcm",
+					"réponse": "الجاز",
+					"options": [
+						"البلوز",
+						"الجاز",
+						"الروك أند رول",
+						"الموسيقى الكلاسيكية"
+					],
+					"difficulté": "medium"
+				}
+			],
+			"Sports": [
+				{
+					"id": "sports.fifa2018.winner",
+					"question": "أي دولة فازت بكأس العالم FIFA 2018؟",
+					"type": "qcm",
+					"réponse": "فرنسا",
+					"options": [
+						"البرازيل",
+						"ألمانيا",
+						"فرنسا",
+						"الأرجنتين"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sports.olympics.100m_record",
+					"question": "من يحمل الرقم القياسي العالمي لسباق 100 متر؟",
+					"type": "texte",
+					"réponse": "أوسين بولت",
+					"variantes": [
+						"بولت",
+						"أوسين",
+						"أوسين سانت ليو بولت"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.world_cup_2022",
+					"question": "أي دولة فازت بكأس العالم لكرة القدم للرجال عام 2022؟",
+					"type": "qcm",
+					"réponse": "الأرجنتين",
+					"options": [
+						"فرنسا",
+						"البرازيل",
+						"الأرجنتين",
+						"ألمانيا"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.olympic_medals",
+					"question": "من يحمل الرقم القياسي في أكثر الميداليات الذهبية الأولمبية في التاريخ؟",
+					"type": "qcm",
+					"réponse": "مايكل فيلبس",
+					"options": [
+						"أوسين بولت",
+						"كارل لويس",
+						"مايكل فيلبس",
+						"مارك سبيتز"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.marathon_distance",
+					"question": "ما هي المسافة الرسمية للماراثون؟",
+					"type": "qcm",
+					"réponse": "42.195 كم",
+					"options": [
+						"21.097 كم",
+						"42.195 كم",
+						"40000 كم",
+						"50000 كم"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.tennis_clay",
+					"question": "أي من بطولات التنس الأربع الكبرى تُلعب على ملاعب طينية؟",
+					"type": "qcm",
+					"réponse": "بطولة فرنسا المفتوحة (رولان جاروس)",
+					"options": [
+						"ويمبلدون",
+						"البطولة الأمريكية المفتوحة",
+						"البطولة الأسترالية المفتوحة",
+						"بطولة فرنسا المفتوحة (رولان جاروس)"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.basketball_players",
+					"question": "كم عدد اللاعبين من كل فريق المسموح بهم على الملعب في وقت واحد في لعبة كرة السلة؟",
+					"type": "qcm",
+					"réponse": "5",
+					"options": [
+						"5",
+						"6",
+						"7",
+						"11"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.judo_origin",
+					"question": "في أي دولة نشأت فنون الجودو القتالية؟",
+					"type": "qcm",
+					"réponse": "اليابان",
+					"options": [
+						"الصين",
+						"كوريا الجنوبية",
+						"اليابان",
+						"تايلاند"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.ali_name",
+					"question": "ما هو الاسم الذي وُلد به الملاكم الأسطوري محمد علي؟",
+					"type": "qcm",
+					"réponse": "كاسيوس كلاي",
+					"options": [
+						"جو فريزر",
+						"جورج فورمان",
+						"كاسيوس كلاي",
+						"شوجر راي روبنسون"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.home_run",
+					"question": "يُستخدم مصطلح 'home run' بشكل أساسي في أي رياضة؟",
+					"type": "qcm",
+					"réponse": "البيسبول",
+					"options": [
+						"الكريكيت",
+						"البيسبول",
+						"الجولف",
+						"التنس"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.first_modern_olympics",
+					"question": "أي دولة استضافت أول الألعاب الأولمبية الحديثة عام 1896؟",
+					"type": "qcm",
+					"réponse": "اليونان",
+					"options": [
+						"فرنسا",
+						"المملكة المتحدة",
+						"اليونان",
+						"إيطاليا"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.world_cup_attendance",
+					"question": "أي دولة هي الوحيدة التي شاركت في كل بطولة كأس عالم FIFA للرجال؟",
+					"type": "qcm",
+					"réponse": "البرازيل",
+					"options": [
+						"ألمانيا",
+						"إيطاليا",
+						"الأرجنتين",
+						"البرازيل"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.tour_de_france_first",
+					"question": "من فاز بأول جولة فرنسا سنة 1903؟",
+					"type": "qcm",
+					"réponse": "موريس جارين",
+					"options": [
+						"جاك أنكويتل",
+						"إيدي ميركس",
+						"موريس جارين",
+						"برنار إينو"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "sport.ryder_cup",
+					"question": "كأس رايدر هي منافسة دولية شهيرة في أي رياضة؟",
+					"type": "qcm",
+					"réponse": "الجولف",
+					"options": [
+						"التنس",
+						"الجولف",
+						"الإبحار",
+						"الفروسية"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.soccer_duration",
+					"question": "كم دقيقة يستغرق مباراة كرة قدم منتظمة، مستثنى الوقت الإضافي؟",
+					"type": "qcm",
+					"réponse": "90",
+					"options": [
+						"60",
+						"80",
+						"90",
+						"120"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.canada_winter",
+					"question": "ما هي الرياضة الشتوية الرسمية لكندا؟",
+					"type": "qcm",
+					"réponse": "هوكي الجليد",
+					"options": [
+						"الكيرلنج",
+						"ركوب الألواح على الثلج",
+						"التزحلق الفني على الجليد",
+						"هوكي الجليد"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.100m_record",
+					"question": "من يحمل الرقم القياسي العالمي لسباق 100 متر للرجال؟",
+					"type": "qcm",
+					"réponse": "أوسين بولت",
+					"options": [
+						"تايسون جاي",
+						"يوهان بليك",
+						"أوسين بولت",
+						"أسافا باول"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.bowling_perfect",
+					"question": "ما هي أعلى درجة ممكنة في لعبة من العشرة أطراف البولينج؟",
+					"type": "qcm",
+					"réponse": "300",
+					"options": [
+						"200",
+						"300",
+						"400",
+						"500"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.lombardi_trophy",
+					"question": "تُمنح كأس Vince Lombardi لبطل أي دوري رياضي رئيسي؟",
+					"type": "qcm",
+					"réponse": "NFL (كرة القدم الأمريكية)",
+					"options": [
+						"NBA (كرة السلة)",
+						"NHL (الهوكي)",
+						"MLB (البيسبول)",
+						"NFL (كرة القدم الأمريكية)"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.nba_acronym",
+					"question": "ماذا يرمز اختصار NBA؟",
+					"type": "qcm",
+					"réponse": "الدوري الأمريكي لكرة السلة",
+					"options": [
+						"الدوري الأمريكي لكرة السلة",
+						"التحالف الوطني لكرة السلة",
+						"المجلس الوطني للرياضات",
+						"دوري كرة السلة الجديد"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.all_blacks",
+					"question": "'All Blacks' هي فريق الرجبي الوطني الشهير لأي دولة؟",
+					"type": "qcm",
+					"réponse": "نيوزيلندا",
+					"options": [
+						"أستراليا",
+						"جنوب أفريقيا",
+						"إنجلترا",
+						"نيوزيلندا"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.f1_hamilton",
+					"question": "حتى عام 2023، أي سائق فورمولا واحد يشاركيل الرقم القياسي بـ 7 بطولات عالمية مع مايكل شوماخر؟",
+					"type": "qcm",
+					"réponse": "لويس هاميلتون",
+					"options": [
+						"سيباستيان فيتل",
+						"فرناندو ألونسو",
+						"ماكس فيرشتابن",
+						"لويس هاميلتون"
+					],
+					"difficulté": "hard"
+				}
+			],
+			"Cinéma": [
+				{
+					"id": "cinema.titanic.lead_actor",
+					"question": "من هو نجم الفيلم 'Titanic'؟",
+					"type": "qcm",
+					"réponse": "ليوناردو دي كابريو",
+					"options": [
+						"براد بيت",
+						"جوني ديب",
+						"ليوناردو دي كابريو",
+						"توم كروز"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cinema.lalaland.director",
+					"question": "من هو مخرج فيلم 'La La Land'؟",
+					"type": "qcm",
+					"réponse": "داميان تشازيل",
+					"options": [
+						"ستيفن سبيلبرغ",
+						"كريستوفر نولان",
+						"داميان تشازيل",
+						"كوينتين تارانتينو"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cinema.matrix.lead_actor",
+					"question": "في أي فيلم خيال علمي من عام 1999 يلعب كيانو ريفز دور قرصان كمبيوتر يُدعى نيو؟",
+					"type": "qcm",
+					"réponse": "The Matrix",
+					"options": [
+						"Inception",
+						"The Matrix",
+						"Blade Runner",
+						"Minority Report"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cinema.oscar.best_animated_film_2020",
+					"question": "أي فيلم فاز بجائزة الأوسكار لأفضل فيلم متحرك عام 2020؟",
+					"type": "qcm",
+					"réponse": "Toy Story 4",
+					"options": [
+						"Frozen II",
+						"How to Train Your Dragon: The Hidden World",
+						"Toy Story 4",
+						"Klaus"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cinema.psychose.films",
+					"question": "أي مخرج معروف بأفلام التشويق الخاصة به مثل 'Psycho' و 'The Birds'؟",
+					"type": "texte",
+					"réponse": "ألفريد هيتشكوك",
+					"variantes": [
+						"هيتشكوك",
+						"ألفريد هـ",
+						"السير ألفريد هيتشكوك"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cinema.burton.victor",
+					"question": "أي فيلم لتيم بيرتون يعرض فتى صغير يُدعى فيكتور يجد نفسه عالم الموتى؟",
+					"type": "qcm",
+					"réponse": "Corpse Bride",
+					"options": [
+						"The Nightmare Before Christmas",
+						"Corpse Bride",
+						"Charlie and the Chocolate Factory",
+						"Alice in Wonderland"
+					],
+					"difficulté": "hard"
+				}
+			],
+			"JeuxVidéo": [
+				{
+					"id": "games.esport.first_game",
+					"question": "ما هي أول لعبة ظهرت فيها الرياضات الإلكترونية؟",
+					"type": "texte",
+					"réponse": "Spacewar!",
+					"variantes": [
+						"Space War",
+						"حرب الفضاء",
+						"حرب الفضاء بين المجرات"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.esport.game_awards_2025",
+					"question": "أي لعبة فازت بجائزة أفضل لعبة رياضات إلكترونية في حفل Game Awards 2025؟",
+					"type": "qcm",
+					"réponse": "Counter-Strike 2",
+					"options": [
+						"Dota 2",
+						"Counter-Strike 2",
+						"Fortnite",
+						"League of Legends"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "games.league_of_legends.headquarters_country",
+					"question": "في أي دولة يقع مقر شركة Riot Games، مطور لعبة League of Legends؟",
+					"type": "texte",
+					"réponse": "الولايات المتحدة",
+					"variantes": [
+						"الولايات المتحدة الأمريكية",
+						"أمريكا",
+						"الولايات المتحدة"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.quantic_dream.first_international_game",
+					"question": "ما هي أول لعبة فرنسية من تطوير Quantic Dream حققت اعترافًا دوليًا؟",
+					"type": "qcm",
+					"réponse": "Omikron: The Nomad Soul",
+					"options": [
+						"Fahrenheit",
+						"Heavy Rain",
+						"Omikron: The Nomad Soul",
+						"Detroit: Become Human"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "games.battle_royale.popular_game",
+					"question": "أي لعبة فيديو جعلت نوع Battle Royale شهيرًا؟",
+					"type": "texte",
+					"réponse": "PlayerUnknown's Battlegrounds (PUBG)",
+					"variantes": [
+						"PlayerUnknown's Battlegrounds",
+						"PUBG"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.legend_of_zelda.main_character",
+					"question": "ما اسم الشخصية الرئيسية في سلسلة الألعاب 'The Legend of Zelda'؟",
+					"type": "texte",
+					"réponse": "Link",
+					"variantes": [
+						"Link",
+						"Link"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.minecraft.creeper_inspiration",
+					"question": "أي حيوان ألهم إنشاء شخصية الـ Creeper في Minecraft؟",
+					"type": "texte",
+					"réponse": "الخنزير",
+					"variantes": [
+						"الخنزير",
+						"لحم الخنزير"
+					],
+					"difficulté": "easy"
+				}
+			],
+			"Echec": [
+				{
+					"id": "chess.longest_reign_world_champion",
+					"question": "أي من لاعبي الشطرنج هؤلاء يحمل الرقم القياسي لأطول فترة حكم بلقب بطل العالم الرسمي (27 سنة)؟",
+					"type": "qcm",
+					"réponse": "إيمانويل لاسكر",
+					"options": [
+						"جاري كاسباروف",
+						"إيمانويل لاسكر",
+						"أناتولي كاربوف",
+						"ماغنوس كارلسن"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.total_squares",
+					"question": "كم عدد المربعات على رقعة الشطرنج القياسية؟",
+					"type": "qcm",
+					"réponse": "64",
+					"options": [
+						"100",
+						"64",
+						"81",
+						"144"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.jumping_piece",
+					"question": "أي قطعة شطرنج هي الوحيدة المسموح لها بالقفز فوق القطع الأخرى؟",
+					"type": "qcm",
+					"réponse": "الحصان",
+					"options": [
+						"الفيل",
+						"الرخ",
+						"الملكة",
+						"الحصان"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.stalemate",
+					"question": "ما اسم الوضع الذي لا يكون فيه اللاعب في وضع تهديد مباشر لكن ليس لديه حركات قانونية المتبقية؟",
+					"type": "qcm",
+					"réponse": "الجمود",
+					"options": [
+						"كش ملك",
+						"الجمود",
+						"التحرر بالاتفاق",
+						"الاستسلام"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.special_move_rook",
+					"question": "ما اسم الحركة الخاصة التي تتعلق بالملك والرخ؟",
+					"type": "qcm",
+					"réponse": "التهدئة",
+					"options": [
+						"مسار عابر",
+						"الترقية",
+						"التهدئة",
+						"الضغط"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.en_passant",
+					"question": "قاعدة القبض الخاصة على البيدق 'En passant' هي عبارة فرنسية تُترجم إلى ماذا في الإنجليزية؟",
+					"type": "qcm",
+					"réponse": "أثناء المرور",
+					"options": [
+						"أثناء المرور",
+						"في الحراسة",
+						"القفزة",
+						"تنحى جانبًا"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.origin_country",
+					"question": "في أي دولة يُعتقد على نطاق واسع أن لعبة الشطرنج نشأت؟",
+					"type": "qcm",
+					"réponse": "الهند",
+					"options": [
+						"الصين",
+						"فارس",
+						"الهند",
+						"مصر"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.highest_title",
+					"question": "ما هي أعلى درجة يمكن لاعب الشطرنج أن يحققها، تُمنح من قبل الاتحاد الدولي للشطرنج (FIDE)؟",
+					"type": "qcm",
+					"réponse": "جراند ماستر",
+					"options": [
+						"ماستر دولي",
+						"ماستر وطني",
+						"جراند ماستر",
+						"بطل العالم"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.strongest_female",
+					"question": "من تُعتبر على نطاق واسع أقوى لاعبة شطرنج نسائية في التاريخ؟",
+					"type": "qcm",
+					"réponse": "جوديت بولغار",
+					"options": [
+						"Hou Yifan",
+						"فيرا مينشك",
+						"جوديت بولغار",
+						"بيث هاربون"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "chess.carlsen_2013",
+					"question": "من أصبح بطل الشطرنج العالمي عام 2013 بعد هزيمة Viswanathan Anand؟",
+					"type": "qcm",
+					"réponse": "ماغنوس كارلسن",
+					"options": [
+						"جاري كاسباروف",
+						"فابيانو كاروانا",
+						"ماغنوس كارلسن",
+						"إيان نيبوميانتشي"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.lasker_reign",
+					"question": "من يحمل الرقم القياسي لأطول فترة حكم متتالية كبطل شطرنج عالمي (27 سنة)؟",
+					"type": "texte",
+					"réponse": "إيمانويل لاسكر",
+					"variantes": [
+						"إيمانويل لاسكر",
+						"لاسكر"
+					],
+					"difficulté": "hard"
+				}
+			],
+			"Informatique": [
+				{
+					"id": "informatics.ios_primary_language",
+					"question": "أي لغة برمجة تُستخدم بشكل أساسي لتطوير تطبيقات iOS؟",
+					"type": "qcm",
+					"réponse": "Swift",
+					"options": [
+						"Java",
+						"Kotlin",
+						"Swift",
+						"Objective-C"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "informatics.internet_security_protocol",
+					"question": "أي بروتوكول يُستخدم لتأمين الاتصالات على الإنترنت من خلال تشفير البيانات المتبادلة بين المتصفح وخادم الويب؟",
+					"type": "qcm",
+					"réponse": "HTTPS",
+					"options": [
+						"HTTP",
+						"FTP",
+						"SMTP",
+						"HTTPS"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "informatics.linux_kernel",
+					"question": "ما اسم نواة نظام التشغيل مفتوح المصدر الأكثر استخدامًا في العالم؟",
+					"type": "texte",
+					"réponse": "Linux",
+					"variantes": [
+						"Linux Kernel",
+						"GNU/Linux"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.first_programmer",
+					"question": "من يُعتبر على نطاق واسع أول مبرمجة كمبيوتر؟",
+					"type": "qcm",
+					"réponse": "آدا لوفليس",
+					"options": [
+						"آلان تورينج",
+						"تشارلز بابيج",
+						"آدا لوفليس",
+						"جريس هوبر"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.cpu_meaning",
+					"question": "ماذا يرمز اختصار CPU؟",
+					"type": "qcm",
+					"réponse": "وحدة المعالجة المركزية",
+					"options": [
+						"وحدة العملية المركزية",
+						"وحدة الكمبيوتر الشخصية",
+						"وحدة المعالج المركزي",
+						"وحدة المعالجة المركزية"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.html_acronym",
+					"question": "ماذا يرمز اختصار HTML؟",
+					"type": "qcm",
+					"réponse": "لغة ترميز HyperText",
+					"options": [
+						"لغة آلة HyperText",
+						"لغة ترميز HyperText",
+						"لغة HyperLink Markup",
+						"لغة Home Tool Markup"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.java_creator",
+					"question": "أي مبرمج أنشأ لغة البرمجة Java عام 1995؟",
+					"type": "qcm",
+					"réponse": "جيمس جوسلينج",
+					"options": [
+						"جويدو فان روسوم",
+						"بيارن سترويستروب",
+						"جيمس جوسلينج",
+						"دينيس ريتشي"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "cs.turing_father",
+					"question": "من يُعتبر غالبًا مؤسس علوم الحاسوب النظرية والذكاء الاصطناعي؟",
+					"type": "qcm",
+					"réponse": "آلان تورينج",
+					"options": [
+						"جون فون نيومان",
+						"آلان تورينج",
+						"تيم بيرنرز-لي",
+						"لينوس تورفالدس"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.binary_search_time",
+					"question": "ما هو التعقيد الزمني للحالة الأسوأ لخوارزمية البحث الثنائي؟",
+					"type": "qcm",
+					"réponse": "O(log n)",
+					"options": [
+						"O(1)",
+						"O(n)",
+						"O(n log n)",
+						"O(log n)"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "cs.https_port",
+					"question": "أي منفذ شبكي يُستخدم عادةً لحركة الويب الآمنة (HTTPS)؟",
+					"type": "qcm",
+					"réponse": "443",
+					"options": [
+						"80",
+						"21",
+						"443",
+						"22"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.sql_meaning",
+					"question": "ماذا يرمز اختصار SQL في إدارة قواعد البيانات؟",
+					"type": "qcm",
+					"réponse": "لغة الاستعلام المهيكلة",
+					"options": [
+						"لغة الاستعلام القياسية",
+						"لغة الاستعلام المهيكلة",
+						"لغة السؤال البسيطة",
+						"لغة الاستعلام المتسلسلة"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.github_acquisition",
+					"question": "أي شركة تكنولوجية استحوذت على GitHub عام 2018؟",
+					"type": "qcm",
+					"réponse": "مايكروسوفت",
+					"options": [
+						"جوجل",
+						"فيسبوك",
+						"أمازون",
+						"مايكروسوفت"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.first_iphone",
+					"question": "في أي سنة أطلقت Apple أول iPhone على الإطلاق؟",
+					"type": "qcm",
+					"réponse": "2007",
+					"options": [
+						"2005",
+						"2007",
+						"2009",
+						"2010"
+					],
+					"difficulté": "medium"
+				}
+			]
+		}
+	]
 }

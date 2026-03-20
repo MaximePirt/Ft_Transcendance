@@ -2,6 +2,7 @@ const userModel = require('../models/userModel');
 const fs = require("fs");
 const { pipeline } = require("stream/promises");
 const path = require("path");
+const logoutWsHub = require("../ws/logoutWsHub.js");
 
 const ACHIEVEMENT_DEFS = [
 	{ key: 'first_match', metric: 'total_matches', target: 1, points: 10 },
@@ -48,18 +49,24 @@ async function updateUser(userId, updateData) {
 }
 
 async function updateAvatar(userId, data) {
-	if (!["image/png", "image/jpeg"].includes(data.mimetype)) {
-		throw new Error("Invalid file type, only PNG and JPEG are allowed");
+	if (!["image/png", "image/jpeg", "image/gif"].includes(data.mimetype)) {
+		throw new Error("Invalid file type, only PNG, JPEG and GIF are allowed");
 	}
-	const ext = data.mimetype === "image/png" ? "png" : "jpg";
-	const filePath = `/uploads/user/avatars/${userId}-${Date.now()}.${ext}`;
+	const ext = data.mimetype === "image/png"
+		? "png"
+		: data.mimetype === "image/gif"
+			? "gif"
+			: "jpg";
+	const fileName = `${userId}-${Date.now()}.${ext}`;
+	const filePath = `/uploads/user/avatars/${fileName}`;
 
 	const uploadDir = path.join(__dirname, "../../uploads/user/avatars");
 	if (!fs.existsSync(uploadDir)) {
 		fs.mkdirSync(uploadDir, { recursive: true });
 	}
 
-	await pipeline(data.file, fs.createWriteStream(`.${filePath}`));
+	const outputPath = path.join(uploadDir, fileName);
+	await pipeline(data.file, fs.createWriteStream(outputPath));
 
 	await updateUser(userId, { avatarUrl: filePath });
 	return { message: "Avatar uploaded", avatarUrl: filePath };
@@ -153,6 +160,23 @@ async function getWinsLeaderboard(limit = 5)
 	}));
 }
 
+async function deleteUser(userId) {
+	const res = await userModel.deleteUserById(userId);
+	if (!res || res.changes === 0)
+		throw new Error("User does not exist");
+	
+	logoutWsHub.broadcast(userId, {type: 'logout', payload: { userId } });
+	return res;
+}
+
+async function isUserInAGame(userId) {
+	const user = await userModel.findUserInAGame(userId);
+	if (!user) {
+		return false;
+	}
+	return true;
+}
+
 module.exports = {
 	getUsers,
 	getUserById,
@@ -163,5 +187,7 @@ module.exports = {
 	getRecentMatchesByUserId,
 	getUserStatsById,
 	getUserAchievementsById,
-	getWinsLeaderboard
+	getWinsLeaderboard,
+	deleteUser,
+	isUserInAGame
 };

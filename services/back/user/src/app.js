@@ -1,24 +1,46 @@
-// services/user/src/app.js
-// This microservice is here to handle :
-/*
-- User data management (CRUD operations)
-- User profile management as avatar
-- User friends
-- User stats
-
-It listen on porte 3001
-
-*/
-
 const fastify = require("fastify")({ logger: true });
 const path = require("path");
+const fastifyJwt = require("@fastify/jwt");
+
+const jwt_secret = process.env.JWT_SECRET || false;
+if (!jwt_secret) {
+	console.error("JWT_SECRET environment variable is not set.");
+	process.exit(1);
+}
+
+fastify.register(require("@fastify/cookie"), {
+	secret: jwt_secret,
+	parseOptions: {}
+});
+
+
+fastify.register(fastifyJwt, {
+  secret: jwt_secret,
+  cookie: {
+    cookieName: "token",
+    signed: false
+  }
+});
+
+fastify.register(require("./plugins/auth"));
 fastify.register(require("@fastify/multipart"));
 fastify.register(require("@fastify/static"), {
   root: path.join(__dirname, "..", "uploads"),
   prefix: "/uploads/",
 });
-fastify.register(require("./routes/userRoute"));
-fastify.register(require("./routes/friendRoute"));
+
+let websocketEnabled = false;
+try {
+  const websocketPlugin = require("@fastify/websocket");
+  fastify.register(websocketPlugin);
+  websocketEnabled = true;
+} catch (error) {
+  fastify.log.info("@fastify/websocket not found, websocket routes disabled");
+}
+
+if (websocketEnabled) {
+  fastify.register(require("./routes/wsRoute"));
+}
 
 
 fastify.register(require("@fastify/cors"), {
@@ -28,6 +50,8 @@ fastify.register(require("@fastify/cors"), {
 	allowedHeaders: ["Content-type", "Authorization"],
 });
 
+fastify.register(require("./routes/userRoute"));
+fastify.register(require("./routes/friendRoute"));
 
 
 const schedule = require("@fastify/schedule");
@@ -47,10 +71,9 @@ const purgeTask = new AsyncTask(
 );
 
 // Schedule job timing at 3 AM daily
-// TODO: Change to 3AM, currently every 2 minutes for testing
 const purgeJob = new CronJob(
   {
-	cronExpression: "*/20 * * * *",
+	cronExpression: "0 3 * * *",
   },
   purgeTask
 );

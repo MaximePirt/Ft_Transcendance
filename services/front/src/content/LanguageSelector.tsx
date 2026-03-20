@@ -12,10 +12,12 @@ const LanguageSelector = () => {
 
     const changeLng = (lang: string) => {
         i18n.changeLanguage(lang);
+        localStorage.setItem('language', lang);
     }
 
     useEffect(() => {
-        document.body.dir = i18n.dir()
+        document.documentElement.dir = i18n.dir()
+        document.documentElement.lang = i18n.language
     }, [i18n, i18n.language])
 
     return (

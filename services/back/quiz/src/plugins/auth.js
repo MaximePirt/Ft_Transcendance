@@ -1,25 +1,35 @@
+const fp = require("fastify-plugin");
 
+const USER_URL = process.env.USER_API_URL || false;
+if (!USER_URL) {
+	console.error("USER_API_URL environment variable is not set.");
+	process.exit(1);
+}
 
-module.exports = async function authPlugin(fastify, opts) {
-	
-	fastify.register(require('@fastify/jwt'), { 
-		secret: process.env.JWT_SECRET 
-	});
-
-
-	fastify.register(require("@fastify/cookie"), {
-		secret: process.env.JWT_SECRET,
-		parseOptions: {},
-		maxAge: 60_000,
-	});
-
-	fastify.decorate('authenticate', async (request, reply) => {
+module.exports = fp(async function authPlugin(fastify) {
+	fastify.decorate("authenticate", async (request, reply) => {
 		try {
-			request.user = await request.jwtVerify();
-		} catch (err) {
-			reply.code(401).send({ error: 'Unauthorized' });
+			const token = request.cookies.token;
+			if (!token) {
+				return reply.code(401).send({ error: "No token" });
+			}
+			const decoded = fastify.jwt.verify(token);
+			
+			const res = await fetch(`${USER_URL}/users/${decoded.id}`);
+			if (!res.ok) {
+				reply.clearCookie("token", {
+					path: "/",
+					httpOnly: true,
+					secure: true,
+					sameSite: "lax"
+				});
+				return reply.code(401).send({ error: "User no longer exists" });
+			}
+
+			request.user = decoded;
+
+		} catch (e) {
+			return reply.code(401).send({ error: "Invalid token" });
 		}
 	});
-
-	console.log("Auth plugin registered");
-};
+});

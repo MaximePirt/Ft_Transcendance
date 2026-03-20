@@ -12,7 +12,6 @@ if (!usermailPass) {
     process.exit(1);
 }
 
-// TODO: Mettre le host, port, user, et pass et ENV
 function createZohoTransporter() {
     return nodemailer.createTransport({
         host: "smtp.zoho.eu",

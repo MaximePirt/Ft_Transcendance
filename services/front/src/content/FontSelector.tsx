@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const FONTS = [
-  'default',
-  'classic',
-  'round',
-  'geometrical',
+  { id: 'default', labelKey: 'font_default' },
+  { id: 'classic', labelKey: 'font_classic' },
+  { id: 'round', labelKey: 'font_round' },
+  { id: 'geometrical', labelKey: 'font_geometrical' },
 ] as const
 
-async function applyFont(fontName: string, signal?: AbortSignal) {
+async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false) {
   try {
     const res = await fetch(`/themes/fonts/${fontName}.json`, { signal })
+    if (!res.ok) {
+      if (!isRetry && fontName !== 'default') {
+        return applyFont('default', signal, true)
+      }
+      return
+    }
+
     const themeToApply = await res.json()
 
     const root = document.documentElement
@@ -19,14 +27,18 @@ async function applyFont(fontName: string, signal?: AbortSignal) {
 
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return
-    console.error(`Erreur lors du chargement du thème "${fontName}"`, err)
-    if (fontName !== 'default')
-      return applyFont('default', signal)
+    if (!isRetry && fontName !== 'default') {
+      return applyFont('default', signal, true)
+    }
+    if (!isRetry && fontName !== 'default') {
+      console.log(`Erreur lors du chargement de la police "${fontName}"`, err)
+    }
     return
   }
 }
 
 const FontSelector = () => {
+  const { t } = useTranslation()
   const [font, setFont] = useState<string>('default')
 
   useEffect(() => {
@@ -66,11 +78,11 @@ const FontSelector = () => {
       className="font-combobox"
       value={font}
       onChange={handleFontChange}
-      aria-label="font"
+      aria-label={t('font_selector_label')}
     >
-      {FONTS.map((fontName) => (
-        <option key={fontName} value={fontName}>
-          {fontName}
+      {FONTS.map((fontOption) => (
+        <option key={fontOption.id} value={fontOption.id}>
+          {t(fontOption.labelKey)}
         </option>
       ))}
     </select>

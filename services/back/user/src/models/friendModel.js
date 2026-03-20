@@ -47,6 +47,15 @@ const listPendingSent = db.prepare(`
   AND f.initiator_id = ?
 `);
 
+const listRelatedUsers = db.prepare(`
+  SELECT DISTINCT CASE
+    WHEN user_id = ? THEN friend_id
+    ELSE user_id
+  END AS id
+  FROM friends
+  WHERE user_id = ? OR friend_id = ?
+`);
+
 
 //	Functions
 
@@ -68,7 +77,7 @@ function addFriend(userId, friendId) {
       return {
         ok: false,
         created: false,
-        statusCode: 500,
+        statusCode: 401,
         message: "Insert conflicted, unknown error.",
       };
     if (init_user.status === "accepted")
@@ -88,7 +97,7 @@ function addFriend(userId, friendId) {
       return {
         ok: false,
         created: false,
-        statusCode: 500,
+        statusCode: 401,
         message: "Error while accepting friend request.",
       };
     }
@@ -102,7 +111,7 @@ function addFriend(userId, friendId) {
       };
     }
     default:
-      return { ok: false, created: false, statusCode: 500, message: "Unknown error." };
+      return { ok: false, created: false, statusCode: 401, message: "Unknown error." };
   }
 }
 
@@ -120,7 +129,6 @@ function removeFriend(userId, friendId) {
   if (!status || (status.status !== "accepted" && status.status !== "pending"))
     return { ok: false, message: "No existing friendship or invitation." };
 
-  //TODO: Check if possibilities to add a verification action (not sure)
   const info = deleteFriend.run(min, max);
   if (info.changes === 1) return { ok: true, info };
   return { ok: false, message: "Error while removing friend." };
@@ -150,6 +158,13 @@ function getFriendshipStatus(userId, friendId) {
   return { ok: true, status: status.status, initiator_id: status.initiator_id };
 }
 
+function listRelatedUserIds(userId) {
+  return listRelatedUsers
+    .all(userId, userId, userId)
+    .map((row) => Number(row.id))
+    .filter((id) => Number.isInteger(id) && id > 0);
+}
+
 module.exports = {
   addFriend,
   removeFriend,
@@ -157,4 +172,5 @@ module.exports = {
   listFriendRequestsReceived,
   listFriendRequestsSent,
   getFriendshipStatus,
+  listRelatedUserIds,
 };

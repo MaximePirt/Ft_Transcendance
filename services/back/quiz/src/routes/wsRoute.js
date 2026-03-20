@@ -11,11 +11,10 @@ const QUESTION_TIMER = Number(process.env.QUESTION_TIMER || 15000);
 
 module.exports = async function wsRoutes(fastify) {
 
-	fastify.get('/ws/game-sessions/:id', {websocket: true},
+	fastify.get('/ws/game-sessions/:id', {preHandler: fastify.authenticate, websocket: true},
 	(socket, req) => {
 		const sessionId = Number(req.params.id);
-		const userId = 1;
-		// const userId = req.user.id;
+		const userId = req.user.id;
 
 		const player = quizModel.findUserInSession(sessionId, userId);
 		if (!player) {

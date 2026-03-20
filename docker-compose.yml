@@ -30,33 +30,15 @@ services:
     container_name: front
     networks:
       - ft_transcendance
-    # Port 5173 exposed for consistency with internal config, but not needed publicly
-    # ports:
-    #   - "5173:5173"
-    environment:
-      - FRONT_URL=https://localhost/
+    depends_on:
+      sqlite_db:
+          condition: service_completed_successfully
+    expose:
+      - 5173
     volumes:
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
     restart: on-failure
-    
-  api:
-    build:
-      context: ./services/back/api
-      dockerfile: Dockerfile
-    container_name: api
-    networks:
-      - ft_transcendance
-    ports:
-      - "3000:3000"
-    environment:
-      - API_URL=https://localhost:3000
-    volumes:
-      - db:/db
-    depends_on:
-      sqlite_db:
-          condition: service_completed_successfully 
-    command: node --watch src/app.js 
     
   user_api:
     build:
@@ -67,18 +49,15 @@ services:
       - ft_transcendance
     ports:
       - "3001:3001"
-    environment:
-      - API_URL=https://localhost:3001
     volumes:
       - db:/db
+      - user_uploads:/app/uploads
       - vault-secrets:/secrets:ro
       - ./shared:/scripts:ro
-      - ./services/back/user:/app
-      - user_node_modules:/app/node_modules
     depends_on:
       sqlite_db:
           condition: service_completed_successfully 
-    command: node --watch src/app.js
+    command: node src/app.js
 
   auth_api:
     build:
@@ -89,17 +68,14 @@ services:
     ports:
       - "3003:3003"
       - "1025:1025"
-    environment:
-      - API_URL=https://localhost:3003
     volumes:
     - db:/db
     - vault-secrets:/secrets:ro
     - ./shared:/scripts:ro
-    - auth_node_modules:/app/node_modules
     depends_on:
       sqlite_db:
           condition: service_completed_successfully
-    command: node --watch src/app.js
+    command: node src/app.js
 
 
   quiz_api:
@@ -111,17 +87,16 @@ services:
         - ft_transcendance
       ports:
         - "3002:3002"
-      environment:
-        - API_URL=https://localhost:3002
       volumes:
         - db:/db
         - vault-secrets:/secrets:ro
         - ./shared:/scripts:ro
-        - quiz_node_modules:/app/node_modules
       depends_on:
         sqlite_db:
           condition: service_completed_successfully 
-      command: node --watch src/app.js
+        vault_agent:
+          condition: service_healthy
+      command: node src/app.js
     
 
   sqlite_db:
@@ -209,8 +184,5 @@ volumes:
       device: tmpfs
   db:
     driver: local
-  front_node_modules:
-  api_node_modules:
-  auth_node_modules:
-  quiz_node_modules:
-  user_node_modules:
+  user_uploads:
+    driver: local

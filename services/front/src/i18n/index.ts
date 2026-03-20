@@ -5,6 +5,12 @@ import enLang from './locales/en/en.json'
 import frLang from './locales/fr/fr.json'
 import arLang from './locales/ar/ar.json'
 
+const supportedLanguages = ['en', 'fr', 'ar'] as const
+const storedLanguage = localStorage.getItem('language')?.split('-')[0]
+const initialLanguage = supportedLanguages.includes((storedLanguage as (typeof supportedLanguages)[number]) ?? 'en')
+  ? storedLanguage
+  : 'en'
+
 i18n
   .use(initReactI18next)
   .init({
@@ -20,8 +26,8 @@ i18n
       },
     },
     
-    lng: localStorage.getItem('language') || 'fr',
-    fallbackLng: 'fr',
+    lng: initialLanguage,
+    fallbackLng: 'en',
     returnObjects:true,
 
     interpolation: {

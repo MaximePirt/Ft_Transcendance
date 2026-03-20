@@ -1,299 +1,1241 @@
 {
-    "Quiz": [
-        {
-            "Histoire": [
-                {
-                    "id": "history.law.contraceptives",
-                    "question": "Quelle est la loi qui autorise l’usage des contraceptifs, et notamment la contraception orale.",
-                    "type": "qcm",
-                    "réponse": "Loi Neuwirth",
-                    "options": [
-                        "Loi SRU",
-                        "Accords de Grenelle",
-                        "Loi Badinter",
-                        "Loi Neuwirth"
-                    ],
-                    "difficulté": "medium"
-                },
-                {
-                    "id": "history.discovery.america",
-                    "question": "Qui a découvert l'Amérique ?",
-                    "type": "texte",
-                    "réponse": "Christophe Colomb",
+	"Quiz": [
+		{
+			"Histoire": [
+				{
+					"id": "history.law.contraceptives",
+					"question": "Quelle loi autorise l'utilisation des contraceptifs, en particulier la contraception orale ?",
+					"type": "qcm",
+					"réponse": "Loi Neuwirth",
+					"options": [
+						"Loi SRU",
+						"Accords de Grenelle",
+						"Loi Badinter",
+						"Loi Neuwirth"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.discovery.america",
+					"question": "Qui a découvert l'Amérique ?",
+					"type": "texte",
+					"réponse": "Christophe Colomb",
                     "variantes": [
                         "Colomb",
                         "Christopher Columbus",
                         "Christophe Colombe",
                         "Cristóbal Colón"
                     ],
-                    "difficulté": "easy"
-                }
-
-            ],
-            "Musiques": [
-                {
-                    "id": "music.bohemian_rhapsody",
-                    "question": "Quel artiste a chanté 'Bohemian Rhapsody' ?",
-                    "type": "qcm",
-                    "réponse": "Queen",
-                    "options": [
-                        "The Beatles",
-                        "Queen",
-                        "Led Zeppelin",
-                        "Pink Floyd"
-                    ],
-                    "difficulté": "medium"
-                }
-
-            ],
-            "Sports": [
-                {
-                    "id": "sports.fifa2018.winner",
-                    "question": "Quel pays a remporté la Coupe du Monde de la FIFA 2018 ?",
-                    "type": "qcm",
-                    "réponse": "France",
-                    "options": [
-                        "Brésil",
-                        "Allemagne",
-                        "France",
-                        "Argentine"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "sports.olympics.100m_record",
-                    "question": "Qui détient le record du monde du 100 mètres masculin ?",
-                    "type": "texte",
-                    "réponse": "Usain Bolt",
-                    "variantes": [
-                        "Bolt",
-                        "Usain",
-                        "Usain St. Leo Bolt"
-                    ],
-                    "difficulté": "easy"
-                }
-            ],
-            "Cinéma": [
-                {
-                    "id": "cinema.titanic.lead_actor",
-                    "question": "Qui est l'acteur principal dans le film 'Titanic' ?",
-                    "type": "qcm",
-                    "réponse": "Leonardo DiCaprio",
-                    "options": [
-                        "Brad Pitt",
-                        "Johnny Depp",
-                        "Leonardo DiCaprio",
-                        "Tom Cruise"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "cinema.lalaland.director",
-                    "question": "Quel est le realisateur du film 'Lalaland' ?",
-                    "type": "qcm",
-                    "réponse": "Damien Chazelle",
-                    "options": [
-                        "Steven Spielberg",
-                        "Christopher Nolan",
-                        "Damien Chazelle",
-                        "Quentin Tarantino"
-                    ],
-                    "difficulté": "medium"
-                },
-                {
-                    "id": "cinema.matrix.lead_actor",
-                    "question": "Dans quel film de science-fiction de 1999, Keanu Reeves incarne-t-il un pirate informatique nommé Neo ?",
-                    "type": "qcm",
-                    "réponse": "The Matrix",
-                    "options": [
-                        "Inception",
-                        "The Matrix",
-                        "Blade Runner",
-                        "Minority Report"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "cinema.oscar.best_animated_film_2020",
-                    "question": "Quel film a remporte l'Oscar du meilleur film d'animation en 2020 ?",
-                    "type": "qcm",
-                    "réponse": "Toy Story 4",
-                    "options": [
-                        "Frozen II",
-                        "How to Train Your Dragon: The Hidden World",
-                        "Toy Story 4",
-                        "Klaus"
-                    ],
-                    "difficulté": "medium"
-                },
-                {
-                    "id": "cinema.psychose.films",
-                    "question": "Quel réalisateur est connu pour ses films à suspense tels que 'Psychose' et 'Les Oiseaux' ?",
-                    "type": "texte",
-                    "réponse": "Alfred Hitchcock",
-                    "variantes": [
-                        "Hitchcock",
-                        "Alfred H.",
-                        "Sir Alfred Hitchcock"
-                    ],
-                    "difficulté": "medium"
-                },
-                {
-                    "id": "cinema.burton.victor",
-                    "question": "Quel film de Tim Burton met en scène un jeune garçon nommé Victor qui se retrouve dans le monde des morts ?",
-                    "type": "qcm",
-                    "réponse": "Les Noces Funèbres",
-                    "options": [
-                        "L'Étrange Noël de Monsieur Jack",
-                        "Les Noces Funèbres",
-                        "Charlie et la Chocolaterie",
-                        "Alice au Pays des Merveilles"
-                    ],
-                    "difficulté": "hard"
-                }
-            ],
-            "JeuxVidéo": [
-                {
-                    "id": "games.esport.first_game",
-                    "question": "Quel est le premier jeu sur lequel l'esport est apparu ?",
-                    "type": "texte",
-                    "réponse": "The Intergalactic Space War",
-                    "variantes": [
-                        "Space War",
-                        "The Space War",
-                        "Intergalactic Space War"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "games.esport.game_awards_2025",
-                    "question": "Quel jeu a remporte le Game Awards du jeu esport de l'année 2025 ? ",
-                    "type": "qcm",
-                    "réponse": "Counter-Strike 2",
-                    "options": [
-                        "Dota 2",
-                        "Counter-Strike 2",
-                        "Fortnite",
-                        "League of Legends"
-                    ],
-                    "difficulté": "medium"
-                },
-                {
-                    "id": "games.league_of_legends.headquarters_country",
-                    "question": "Dans quel pays se trouve le siège social de Riot Games, le développeur de League of Legends ?",
-                    "type": "texte",
-                    "réponse": "États-Unis",
-                    "variantes": [
-                        "USA",
-                        "Amérique",
-                        "United States"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "games.quantic_dream.first_international_game",
-                    "question": "Quel est le premier jeu Français créé par Quantic Dream à avoir été reconnu à l'international ?",
-                    "type": "qcm",
-                    "réponse": "Omikron: The Nomad Soul",
-                    "options": [
-                        "Fahrenheit",
-                        "Heavy Rain",
-                        "Omikron: The Nomad Soul",
-                        "Detroit: Become Human"
-                    ],
-                    "difficulté": "hard"
-
-                },
-                {
-                    "id": "games.battle_royale.popular_game",
-                    "question": "Quel jeu vidéo a popularisé le genre Battle Royale ?",
-                    "type": "qcm",
-                    "réponse": "PlayerUnknown's Battlegrounds (PUBG)",
-                    "options": [
-                        "Fortnite",
-                        "Apex Legends",
-                        "PlayerUnknown's Battlegrounds (PUBG)",
-                        "Call of Duty: Warzone"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "games.legend_of_zelda.main_character",
-                    "question": "Quel est le nom du protagoniste principal dans la série de jeux vidéo 'The Legend of Zelda' ?",
-                    "type": "texte",
-                    "réponse": "Link",
-                    "variantes": [
-                        "Laink",
-                        "Linque"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "games.minecraft.creeper_inspiration",
-                    "question": "Quel animal a servi a l'invention du creeper dans Minecraft ?",
-                    "type": "texte",
-                    "réponse": "Cochon",
-                    "variantes": [
-                        "Pig",
-                        "Pork"
-                    ],
-                    "difficulté": "easy"
-                }
-            ],
-            "Echec": [
-                {
-                    "id": "chess.longest_reign_world_champion",
-                    "question": "Lequel de ces joueurs d'échecs détient le record du plus long règne ininterrompu en tant que champion du monde officiel (27 ans) ?",
-                    "type": "qcm",
-                    "réponse": "Emanuel Lasker",
-                    "options": [
-                        "Garry Kasparov",
-                        "Emanuel Lasker",
-                        "Anatoly Karpov",
-                        "Magnus Carlsen"
-                    ],
-                    "difficulté": "easy"
-                }
-            ],
-            "Informatique": [
-                {
-                    "id": "informatics.ios_primary_language",
-                    "question": "Quel langage de programmation est principalement utilisé pour le développement d'applications iOS ?",
-                    "type": "qcm",
-                    "réponse": "Swift",
-                    "options": [
-                        "Java",
-                        "Kotlin",
-                        "Swift",
-                        "Objective-C"
-                    ],
-                    "difficulté": "medium"
-                },
-                {
-                    "id": "informatics.internet_security_protocol",
-                    "question": "Quel protocole est utilisé pour sécuriser les communications sur Internet en chiffrant les données échangées entre le navigateur et le serveur web ?",
-                    "type": "qcm",
-                    "réponse": "HTTPS",
-                    "options": [
-                        "HTTP",
-                        "FTP",
-                        "SMTP",
-                        "HTTPS"
-                    ],
-                    "difficulté": "easy"
-                },
-                {
-                    "id": "informatics.linux_kernel",
-                    "question": "Quel est le noyau de système d'exploitation open source le plus utilisé dans le monde ?",
-                    "type": "texte",
-                    "réponse": "Linux",
-                    "variantes": [
-                        "Linux Kernel",
-                        "GNU/Linux"
-                    ],
-                    "difficulté": "easy"
-                }
-            ]
-        }
-    ]
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.first_us_president",
+					"question": "Qui a été le premier président des États-Unis ?",
+					"type": "qcm",
+					"réponse": "George Washington",
+					"options": [
+						"Thomas Jefferson",
+						"Abraham Lincoln",
+						"George Washington",
+						"Jeffrey Epstein"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.ww2_end_year",
+					"question": "En quelle année la Seconde Guerre mondiale s'est-elle officiellement terminée ?",
+					"type": "qcm",
+					"réponse": "1945",
+					"options": [
+						"1941",
+						"1943",
+						"1945",
+						"1950"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.first_roman_emperor",
+					"question": "Qui a été le premier empereur de l'Empire romain ?",
+					"type": "qcm",
+					"réponse": "Auguste",
+					"options": [
+						"Jules César",
+						"Auguste",
+						"Néron",
+						"Marc Aurèle"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "history.columbus_1492",
+					"question": "À qui attribue-t-on la découverte des Amériques pour l'Europe en 1492 ?",
+					"type": "qcm",
+					"réponse": "Christophe Colomb",
+					"options": [
+						"Fernand de Magellan",
+						"Vasco de Gama",
+						"Christophe Colomb",
+						"Marco Polo"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.french_revolution_start",
+					"question": "Quelle année a marqué le début de la Révolution française ?",
+					"type": "qcm",
+					"réponse": "1789",
+					"options": [
+						"1776",
+						"1789",
+						"1812",
+						"1848"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.soviet_leader_ww2",
+					"question": "Qui était le dirigeant de l'Union soviétique pendant la Seconde Guerre mondiale ?",
+					"type": "qcm",
+					"réponse": "Joseph Staline",
+					"options": [
+						"Vladimir Lénine",
+						"Léon Trotsky",
+						"Joseph Staline",
+						"Nikita Khrouchtchev"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.giza_pyramids",
+					"question": "Quelle ancienne civilisation a construit les pyramides de Gizeh ?",
+					"type": "qcm",
+					"réponse": "Les anciens Égyptiens",
+					"options": [
+						"Les anciens Grecs",
+						"Les Mayas",
+						"Les anciens Égyptiens",
+						"Les Sumériens"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.magna_carta_year",
+					"question": "En quelle année la Magna Carta a-t-elle été signée en Angleterre ?",
+					"type": "qcm",
+					"réponse": "1215",
+					"options": [
+						"1066",
+						"1215",
+						"1348",
+						"1492"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "history.cleopatra",
+					"question": "Qui était la célèbre reine de l'Égypte antique qui a eu des relations avec Jules César et Marc Antoine ?",
+					"type": "texte",
+					"réponse": "Cléopâtre",
+					"variantes": [
+						"Cleopatre",
+						"Cleopatra",
+						"Cléopâtre"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.cold_war_nations",
+					"question": "La Guerre froide était principalement une tension géopolitique entre quelles deux nations ?",
+					"type": "qcm",
+					"réponse": "États-Unis et Union soviétique",
+					"options": [
+						"États-Unis et Chine",
+						"Royaume-Uni et Allemagne",
+						"États-Unis et Union soviétique",
+						"Union soviétique et Chine"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "history.longest_french_monarch",
+					"question": "Qui a été le monarque au règne le plus long de l'histoire de France ?",
+					"type": "texte",
+					"réponse": "Louis XIV",
+					"variantes": [
+						"Louis XIV",
+						"louis quatorze",
+						"louis 14",
+						"louis the fourteenth",
+						"Le Roi Soleil"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "history.berlin_wall_fall",
+					"question": "Quel célèbre mur est tombé en 1989, symbolisant la fin de la Guerre froide ?",
+					"type": "qcm",
+					"réponse": "Mur de Berlin",
+					"options": [
+						"Grande Muraille de Chine",
+						"Mur d'Hadrien",
+						"Mur de Berlin",
+						"Mur des Lamentations"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "history.ww1_assassination",
+					"question": "L'assassinat de qui à Sarajevo en 1914 a déclenché le début de la Première Guerre mondiale ?",
+					"type": "qcm",
+					"réponse": "Archiduc François-Ferdinand",
+					"options": [
+						"Brigitte Macron",
+						"Kim Jon Hun",
+						"Archiduc François-Ferdinand",
+						"Józef Piłsudski"
+					],
+					"difficulté": "easy"
+				}
+			],
+			"Musiques": [
+				{
+					"id": "music.bohemian_rhapsody",
+					"question": "Quel artiste a chanté 'Bohemian Rhapsody' ?",
+					"type": "qcm",
+					"réponse": "Queen",
+					"options": [
+						"The Beatles",
+						"Queen",
+						"Led Zeppelin",
+						"Pink Floyd"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.smells_like_teen_spirit",
+					"question": "Quel groupe a sorti le tube 'Smells Like Teen Spirit' en 1991 ?",
+					"type": "qcm",
+					"réponse": "Nirvana",
+					"options": [
+						"Pearl Jam",
+						"Nirvana",
+						"Soundgarden",
+						"Alice in Chains"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.king_of_pop",
+					"question": "Qui est couramment surnommé le 'King of Pop' ?",
+					"type": "qcm",
+					"réponse": "Michael Jackson",
+					"options": [
+						"Michael Jackson",
+						"Elton John",
+						"Prince",
+						"David Bowie"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.dark_side_of_the_moon",
+					"question": "Quel groupe a sorti l'album emblématique 'The Dark Side of the Moon' ?",
+					"type": "qcm",
+					"réponse": "Pink Floyd",
+					"options": [
+						"The Rolling Stones",
+						"The Doors",
+						"Pink Floyd",
+						"The Who"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.beatles_members",
+					"question": "Lequel des artistes suivants n'était PAS membre de The Beatles ?",
+					"type": "qcm",
+					"réponse": "Mick Jagger",
+					"options": [
+						"John Lennon",
+						"Paul McCartney",
+						"George Harrison",
+						"Mick Jagger"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.moonwalk",
+					"question": "Quel mouvement de danse a été popularisé par Michael Jackson lors d'une performance en 1983 ?",
+					"type": "qcm",
+					"réponse": "The Moonwalk",
+					"options": [
+						"The Robot",
+						"The Moonwalk",
+						"The Worm",
+						"The Twist"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.i_will_always_love_you",
+					"question": "Qui a initialement écrit et enregistré la chanson 'I Will Always Love You' ?",
+					"type": "qcm",
+					"réponse": "Dolly Parton",
+					"options": [
+						"Whitney Houston",
+						"Celine Dion",
+						"Dolly Parton",
+						"Patsy Cline"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.ziggy_stardust",
+					"question": "Ziggy Stardust était l'alter ego de quel musicien célèbre ?",
+					"type": "qcm",
+					"réponse": "David Bowie",
+					"options": [
+						"Elton John",
+						"David Bowie",
+						"Freddie Mercury",
+						"Iggy Pop"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.woodstock_year",
+					"question": "En quelle année le festival de musique original Woodstock a-t-il eu lieu ?",
+					"type": "qcm",
+					"réponse": "1969",
+					"options": [
+						"1967",
+						"1968",
+						"1969",
+						"1970"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.abba_country",
+					"question": "Le légendaire groupe pop ABBA est originaire de quel pays ?",
+					"type": "qcm",
+					"réponse": "Suède",
+					"options": [
+						"Norvège",
+						"Danemark",
+						"Suède",
+						"Finlande"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.instrument_jimi_hendrix",
+					"question": "Pour quel instrument Jimi Hendrix était-il le plus célèbre ?",
+					"type": "qcm",
+					"réponse": "Guitare",
+					"options": [
+						"Batterie",
+						"Basse",
+						"Guitare",
+						"Clavier"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.nobel_literature",
+					"question": "Quel musicien a reçu le prix Nobel de littérature en 2016 ?",
+					"type": "qcm",
+					"réponse": "Bob Dylan",
+					"options": [
+						"Leonard Cohen",
+						"Paul McCartney",
+						"Joni Mitchell",
+						"Bob Dylan"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.spice_girls",
+					"question": "Quel était le nom du premier single des Spice Girls sorti en 1996 ?",
+					"type": "qcm",
+					"réponse": "Wannabe",
+					"options": [
+						"Spice Up Your Life",
+						"Wannabe",
+						"Say You'll Be There",
+						"Stop"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.beethoven_deaf",
+					"question": "Quel célèbre compositeur classique a continué à écrire de la musique même après être devenu complètement sourd ?",
+					"type": "texte",
+					"réponse": "Ludwig van Beethoven",
+					"variantes": [
+						"Beethoven",
+						"Ludwig",
+						"Ludwig Beethoven",
+						"Beethoven Ludwig"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.eminem_real_name",
+					"question": "Quel est le vrai nom du rappeur Eminem ?",
+					"type": "qcm",
+					"réponse": "Marshall Mathers",
+					"options": [
+						"Calvin Broadus",
+						"Sean Combs",
+						"Marshall Mathers",
+						"Curtis Jackson"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.queen_of_soul",
+					"question": "Qui est largement connue comme la 'Queen of Soul' ?",
+					"type": "qcm",
+					"réponse": "Aretha Franklin",
+					"options": [
+						"Diana Ross",
+						"Aretha Franklin",
+						"Tina Turner",
+						"Etta James"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.nirvana_frontman",
+					"question": "Qui était le chanteur principal et guitariste du groupe grunge Nirvana ?",
+					"type": "qcm",
+					"réponse": "Kurt Cobain",
+					"options": [
+						"Eddie Vedder",
+						"Chris Cornell",
+						"Kurt Cobain",
+						"Layne Staley"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.first_mtv_video",
+					"question": "Quel a été le tout premier clip vidéo diffusé sur MTV en 1981 ?",
+					"type": "qcm",
+					"réponse": "Video Killed the Radio Star",
+					"options": [
+						"Thriller",
+						"Money for Nothing",
+						"Take On Me",
+						"Video Killed the Radio Star"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "music.rolling_stones_logo",
+					"question": "Quel est le célèbre logo de The Rolling Stones ?",
+					"type": "qcm",
+					"réponse": "Une bouche avec la langue tirée",
+					"options": [
+						"Une sous-marin jaune",
+						"Une bouche avec la langue tirée",
+						"Un prisme reflétant la lumière",
+						"Un éclair"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "music.adele_albums",
+					"question": "D'après quoi les trois premiers albums studio d'Adele sont-ils nommés ?",
+					"type": "qcm",
+					"réponse": "Son âge",
+					"options": [
+						"Son âge",
+						"Ses couleurs préférées",
+						"Des villes où elle a vécu",
+						"Ses relations"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "music.miles_davis",
+					"question": "Miles Davis était une figure légendaire dans quel genre musical ?",
+					"type": "qcm",
+					"réponse": "Jazz",
+					"options": [
+						"Blues",
+						"Jazz",
+						"Rock and Roll",
+						"Classique"
+					],
+					"difficulté": "medium"
+				}
+			],
+			"Sports": [
+				{
+					"id": "sports.fifa2018.winner",
+					"question": "Quel pays a remporté la Coupe du Monde de la FIFA 2018 ?",
+					"type": "qcm",
+					"réponse": "France",
+					"options": [
+						"Brésil",
+						"Allemagne",
+						"France",
+						"Argentine"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sports.olympics.100m_record",
+					"question": "Qui détient le record du monde du 100 mètres ?",
+					"type": "texte",
+					"réponse": "Usain Bolt",
+					"variantes": [
+						"Bolt",
+						"Usain",
+						"Usain St. Leo Bolt"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.world_cup_2022",
+					"question": "Quel pays a remporté la Coupe du Monde masculine de la FIFA en 2022 ?",
+					"type": "qcm",
+					"réponse": "Argentine",
+					"options": [
+						"France",
+						"Brésil",
+						"Argentine",
+						"Allemagne"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.olympic_medals",
+					"question": "Qui détient le record du plus grand nombre de médailles d'or olympiques de tous les temps ?",
+					"type": "qcm",
+					"réponse": "Michael Phelps",
+					"options": [
+						"Usain Bolt",
+						"Carl Lewis",
+						"Michael Phelps",
+						"Mark Spitz"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.marathon_distance",
+					"question": "Quelle est la distance officielle d'un marathon ?",
+					"type": "qcm",
+					"réponse": "42.195 km",
+					"options": [
+						"21.097 km",
+						"42.195 km",
+						"40.000 km",
+						"50.000 km"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.tennis_clay",
+					"question": "Lequel des quatre tournois du Grand Chelem de tennis se joue sur terre battue ?",
+					"type": "qcm",
+					"réponse": "French Open (Roland Garros)",
+					"options": [
+						"Wimbledon",
+						"US Open",
+						"Australian Open",
+						"French Open (Roland Garros)"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.basketball_players",
+					"question": "Combien de joueurs de chaque équipe sont autorisés sur le terrain en même temps dans un match de basket-ball standard ?",
+					"type": "qcm",
+					"réponse": "5",
+					"options": [
+						"5",
+						"6",
+						"7",
+						"11"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.judo_origin",
+					"question": "Dans quel pays l'art martial du Judo a-t-il vu le jour ?",
+					"type": "qcm",
+					"réponse": "Japon",
+					"options": [
+						"Chine",
+						"Corée du Sud",
+						"Japon",
+						"Thaïlande"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.ali_name",
+					"question": "Quel était le nom de naissance du légendaire boxeur Muhammad Ali ?",
+					"type": "qcm",
+					"réponse": "Cassius Clay",
+					"options": [
+						"Joe Frazier",
+						"George Foreman",
+						"Cassius Clay",
+						"Sugar Ray Robinson"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.home_run",
+					"question": "Le terme 'home run' est principalement utilisé dans quel sport ?",
+					"type": "qcm",
+					"réponse": "Baseball",
+					"options": [
+						"Cricket",
+						"Baseball",
+						"Golf",
+						"Tennis"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.first_modern_olympics",
+					"question": "Quel pays a accueilli les premiers Jeux Olympiques modernes en 1896 ?",
+					"type": "qcm",
+					"réponse": "Grèce",
+					"options": [
+						"France",
+						"Royaume-Uni",
+						"Grèce",
+						"Italie"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.world_cup_attendance",
+					"question": "Quel est le seul pays à avoir participé à toutes les éditions de la Coupe du Monde masculine de la FIFA ?",
+					"type": "qcm",
+					"réponse": "Brésil",
+					"options": [
+						"Allemagne",
+						"Italie",
+						"Argentine",
+						"Brésil"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.tour_de_france_first",
+					"question": "Qui a remporté le tout premier Tour de France en 1903 ?",
+					"type": "qcm",
+					"réponse": "Maurice Garin",
+					"options": [
+						"Jacques Anquetil",
+						"Eddy Merckx",
+						"Maurice Garin",
+						"Bernard Hinault"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "sport.ryder_cup",
+					"question": "La Ryder Cup est une célèbre compétition internationale dans quel sport ?",
+					"type": "qcm",
+					"réponse": "Golf",
+					"options": [
+						"Tennis",
+						"Golf",
+						"Voile",
+						"Équitation"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.soccer_duration",
+					"question": "Combien de minutes dure un match de football standard, hors temps additionnel ?",
+					"type": "qcm",
+					"réponse": "90",
+					"options": [
+						"60",
+						"80",
+						"90",
+						"120"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.canada_winter",
+					"question": "Quel est le sport d'hiver national officiel du Canada ?",
+					"type": "qcm",
+					"réponse": "Hockey sur glace",
+					"options": [
+						"Curling",
+						"Snowboard",
+						"Patinage artistique",
+						"Hockey sur glace"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.100m_record",
+					"question": "Qui détient le record du monde masculin du 100 mètres ?",
+					"type": "qcm",
+					"réponse": "Usain Bolt",
+					"options": [
+						"Tyson Gay",
+						"Yohan Blake",
+						"Usain Bolt",
+						"Asafa Powell"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.bowling_perfect",
+					"question": "Quel est le score maximum possible dans une seule partie de bowling à dix quilles ?",
+					"type": "qcm",
+					"réponse": "300",
+					"options": [
+						"200",
+						"300",
+						"400",
+						"500"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.lombardi_trophy",
+					"question": "Le Vince Lombardi Trophy est décerné au champion de quelle ligue sportive majeure ?",
+					"type": "qcm",
+					"réponse": "NFL (Football américain)",
+					"options": [
+						"NBA (Basket-ball)",
+						"NHL (Hockey sur glace)",
+						"MLB (Baseball)",
+						"NFL (Football américain)"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "sport.nba_acronym",
+					"question": "Que signifie NBA ?",
+					"type": "qcm",
+					"réponse": "National Basketball Association",
+					"options": [
+						"National Basketball Association",
+						"Nationwide Basketball Alliance",
+						"National Board of Athletics",
+						"New Basketball Association"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.all_blacks",
+					"question": "Les 'All Blacks' sont la célèbre équipe nationale de rugby à XV de quel pays ?",
+					"type": "qcm",
+					"réponse": "Nouvelle-Zélande",
+					"options": [
+						"Australie",
+						"Afrique du Sud",
+						"Angleterre",
+						"Nouvelle-Zélande"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "sport.f1_hamilton",
+					"question": "En 2023, quel pilote de Formule 1 partage le record de 7 championnats du monde avec Michael Schumacher ?",
+					"type": "qcm",
+					"réponse": "Lewis Hamilton",
+					"options": [
+						"Sebastian Vettel",
+						"Fernando Alonso",
+						"Max Verstappen",
+						"Lewis Hamilton"
+					],
+					"difficulté": "hard"
+				}
+			],
+			"Cinéma": [
+				{
+					"id": "cinema.titanic.lead_actor",
+					"question": "Qui est l'acteur principal du film 'Titanic' ?",
+					"type": "qcm",
+					"réponse": "Leonardo DiCaprio",
+					"options": [
+						"Brad Pitt",
+						"Johnny Depp",
+						"Leonardo DiCaprio",
+						"Tom Cruise"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cinema.lalaland.director",
+					"question": "Qui est le réalisateur du film 'La La Land' ?",
+					"type": "qcm",
+					"réponse": "Damien Chazelle",
+					"options": [
+						"Steven Spielberg",
+						"Christopher Nolan",
+						"Damien Chazelle",
+						"Quentin Tarantino"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cinema.matrix.lead_actor",
+					"question": "Dans quel film de science-fiction de 1999 Keanu Reeves joue-t-il un hacker informatique nommé Neo ?",
+					"type": "qcm",
+					"réponse": "The Matrix",
+					"options": [
+						"Inception",
+						"The Matrix",
+						"Blade Runner",
+						"Minority Report"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cinema.oscar.best_animated_film_2020",
+					"question": "Quel film a remporté l'Oscar du meilleur film d'animation en 2020 ?",
+					"type": "qcm",
+					"réponse": "Toy Story 4",
+					"options": [
+						"Frozen II",
+						"How to Train Your Dragon: The Hidden World",
+						"Toy Story 4",
+						"Klaus"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cinema.psychose.films",
+					"question": "Quel réalisateur est connu pour ses films à suspense tels que 'Psychose' et 'Les Oiseaux' ?",
+					"type": "texte",
+					"réponse": "Alfred Hitchcock",
+					"variantes": [
+						"Hitchcock",
+						"Alfred H.",
+						"Sir Alfred Hitchcock"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cinema.burton.victor",
+					"question": "Quel film de Tim Burton met en scène un jeune garçon nommé Victor qui se retrouve dans le monde des morts ?",
+					"type": "qcm",
+					"réponse": "Les Noces Funèbres",
+					"options": [
+						"L'Étrange Noël de Monsieur Jack",
+						"Les Noces Funèbres",
+						"Charlie et la Chocolaterie",
+						"Alice au Pays des Merveilles"
+					],
+					"difficulté": "hard"
+				}
+			],
+			"JeuxVidéo": [
+				{
+					"id": "games.esport.first_game",
+					"question": "Quel est le premier jeu dans lequel l'e-sport est apparu ?",
+					"type": "texte",
+					"réponse": "The Intergalactic Space War",
+					"variantes": [
+						"Space War",
+						"The Space War",
+						"Intergalactic Space War"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.esport.game_awards_2025",
+					"question": "Quel jeu a remporté le prix du jeu e-sport de l'année aux Game Awards en 2025 ?",
+					"type": "qcm",
+					"réponse": "Counter-Strike 2",
+					"options": [
+						"Dota 2",
+						"Counter-Strike 2",
+						"Fortnite",
+						"League of Legends"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "games.league_of_legends.headquarters_country",
+					"question": "Dans quel pays se trouve le siège social de Riot Games, le développeur de League of Legends ?",
+					"type": "texte",
+					"réponse": "États-Unis",
+					"variantes": [
+						"USA",
+						"Amérique",
+						"United States"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.quantic_dream.first_international_game",
+					"question": "Quel est le premier jeu français créé par Quantic Dream à être reconnu à l'international ?",
+					"type": "qcm",
+					"réponse": "Omikron: The Nomad Soul",
+					"options": [
+						"Fahrenheit",
+						"Heavy Rain",
+						"Omikron: The Nomad Soul",
+						"Detroit: Become Human"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "games.battle_royale.popular_game",
+					"question": "Quel jeu vidéo a popularisé le genre Battle Royale ?",
+					"type": "texte",
+					"réponse": "PlayerUnknown's Battlegrounds (PUBG)",
+					"variantes": [
+						"PlayerUnknown's Battlegrounds",
+						"PUBG"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.legend_of_zelda.main_character",
+					"question": "Quel est le nom du protagoniste principal dans la série de jeux vidéo 'The Legend of Zelda' ?",
+					"type": "texte",
+					"réponse": "Link",
+					"variantes": [
+						"Laink",
+						"Linque"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "games.minecraft.creeper_inspiration",
+					"question": "Quel animal a inspiré la création du creeper dans Minecraft ?",
+					"type": "texte",
+					"réponse": "Cochon",
+					"variantes": [
+						"Pig",
+						"Pork"
+					],
+					"difficulté": "easy"
+				}
+			],
+			"Echec": [
+				{
+					"id": "chess.longest_reign_world_champion",
+					"question": "Lequel de ces joueurs d'échecs détient le record du plus long règne ininterrompu en tant que champion du monde officiel (27 ans) ?",
+					"type": "qcm",
+					"réponse": "Emanuel Lasker",
+					"options": [
+						"Garry Kasparov",
+						"Emanuel Lasker",
+						"Anatoly Karpov",
+						"Magnus Carlsen"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.total_squares",
+					"question": "Combien y a-t-il de cases sur un échiquier standard ?",
+					"type": "qcm",
+					"réponse": "64",
+					"options": [
+						"100",
+						"64",
+						"81",
+						"144"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.jumping_piece",
+					"question": "Quelle pièce d'échecs est la seule autorisée à sauter par-dessus d'autres pièces ?",
+					"type": "qcm",
+					"réponse": "Cavalier",
+					"options": [
+						"Fou",
+						"Tour",
+						"Reine",
+						"Cavalier"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.stalemate",
+					"question": "Comment appelle-t-on la situation où un joueur n'est pas en échec mais n'a aucun coup légal restant ?",
+					"type": "qcm",
+					"réponse": "Pat",
+					"options": [
+						"Échec et mat",
+						"Pat",
+						"Nulle par accord",
+						"Abandon"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.special_move_rook",
+					"question": "Comment s'appelle le mouvement spécial impliquant le Roi et une Tour ?",
+					"type": "qcm",
+					"réponse": "Roque",
+					"options": [
+						"En passant",
+						"Promotion",
+						"Roque",
+						"Clouage"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.en_passant",
+					"question": "La règle spéciale de capture de pion 'En passant' est un terme français qui se traduit par quoi en anglais ?",
+					"type": "qcm",
+					"réponse": "In passing",
+					"options": [
+						"In passing",
+						"On guard",
+						"The leap",
+						"Step aside"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.origin_country",
+					"question": "Dans quel pays le jeu d'échecs est-il largement considéré comme ayant vu le jour ?",
+					"type": "qcm",
+					"réponse": "Inde",
+					"options": [
+						"Chine",
+						"Perse",
+						"Inde",
+						"Égypte"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.highest_title",
+					"question": "Quel est le titre le plus élevé qu'un joueur d'échecs puisse obtenir, décerné par la FIDE ?",
+					"type": "qcm",
+					"réponse": "Grand Maître",
+					"options": [
+						"Maître International",
+						"Maître National",
+						"Grand Maître",
+						"Champion du Monde"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "chess.strongest_female",
+					"question": "Qui est largement considérée comme la plus forte joueuse d'échecs de tous les temps ?",
+					"type": "qcm",
+					"réponse": "Judit Polgár",
+					"options": [
+						"Hou Yifan",
+						"Vera Menchik",
+						"Judit Polgár",
+						"Beth Harmon"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "chess.carlsen_2013",
+					"question": "Qui est devenu champion du monde d'échecs en 2013 en battant Viswanathan Anand ?",
+					"type": "qcm",
+					"réponse": "Magnus Carlsen",
+					"options": [
+						"Garry Kasparov",
+						"Fabiano Caruana",
+						"Magnus Carlsen",
+						"Ian Nepomniachtchi"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "chess.lasker_reign",
+					"question": "Qui détient le record du plus long règne ininterrompu en tant que champion du monde officiel (27 ans) ?",
+					"type": "texte",
+					"réponse": "Emanuel Lasker",
+					"variantes": [
+						"Emanuel Lasker",
+						"Lasker"
+					],
+					"difficulté": "hard"
+				}
+			],
+			"Informatique": [
+				{
+					"id": "informatics.ios_primary_language",
+					"question": "Quel langage de programmation est principalement utilisé pour développer des applications iOS ?",
+					"type": "qcm",
+					"réponse": "Swift",
+					"options": [
+						"Java",
+						"Kotlin",
+						"Swift",
+						"Objective-C"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "informatics.internet_security_protocol",
+					"question": "Quel protocole est utilisé pour sécuriser les communications sur Internet en cryptant les données échangées entre le navigateur et le serveur web ?",
+					"type": "qcm",
+					"réponse": "HTTPS",
+					"options": [
+						"HTTP",
+						"FTP",
+						"SMTP",
+						"HTTPS"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "informatics.linux_kernel",
+					"question": "Quel est le nom du noyau de système d'exploitation open-source le plus utilisé au monde ?",
+					"type": "texte",
+					"réponse": "Linux",
+					"variantes": [
+						"Linux Kernel",
+						"GNU/Linux"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.first_programmer",
+					"question": "Qui est largement considérée comme le premier programmeur informatique ?",
+					"type": "qcm",
+					"réponse": "Ada Lovelace",
+					"options": [
+						"Alan Turing",
+						"Charles Babbage",
+						"Ada Lovelace",
+						"Grace Hopper"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.cpu_meaning",
+					"question": "Que signifie CPU ?",
+					"type": "qcm",
+					"réponse": "Central Processing Unit",
+					"options": [
+						"Central Process Unit",
+						"Computer Personal Unit",
+						"Central Processor Unit",
+						"Central Processing Unit"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.html_acronym",
+					"question": "Que signifie HTML ?",
+					"type": "qcm",
+					"réponse": "HyperText Markup Language",
+					"options": [
+						"HyperText Machine Language",
+						"HyperText Markup Language",
+						"HyperLink Markup Language",
+						"Home Tool Markup Language"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.java_creator",
+					"question": "Quel programmeur a créé le langage de programmation Java en 1995 ?",
+					"type": "qcm",
+					"réponse": "James Gosling",
+					"options": [
+						"Guido van Rossum",
+						"Bjarne Stroustrup",
+						"James Gosling",
+						"Dennis Ritchie"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "cs.turing_father",
+					"question": "Qui est souvent considéré comme le père de l'informatique théorique et de l'intelligence artificielle ?",
+					"type": "qcm",
+					"réponse": "Alan Turing",
+					"options": [
+						"John von Neumann",
+						"Alan Turing",
+						"Tim Berners-Lee",
+						"Linus Torvalds"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.binary_search_time",
+					"question": "Quelle est la complexité temporelle dans le pire des cas d'un algorithme de recherche dichotomique (binary search) ?",
+					"type": "qcm",
+					"réponse": "O(log n)",
+					"options": [
+						"O(1)",
+						"O(n)",
+						"O(n log n)",
+						"O(log n)"
+					],
+					"difficulté": "hard"
+				},
+				{
+					"id": "cs.https_port",
+					"question": "Quel port réseau est généralement utilisé pour le trafic web sécurisé (HTTPS) ?",
+					"type": "qcm",
+					"réponse": "443",
+					"options": [
+						"80",
+						"21",
+						"443",
+						"22"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.sql_meaning",
+					"question": "Que signifie SQL dans la gestion de bases de données ?",
+					"type": "qcm",
+					"réponse": "Structured Query Language",
+					"options": [
+						"Standard Query Language",
+						"Structured Query Language",
+						"Simple Question Language",
+						"Sequential Query Language"
+					],
+					"difficulté": "easy"
+				},
+				{
+					"id": "cs.github_acquisition",
+					"question": "Quelle entreprise technologique a racheté GitHub en 2018 ?",
+					"type": "qcm",
+					"réponse": "Microsoft",
+					"options": [
+						"Google",
+						"Facebook",
+						"Amazon",
+						"Microsoft"
+					],
+					"difficulté": "medium"
+				},
+				{
+					"id": "cs.first_iphone",
+					"question": "En quelle année Apple a-t-il sorti le tout premier iPhone ?",
+					"type": "qcm",
+					"réponse": "2007",
+					"options": [
+						"2005",
+						"2007",
+						"2009",
+						"2010"
+					],
+					"difficulté": "medium"
+				}
+			]
+		}
+	]
 }

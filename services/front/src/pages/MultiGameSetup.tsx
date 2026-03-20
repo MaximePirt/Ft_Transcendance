@@ -4,20 +4,20 @@ import { useTranslation } from 'react-i18next'
 import '../App.css'
 
 const themes = (t: any) => [
-  { id: 'All', slug: 'all', title: t('all', { defaultValue: 'Tous' }), detail: t('all_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Histoire', slug: 'histoire', title: t('histoire', { defaultValue: 'Histoire' }), detail: t('histoire_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Musiques', slug: 'musiques', title: t('music', { defaultValue: 'Musiques' }), detail: t('music_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Sports', slug: 'sports', title: t('sports', { defaultValue: 'Sports' }), detail: t('sports_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Cinéma', slug: 'cinema', title: t('cinema', { defaultValue: 'Cinéma' }), detail: t('cinema_desc', { defaultValue: '' }), icon: '' },
-  { id: 'JeuxVidéo', slug:'jeuxvideo' ,title:t('video_games',{defaultValue:'JeuxVidéo'}),detail:t('video_games_desc',{defaultValue:''}),icon:''},
-  { id: 'Echec', slug: 'echec', title: t('chess', { defaultValue: 'Echec' }), detail: t('chess_desc', { defaultValue: '' }), icon: '' },
-  { id: 'Informatique', slug: 'informatique', title: t('Informatique', { defaultValue: 'Informatique' }), detail: t('Informatique_desc', { defaultValue: '' }), icon: '' }
+  { id: 'All', slug: 'all', title: t('all'), detail: t('all_desc'), icon: '' },
+  { id: 'Histoire', slug: 'histoire', title: t('histoire'), detail: t('histoire_desc'), icon: '' },
+  { id: 'Musiques', slug: 'musiques', title: t('music'), detail: t('music_desc'), icon: '' },
+  { id: 'Sports', slug: 'sports', title: t('sports'), detail: t('sports_desc'), icon: '' },
+  { id: 'Cinéma', slug: 'cinema', title: t('cinema'), detail: t('cinema_desc'), icon: '' },
+  { id: 'JeuxVidéo', slug:'jeuxvideo' ,title:t('video_games'),detail:t('video_games_desc'),icon:''},
+  { id: 'Echec', slug: 'echec', title: t('chess'), detail: t('chess_desc'), icon: '' },
+  { id: 'Informatique', slug: 'informatique', title: t('Informatique'), detail: t('Informatique_desc'), icon: '' }
 ]
 
 const powerUps = (t: any) => [
-  { id: 'skip', slug: 'skip', title: t('pu_skip', { defaultValue: 'Skip' }), detail: t('pu_skip_desc', { defaultValue: '' }), icon: '' },
-  { id: 'hint', slug: 'hint', title: t('pu_hint', { defaultValue: 'Indice' }), detail: t('pu_hint_desc', { defaultValue: '' }), icon: '' },
-  { id: 'fifty', slug: 'fifty', title: t('pu_5050', { defaultValue: '50/50' }), detail: t('pu_5050_desc', { defaultValue: '' }), icon: '' },
+  { id: 'skip', slug: 'skip', title: t('pu_skip'), detail: t('pu_skip_desc'), icon: '' },
+  { id: 'hint', slug: 'hint', title: t('pu_hint'), detail: t('pu_hint_desc'), icon: '' },
+  { id: 'fifty', slug: 'fifty', title: t('pu_5050'), detail: t('pu_5050_desc'), icon: '' },
 ];
 
 const MAX_POWERUPS = 3;
@@ -25,10 +25,13 @@ const MIN_Q = 2;
 const MAX_Q = 10;
 const MIN_P = 2;
 const MAX_P = 8;
+const STORAGE_KEY = 'soloGameState:v1'
+
 
 function SoloGameSetup() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isRtl = i18n.dir() === 'rtl'
   const [selectedThemes, setSelectedThemes] = useState<Set<string>>(new Set())
   const [showThemesCard, setShowThemesCard] = useState(false)
   const [showPowerUpsCard, setShowPowerUpsCard] = useState(false);
@@ -39,8 +42,6 @@ function SoloGameSetup() {
   const [questionCount, setQuestionCount] = useState<number>(2);
   const themeList = themes(t)
   const themeIds = themeList.filter((theme) => theme.id !== 'All').map((theme) => theme.id)
-  localStorage.removeItem("sessionId")
-  localStorage.removeItem("questionCount")
 
 
 
@@ -90,6 +91,20 @@ function SoloGameSetup() {
     });
   };
 
+  async function getUserId() {
+    localStorage.removeItem("userId");
+    const response = await fetch(`https://localhost/api/user/me_id`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+    if (!response.ok) {
+      console.error("Failed to fetch user ID")
+      return
+    }
+    const currentUserId = await response.json();
+    localStorage.setItem("userId", String(currentUserId.id));
+  }
+
   const handleStartGame = async () => {
     console.log("Theme List : ", themeList);
     console.log("powerUps List : ", powerUps(t));
@@ -101,6 +116,23 @@ function SoloGameSetup() {
       }
       console.log("Selected themes for API:", topic);
       console.log("Player Count:", playerCount);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("sessionId");
+      localStorage.removeItem("questionCount");
+      localStorage.removeItem("maxPlayers");
+      localStorage.removeItem("sessionCode");
+      let count = questionCount;
+      if (count < MIN_Q)
+        count = MIN_Q;
+      else if (count > MAX_Q)
+        count = MAX_Q;
+
+      let playerNum = playerCount;
+      if (playerNum < MIN_P)
+        playerNum = MIN_P;
+      else if (playerNum > MAX_P)
+        playerNum = MAX_P;
+
       const session = await fetch("https://localhost/api/quiz/game-sessions", {
         method: 'POST',
         credentials: 'include',
@@ -108,8 +140,8 @@ function SoloGameSetup() {
         body: JSON.stringify({
           mode: "random",
           topic: topic,
-          question_count: questionCount,
-          max_players: playerCount,
+          question_count: count,
+          max_players: playerNum,
           power_ups: Array.from(selectedPowerUps),
         }),
       });
@@ -119,16 +151,17 @@ function SoloGameSetup() {
       const data = await session.json();
       localStorage.setItem("sessionId", String(data.sessionId));
       localStorage.setItem("sessionCode", String(data.sessionCode));
-      localStorage.setItem("maxPlayers", String(playerCount));
-      localStorage.setItem("questionCount", String(questionCount));
-      navigate('/quiz/multi', { state: { themes: Array.from(selectedThemes), questionCount, playerCount, powerUps: Array.from(selectedPowerUps) } });
+      localStorage.setItem("maxPlayers", String(playerNum));
+      localStorage.setItem("questionCount", String(count));
+      getUserId();
+      navigate('/quiz/multi', { state: { themes: Array.from(selectedThemes), questionCount: count, playerCount: playerNum, powerUps: Array.from(selectedPowerUps), sessionId: data.sessionId } });
     }
   }
 
   return (
-    <main className="page">
+    <main className="page" dir={i18n.dir()}>
       <div className="shell">
-        <p className="eyebrow">Quiz Sprint - {t("multiplayer_mode")}</p>
+        <p className="eyebrow">{t('app_name')} - {t("multiplayer_mode")}</p>
         <div className="hero">
           <div className="copy">
             <h1>{t("select_theme")}</h1>
@@ -150,8 +183,8 @@ function SoloGameSetup() {
             onClick={() => setShowThemesCard(!showThemesCard)}
           >
             {selectedThemes.size > 0 
-              ? `${selectedThemes.size} ${t('themes_selected', { defaultValue: 'thème(s) sélectionné(s)' })}` 
-              : t('choose_themes', { defaultValue: '' })}
+              ? `${selectedThemes.size} ${t('themes_selected')}` 
+              : t('choose_themes')}
           </button>
         </div>
 
@@ -177,6 +210,7 @@ function SoloGameSetup() {
                   key={theme.slug}
                   style={{
                     display: 'flex',
+                    flexDirection: isRtl ? 'row-reverse' : 'row',
                     alignItems: 'center',
                     padding: 'clamp(0.75rem, 2vw, 1rem)',
                     backgroundColor: '#f9f9f9',
@@ -184,14 +218,15 @@ function SoloGameSetup() {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
-                    position: 'relative'
+                    position: 'relative',
+                    textAlign: isRtl ? 'right' : 'left'
                   }}
                 >
                   <div style={{ 
                     position: 'relative', 
                     width: '64px', 
                     height: '64px', 
-                    marginRight: '1rem',
+                    marginInlineEnd: '1rem',
                     flexShrink: 0 
                   }}>
                     <img
@@ -248,7 +283,7 @@ function SoloGameSetup() {
           cursor: selectedThemes.size > 0 ? 'pointer' : 'not-allowed',
           }}
         >
-          {t('question_count', { defaultValue: 'Nombre de questions' })} : {questionCount}
+          {t('question_count')} : {questionCount}
         </button>
       </div>
       {showQuestionCountCard && (
@@ -262,10 +297,10 @@ function SoloGameSetup() {
       }}>
         <div style={{ marginBottom: '1.5rem' }}>
           <h3 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)' }}>
-            {t('choose_question_count', { defaultValue: 'Choisis le nombre de questions' })}
+            {t('choose_question_count')}
           </h3>
           <div style={{ color: '#666' }}>
-            {t('selected', { defaultValue: 'Sélectionné' })} : <b>{questionCount}</b>
+            {t('selected')} : <b>{questionCount}</b>
           </div>
         </div>
 
@@ -295,7 +330,7 @@ function SoloGameSetup() {
           cursor: selectedThemes.size > 0 ? 'pointer' : 'not-allowed',
           }}
         >
-          {t('players_count', { defaultValue: 'Nombre de joueurs' })} : {playerCount}
+          {t('players_count')} : {playerCount}
         </button>
       </div>
       {showPlayerCountCard && (
@@ -309,10 +344,10 @@ function SoloGameSetup() {
         }}>
           <div style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)' }}>
-              {t('chooseplayercount', { defaultValue: 'Choisis le nombre de joueurs' })}
+              {t('chooseplayercount')}
             </h3>
             <div style={{ color: '#666' }}>
-              {t('selected', { defaultValue: 'Sélectionné' })} : <b>{playerCount}</b>
+              {t('selected')} : <b>{playerCount}</b>
             </div>
           </div>
 
@@ -344,8 +379,8 @@ function SoloGameSetup() {
             }}
           >
             {selectedPowerUps.size > 0
-              ? `${selectedPowerUps.size}/${MAX_POWERUPS} ${t('power_ups_selected', { defaultValue: 'power-up(s) sélectionné(s)' })}`
-              : t('power_ups', { defaultValue: 'Power-ups' })}
+              ? `${selectedPowerUps.size}/${MAX_POWERUPS} ${t('power_ups_selected')}`
+              : t('power_ups')}
           </button>
       </div>
 
@@ -360,7 +395,7 @@ function SoloGameSetup() {
         }}>
           <div style={{ marginBottom: '1.5rem' }}>
             <h3 style={{ fontSize: 'clamp(1.2rem, 3vw, 1.5rem)' }}>
-              {t("available_powerups", { defaultValue: "Power-ups disponibles" })}
+              {t("available_powerups")}
             </h3>
           </div>
 
@@ -378,6 +413,7 @@ function SoloGameSetup() {
                   key={pu.id}
                   style={{
                     display: 'flex',
+                    flexDirection: isRtl ? 'row-reverse' : 'row',
                     alignItems: 'center',
                     padding: 'clamp(0.75rem, 2vw, 1rem)',
                     backgroundColor: '#f9f9f9',
@@ -385,14 +421,15 @@ function SoloGameSetup() {
                     borderRadius: '4px',
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
-                    position: 'relative'
+                    position: 'relative',
+                    textAlign: isRtl ? 'right' : 'left'
                   }}
                 >
                   <div style={{
                     position: 'relative',
                     width: '64px',
                     height: '64px',
-                    marginRight: '1rem',
+                    marginInlineEnd: '1rem',
                     flexShrink: 0
                   }}>
                     <img

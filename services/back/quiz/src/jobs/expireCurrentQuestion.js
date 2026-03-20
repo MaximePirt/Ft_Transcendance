@@ -50,12 +50,16 @@ function expireCurrentQuestion(sessionId) {
 
 	const { status } = quizModel.advanceSession(sessionId);
 	const players = quizModel.getPlayersBySession(sessionId);
-	wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
 
 	if (status === 'in_progress')
+	{
+		wsHub.broadcast(sessionId, { type: 'next_question', payload: { sessionId } });
 		sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
+	}
 	else if (status === 'completed')
 		wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
+	wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
+
 }
 
 module.exports = { expireCurrentQuestion };

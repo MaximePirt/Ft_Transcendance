@@ -1,19 +1,27 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const THEMES = [
-  'default',
-  'cinéma',
-  'echec',
-  'histoire',
-  'informatique',
-  'jeuxvidéo',
-  'musiques',
-  'sports',
+  { id: 'default', labelKey: 'theme_default' },
+  { id: 'cinéma', labelKey: 'cinema' },
+  { id: 'echec', labelKey: 'chess' },
+  { id: 'histoire', labelKey: 'histoire' },
+  { id: 'informatique', labelKey: 'computer_science' },
+  { id: 'jeuxvidéo', labelKey: 'video_games' },
+  { id: 'musiques', labelKey: 'music' },
+  { id: 'sports', labelKey: 'sports' },
 ] as const
 
-async function applyTheme(themeName: string, signal?: AbortSignal) {
+async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = false) {
   try {
     const res = await fetch(`/themes/styles/${themeName}.json`, { signal })
+    if (!res.ok) {
+      if (!isRetry && themeName !== 'default') {
+        return applyTheme('default', signal, true)
+      }
+      return
+    }
+
     const themeToApply = await res.json()
 
     const root = document.documentElement
@@ -23,14 +31,18 @@ async function applyTheme(themeName: string, signal?: AbortSignal) {
 
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') return
-    console.error(`Erreur lors du chargement du thème "${themeName}"`, err)
-    if (themeName !== 'default')
-      return applyTheme('default', signal)
+    if (!isRetry && themeName !== 'default') {
+      return applyTheme('default', signal, true)
+    }
+    if (!isRetry && themeName !== 'default') {
+      console.log(`Erreur lors du chargement du thème "${themeName}"`, err)
+    }
     return
   }
 }
 
 const ThemeSelector = () => {
+  const { t } = useTranslation()
   const [theme, setTheme] = useState<string>('default')
 
 useEffect(() => {
@@ -74,11 +86,11 @@ useEffect(() => {
       className="theme-combobox"
       value={theme}
       onChange={handleThemeChange}
-      aria-label="theme"
+      aria-label={t('theme_selector_label')}
     >
-      {THEMES.map((themeName) => (
-        <option key={themeName} value={themeName}>
-          {themeName}
+      {THEMES.map((themeOption) => (
+        <option key={themeOption.id} value={themeOption.id}>
+          {t(themeOption.labelKey)}
         </option>
       ))}
     </select>

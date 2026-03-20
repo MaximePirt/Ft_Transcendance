@@ -16,11 +16,8 @@ const POWERUP_PROBABILITY = Number(process.env.POWERUP_PROBABILITY || 0.9);
  */
 
 async function createGameSession(sessionData, hostId) {
-	hostId = 1;
 	const { mode, topic = null,
-			question_count, max_players = 4, power_ups, is_solo } = sessionData;
-	// TODO: uncomment lines below in debug purpose, remove it in prod
-	// const power_ups = ["skip", "hint", "fifty"];
+			question_count, max_players = 4, power_ups = [], is_solo } = sessionData;
 
 	const powerupsJson = power_ups && Array.isArray(power_ups) ? JSON.stringify(power_ups) : null;
 
@@ -151,7 +148,7 @@ async function startGameSession(userId, sessionCode)
 	catch (err) {
 		if (err.message.includes("Not enough questions"))
 			return {code: 400, error: 'Not enough questions available to start the game session'};
-		return {code: 500, error: 'Error starting game session', details: err.message};
+		return {code: 401, error: 'Error starting game session', details: err.message};
 	}
 }
 
@@ -234,8 +231,7 @@ async function submitAnswer(sessionId, userId, question_id, answer)
 }
 
 async function grantPowerupsForQuestion(session, questionOrder) {
-    console.log("==========================================\n\n");
-    const sessionId = session.id;
+    const sessionId = Number(session.id);
     const enabledPowerups = JSON.parse(session.power_ups || '[]');
     if (enabledPowerups.length === 0)
     {
@@ -264,7 +260,6 @@ async function grantPowerupsForQuestion(session, questionOrder) {
         wsHub.broadcast(sessionId, {type: 'powerups_granted', 
             payload: { sessionId, questionOrder, powerups: grantedPowerups }});
     }
-    console.log("==========================================\n\n");
 }
 
 
@@ -299,22 +294,8 @@ async function usePowerup(sessionId, userId, powerupId)
 				throw new Error("No timer found for this question and player");
 			quizModel.recordPlayerAnswer(sessionId, userId, question.id, "skip_powerup", time_taken, 1);
 			quizModel.updatePlayerScore(sessionId, userId, 1, time_taken);
-
-			if (quizModel.haveAllPlayersAnswered(sessionId, question.id)) {
-				sessionTimer.clearTimer(sessionId);
-				const { status, new_order } = quizModel.advanceSession(sessionId);
-				const players = quizModel.getPlayersBySession(sessionId);
-				wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
-				if (status === 'in_progress')
-				{
-					sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
-					const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
-					wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
-					await grantPowerupsForQuestion(session, session.current_question_order);
-				}
-				else if (status === 'completed')
-					wsHub.broadcast(sessionId, {type: 'session_completed', payload: {sessionId}});
-			}
+			const answer = quizModel.getCorrectAnswerForQuestion(question.id, player.lang);
+			powerupPayload = { correct_answer: answer };
 			break;
 		}
 		case 'hint':
@@ -373,7 +354,7 @@ async function usePowerup(sessionId, userId, powerupId)
 		default:
 			throw new Error("Unknown powerup type");
 	}
-	quizModel.usePowerup(powerupId, userId);
+	quizModel.usePowerup(powerupId, userId, session.id);
 	const powerupsCount = await quizModel.countPowerups(sessionId, userId)
 	const updatedAvailable = await quizModel.getAvailablePowerupsForPlayer(sessionId, userId)
 
@@ -397,7 +378,7 @@ async function leaveGameSession(sessionId, userId)
 		return ;
 	console.log("User ID", userId, "is leaving game session ID:", sessionId);
 	quizModel.setPlayerActive(sessionId, userId, false);
-	wsHub.broadcast(sessionId, { type: 'player_left', payload: { sessionId, userId } });
+	wsHub.broadcast(session.id, { type: 'player_left', payload: { userId, player_name: player.username } });
 	if (session.host_id === userId)
 	{
 		const nextHost = quizModel.getNextActivePlayer(sessionId, userId);
@@ -425,6 +406,7 @@ async function leaveGameSession(sessionId, userId)
 			const { status, new_order } = quizModel.advanceSession(sessionId);
 			if (status === 'in_progress')
 			{
+				wsHub.broadcast(sessionId, { type: 'next_question', payload: { sessionId } });
 				sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
 				const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
 				wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
@@ -450,6 +432,7 @@ async function getNextQuestion(userId, sessionId)
 		wsHub.broadcast(sessionId, { type: 'scoreboard_updated', payload: { sessionId, players } });
 		if (status === 'in_progress')
 		{
+			wsHub.broadcast(sessionId, { type: 'next_question', payload: { sessionId } });
 			sessionTimer.scheduleTimer(sessionId, expireCurrentQuestion);
 			const remaining_ms = quizModel.getRemainingMs(sessionId, QUESTION_TIMER);
 			wsHub.broadcast(sessionId, {type: 'question_started', payload: {sessionId, question_order: new_order, remaining_ms : remaining_ms, }});
