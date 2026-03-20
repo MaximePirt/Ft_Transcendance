@@ -395,16 +395,12 @@ function SoloGamePage() {
         credentials: 'include',
       })
       if (!response.ok) {
-        console.log("FHJEUHFUEHFUEHUFHEUFHUEU");
         console.log("Failed to get next question:", response.status, response.statusText)
-        // throw new Error('Failed to get the next question');
+        return ;
       }
-      console.log("Here is response : ", response)
 
     }
     catch (err) {
-      console.log("FHEIUHFEIUHUDHOWIIJOIMOMSOIWNOWNIDNWOD");
-      console.log("API ERROR:", err)
       throw new Error('Failed to get the next question');
     }
 
