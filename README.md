@@ -363,3 +363,10 @@ Gamification, adchievement, profil card.
 #### Dausque Thibault
 
 #### Pierrot Maxime
+My contribution to the project focused on both defining its architectural foundation and implementing essential application features.
+I helped design the initial architecture by structuring the APIs, setting up the database, and integrating several technical infrastructure components, including Nginx and Vault.
+I then took charge of a significant portion of the quiz module’s development, including the game’s functional logic on both the frontend and backend, communication with services, real-time management, and securing client-side persistence.
+
+One of the main challenges was ensuring consistency between the project’s initial architecture, service-to-service communication, and the user interface’s behavior. I also had to ensure reliable synchronization between the frontend’s local state, data from APIs, and real-time events received during a session.  To address these constraints, I structured the state management logic, implemented error-handling mechanisms, properly reset certain data between requests, and set up local persistence solutions to make the application more robust and responsive during use.
+- modules :
+	game-customization, support fort additional browser, game statistics and match history, gdpr compliance, websockets, multiplayer game, backend as microservices, standard user management and authentication, Implement WAF/ModSecurity + Hashicorp Vault, Framework frontend and backend, Implement a complete web-based game where users can play against each other
