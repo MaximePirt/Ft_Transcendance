@@ -296,5 +296,6 @@
   "no": "No",
   "in_game_forbidden_title": "You are currently in a game",
   "in_game_forbidden_desc": "Finish it before you can continue.",
-  "request_data_button": "Request my data"
+  "request_data_button": "Request my data",
+  "join_error": "A connection error has occurred"
 }

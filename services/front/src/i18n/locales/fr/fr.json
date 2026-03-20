@@ -298,5 +298,6 @@
   "no": "Non",
   "in_game_forbidden_title": "Vous etes actuellement dans une partie",
   "in_game_forbidden_desc": "Terminez-la avant de continuer.",
-  "request_data_button": "Demander mes donnees"
+  "request_data_button": "Demander mes donnees",
+  "join_error": "Une erreur de connexion est survenue"
 }

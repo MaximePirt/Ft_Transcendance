@@ -296,5 +296,6 @@
   "no": "لا",
   "in_game_forbidden_title": "أنت حالياً داخل لعبة",
   "in_game_forbidden_desc": "أنهها قبل أن تتابع.",
-  "request_data_button": "طلب بياناتي"
+  "request_data_button": "طلب بياناتي",
+  "join_error": "حدث خطأ في الاتصال"
 }
