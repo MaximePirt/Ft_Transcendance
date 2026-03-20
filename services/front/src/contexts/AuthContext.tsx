@@ -44,7 +44,7 @@ async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = fal
 			return applyTheme('default', signal, true)
 		}
 		if (!isRetry && themeName !== 'default') {
-			console.warn(`Erreur lors du chargement du theme "${themeName}"`, err)
+			console.log(`Erreur lors du chargement du theme "${themeName}"`, err)
 		}
 	}
 }
@@ -70,7 +70,7 @@ async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false
 			return applyFont('default', signal, true)
 		}
 		if (!isRetry && fontName !== 'default') {
-			console.warn(`Erreur lors du chargement de la police "${fontName}"`, err)
+			console.log(`Erreur lors du chargement de la police "${fontName}"`, err)
 		}
 	}
 }
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		} catch (error) {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
-			console.warn('[Auth] failed to apply preferred language', error)
+			console.log('[Auth] failed to apply preferred language', error)
 		}
 	}
 
@@ -332,7 +332,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				keepalive: true,
 			})
 		} catch (error) {
-			console.warn('[Auth] signout request failed', error)
+			console.log('[Auth] signout request failed', error)
 		}
 	}
 

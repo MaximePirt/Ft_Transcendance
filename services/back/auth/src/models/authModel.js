@@ -90,14 +90,12 @@ async function getUserId(email, password) {
 					WHERE email = ?`
 	).get(email);
 	if (!stmt) {
-		console.log("here")
 		throw new Error("USER_NOT_FOUND");
 	}
 
 	const matchPass = await bcrypt.compare(password, stmt.password);
 	delete stmt.password;
 	if (!matchPass) {
-		console.log("no, here");
 		throw new Error("USER_NOT_FOUND");
 	} else
 		return stmt;

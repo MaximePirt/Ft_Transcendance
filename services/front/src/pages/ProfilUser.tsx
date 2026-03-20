@@ -35,7 +35,7 @@ async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = fal
 			return applyTheme('default', signal, true)
 		}
 		if (!isRetry && themeName !== 'default') {
-			console.warn(`Erreur lors du chargement du thème "${themeName}"`, err)
+			console.log(`Erreur lors du chargement du thème "${themeName}"`, err)
 		}
 		return
 	}
@@ -63,7 +63,7 @@ async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false
 			return applyFont('default', signal, true)
 		}
 		if (!isRetry && fontName !== 'default') {
-			console.warn(`Erreur lors du chargement de la police "${fontName}"`, err)
+			console.log(`Erreur lors du chargement de la police "${fontName}"`, err)
 		}
 		return
 	}
@@ -413,7 +413,7 @@ function ProfilUser() {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
 			if (isUserNotFoundError(error)) return
-			console.warn('[Profile] failed to load recent matches', error)
+			console.log('[Profile] failed to load recent matches', error)
 			setRecentMatches([])
 		} finally {
 			setRecentMatchesLoading(false)
@@ -441,7 +441,7 @@ function ProfilUser() {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
 			if (isUserNotFoundError(error)) return
-			console.warn('[Profile] failed to load game stats', error)
+			console.log('[Profile] failed to load game stats', error)
 			setGameStats(defaultGameStats)
 		}
 	}
@@ -473,7 +473,7 @@ function ProfilUser() {
 			if (error instanceof Error && error.name === 'AbortError') return
 			if (error instanceof TypeError) return
 			if (isUserNotFoundError(error)) return
-			console.warn('[Profile] failed to load achievements', error)
+			console.log('[Profile] failed to load achievements', error)
 		} finally {
 			setAchievementsLoading(false)
 		}
@@ -572,7 +572,7 @@ function ProfilUser() {
 								setStickers(parsed)
 							}
 						} catch (e) {
-							console.warn('Failed to parse stickers', e)
+							console.log('Failed to parse stickers', e)
 						}
 					}
 
@@ -583,7 +583,7 @@ function ProfilUser() {
 								setBadges(parsed.slice(0, MAX_BADGES))
 							}
 						} catch (e) {
-							console.warn('Failed to parse badges', e)
+							console.log('Failed to parse badges', e)
 						}
 					}
 
@@ -605,7 +605,7 @@ function ProfilUser() {
 					return
 				}
 				setProfileResolutionDone(true)
-				console.warn('[ProfileCard] failed to load from server, trying localStorage', e)
+				console.log('[ProfileCard] failed to load from server, trying localStorage', e)
 				try {
 					const stored = localStorage.getItem('profileCard')
 					if (stored && canEdit) {
@@ -617,7 +617,7 @@ function ProfilUser() {
 						if (data.description) setDescription(data.description)
 					}
 				} catch (e) {
-					console.warn('[ProfileCard] failed to load from localStorage', e)
+					console.log('[ProfileCard] failed to load from localStorage', e)
 				}
 			}
 		}
@@ -639,7 +639,7 @@ function ProfilUser() {
 			} catch (e) {
 				if (e instanceof Error && e.name === 'AbortError') return
 				if (e instanceof TypeError) return
-				console.warn('[Profile] failed to load social data', e)
+				console.log('[Profile] failed to load social data', e)
 			}
 		}
 
@@ -688,7 +688,7 @@ function ProfilUser() {
 					await Promise.all([loadFriends(user.username), loadFriendRequests()])
 				}
 			} catch (error) {
-				console.warn('[Profile] Friends WebSocket message error', error)
+				console.log('[Profile] Friends WebSocket message error', error)
 			}
 		}
 
@@ -933,9 +933,7 @@ function ProfilUser() {
 		try {
 			const raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain')
 			if (raw) payload = JSON.parse(raw)
-		} catch (err) {
-			// console.warn('[ProfileCard] drop parse failed', err)
-		}
+		} catch (err) {		}
 		if (!payload || !payload.symbol || !dropZoneRef.current) return
 		const rect = dropZoneRef.current.getBoundingClientRect()
 		const x = Math.min(Math.max(((e.clientX - rect.left) / rect.width) * 100, 0), 100)
@@ -1094,7 +1092,7 @@ function ProfilUser() {
 			document.documentElement.dir = i18n.dir(lang)
 			document.documentElement.lang = lang
 		} catch (e) {
-			console.warn('[Profile] failed to change language', e)
+			console.log('[Profile] failed to change language', e)
 		}
 	}
 
