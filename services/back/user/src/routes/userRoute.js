@@ -324,7 +324,7 @@ async function userRoutes(fastify, options) {
 		} catch (error) {
 			request.log.error(error);
 			if (String(error?.message).includes("Invalid file type")) {
-				return reply.code(400).send({ error: "Invalid file type, only PNG and JPEG are allowed" });
+				return reply.code(400).send({ error: "Invalid file type, only PNG, JPEG and GIF are allowed" });
 			}
 			return reply.code(401).send({ error: "Internal Server Error" });
 		}

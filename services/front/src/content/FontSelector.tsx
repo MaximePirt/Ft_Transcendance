@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const FONTS = [
-  'default',
-  'classic',
-  'round',
-  'geometrical',
+  { id: 'default', labelKey: 'font_default' },
+  { id: 'classic', labelKey: 'font_classic' },
+  { id: 'round', labelKey: 'font_round' },
+  { id: 'geometrical', labelKey: 'font_geometrical' },
 ] as const
 
 async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false) {
@@ -37,6 +38,7 @@ async function applyFont(fontName: string, signal?: AbortSignal, isRetry = false
 }
 
 const FontSelector = () => {
+  const { t } = useTranslation()
   const [font, setFont] = useState<string>('default')
 
   useEffect(() => {
@@ -76,11 +78,11 @@ const FontSelector = () => {
       className="font-combobox"
       value={font}
       onChange={handleFontChange}
-      aria-label="font"
+      aria-label={t('font_selector_label')}
     >
-      {FONTS.map((fontName) => (
-        <option key={fontName} value={fontName}>
-          {fontName}
+      {FONTS.map((fontOption) => (
+        <option key={fontOption.id} value={fontOption.id}>
+          {t(fontOption.labelKey)}
         </option>
       ))}
     </select>

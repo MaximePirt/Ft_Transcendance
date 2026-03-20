@@ -404,7 +404,7 @@ function HomePage() {
 			</div>
 			<div className="home-main-layout">
 				<div className="shell home-shell">
-					<p className="eyebrow">Quiz Sprint</p>
+					<p className="eyebrow">{t('app_name')}</p>
 					<div className="hero">
 						<div className="copy">
 							<h1>{t("ready")}</h1>
@@ -466,7 +466,7 @@ function HomePage() {
 			<footer className="footer">
 				<div className="footer__inner">
 					<div>
-						<p className="eyebrow small">Quiz Sprint</p>
+						<p className="eyebrow small">{t('app_name')}</p>
 						<p className="footer__lede">{t("footer_tagline")}</p>
 					</div>
 					<div className="footer__links">

@@ -49,10 +49,14 @@ async function updateUser(userId, updateData) {
 }
 
 async function updateAvatar(userId, data) {
-	if (!["image/png", "image/jpeg"].includes(data.mimetype)) {
-		throw new Error("Invalid file type, only PNG and JPEG are allowed");
+	if (!["image/png", "image/jpeg", "image/gif"].includes(data.mimetype)) {
+		throw new Error("Invalid file type, only PNG, JPEG and GIF are allowed");
 	}
-	const ext = data.mimetype === "image/png" ? "png" : "jpg";
+	const ext = data.mimetype === "image/png"
+		? "png"
+		: data.mimetype === "image/gif"
+			? "gif"
+			: "jpg";
 	const fileName = `${userId}-${Date.now()}.${ext}`;
 	const filePath = `/uploads/user/avatars/${fileName}`;
 

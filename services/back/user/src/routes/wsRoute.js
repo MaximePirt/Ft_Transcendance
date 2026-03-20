@@ -8,19 +8,26 @@ if (!AUTH_URL) {
 }
 
 async function resolveAuthenticatedUserId(req) {
+  const decodedId = Number(req?.user?.id);
+  if (Number.isInteger(decodedId) && decodedId > 0) return decodedId;
+
   const cookieHeader = req.headers.cookie;
   if (!cookieHeader) return null;
 
-  const meRes = await fetch(`${AUTH_URL}/me`, {
-    method: "GET",
-    headers: { cookie: cookieHeader },
-  });
-  if (!meRes.ok) return null;
+  try {
+    const meRes = await fetch(`${AUTH_URL}/me`, {
+      method: "GET",
+      headers: { cookie: cookieHeader },
+    });
+    if (!meRes.ok) return null;
 
-  const me = await meRes.json();
-  const meId = Number(me?.id);
-  if (!Number.isInteger(meId) || meId <= 0) return null;
-  return meId;
+    const me = await meRes.json();
+    const meId = Number(me?.id);
+    if (!Number.isInteger(meId) || meId <= 0) return null;
+    return meId;
+  } catch {
+    return null;
+  }
 }
 
 module.exports = async function wsRoutes(fastify) {

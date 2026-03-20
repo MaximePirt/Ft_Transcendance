@@ -117,8 +117,8 @@ function JoinGame() {
 if (loading) {
 	return (
 		<main className="page">
-		<div className="shell">
-			<p className="eyebrow">Quiz Sprint</p>
+    <div className="shell">
+      <p className="eyebrow">{t('app_name')}</p>
 			<div className="hero">
 			<div className="copy">
         <h1>{t('loading')}</h1>
@@ -133,8 +133,8 @@ if (loading) {
 if (error) {
 	return (
 		<main className="page">
-		<div className="shell">
-			<p className="eyebrow">Quiz Sprint</p>
+    <div className="shell">
+      <p className="eyebrow">{t('app_name')}</p>
 			<div className="hero">
 			<div className="copy">
         <h1>{t('error_title')}</h1>
@@ -154,7 +154,7 @@ if (error) {
   return (
     <main className="page">
       <div className="shell">
-        <p className="eyebrow">Quiz Sprint - {t("join_room")}</p>
+        <p className="eyebrow">{t('app_name')} - {t("join_room")}</p>
         <div className="hero">
           <div className="copy">
             <h1>{t("join_title")}</h1>

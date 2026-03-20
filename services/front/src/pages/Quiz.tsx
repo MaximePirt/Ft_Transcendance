@@ -14,7 +14,7 @@ function QuizPage() {
   return (
     <main className="page">
       <div className="shell">
-        <p className="eyebrow">Quiz Sprint</p>
+        <p className="eyebrow">{t('app_name')}</p>
         <div className="hero">
           <div className="copy">
             <h1>{t("quiz_title")}</h1>

@@ -81,6 +81,14 @@ function SoloGamePage() {
   const [removedOptions, setRemovedOptions] = useState<removedOption[]>([])
   const [powerups, setPowerups] = useState<(string | null)[]>(Array(MAX_SLOTS).fill(null))
 
+  const powerupLabel = (powerupId: string | null) => {
+    if (!powerupId) return t('powerup_slot')
+    if (powerupId === 'skip') return t('pu_skip')
+    if (powerupId === 'hint') return t('pu_hint')
+    if (powerupId === 'fifty') return t('pu_5050')
+    return powerupId
+  }
+
   useEffect(() => {
     const abortController = new AbortController()
     
@@ -496,7 +504,7 @@ function SoloGamePage() {
     return (
       <main className="page">
         <div className="shell">
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="hero">
             <div className="copy">
               <h1>{t('loading')}</h1>
@@ -512,7 +520,7 @@ function SoloGamePage() {
     return (
       <main className="page">
         <div className="shell">
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="hero">
             <div className="copy">
               <h1>{t('error_title')}</h1>
@@ -533,7 +541,7 @@ function SoloGamePage() {
     return (
       <main className="page">
         <div className="shell">
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="hero">
             <div className="copy">
               <h1>{t('no_question_available')}</h1>
@@ -570,7 +578,7 @@ function SoloGamePage() {
       <div className="shell">
         {/* Header du Quiz */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', gap: '12px' }}>
-          <p className="eyebrow">Quiz Sprint - Mode Solo</p>
+          <p className="eyebrow">{t('app_name')} - {t('solo_mode')}</p>
           <div className="ExitButtonContainer">
               {(() => {
                 const exitBtn = exitbutton.find(btn => btn.id === "informatique")
@@ -618,7 +626,7 @@ function SoloGamePage() {
                   }))
                 }}
               >
-                {p ?? t('powerup_slot')}
+                {powerupLabel(p)}
               </button>
             )
           })}

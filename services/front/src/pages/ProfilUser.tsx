@@ -97,6 +97,15 @@ type FriendRequest = {
 	type: 'received' | 'sent'
 }
 
+type FriendsWsMessage = {
+	type?: string
+	payload?: {
+		userId?: string | number
+		online?: boolean
+		reason?: string
+	}
+}
+
 type Sticker = {
 	id: string
 	symbol: string
@@ -226,7 +235,6 @@ function ProfilUser() {
 	const profileUsername = routeUsername || user?.username || ''
 	const dropZoneRef = useRef<HTMLDivElement | null>(null)
 	const avatarInputRef = useRef<HTMLInputElement | null>(null)
-	const friendWsRef = useRef<WebSocket | null>(null)
 	const [bgColor, setBgColor] = useState('#0f0f10')
 	const [stickers, setStickers] = useState<Sticker[]>([])
 	const [badges, setBadges] = useState<string[]>([])
@@ -657,73 +665,44 @@ function ProfilUser() {
 	}, [user, canEdit])
 
 	useEffect(() => {
-		if (!user || !canEdit) return
-		let isDisposed = false
-		let reconnectTimer: number | null = null
-		let currentSocket: WebSocket | null = null
+		if (!user || !canEdit || !isAuthReady || !isAuthenticated) return
 
-		const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+		const onFriendsWsMessage = async (event: Event) => {
+			try {
+				const customEvent = event as CustomEvent<FriendsWsMessage>
+				const msg = customEvent.detail
+				if (!msg) return
 
-		const connect = () => {
-			if (isDisposed) return
-			const socket = new WebSocket(`${proto}//${window.location.host}/ws/user/friends`)
-			currentSocket = socket
-			friendWsRef.current = socket
-
-			socket.onopen = () => {
-				console.log('[Profile] Friends WebSocket connected')
-			}
-
-			socket.onmessage = async (event) => {
-				try {
-					const msg = JSON.parse(event.data)
-					if (msg?.type === 'presence_updated') {
-						const targetUserId = String(msg?.payload?.userId || '')
-						if (targetUserId) {
-							applyPresenceToSocialLists(targetUserId, Boolean(msg?.payload?.online))
-						}
-						return
+				if (msg.type === 'presence_updated') {
+					const targetUserId = String(msg.payload?.userId || '')
+					if (targetUserId) {
+						applyPresenceToSocialLists(targetUserId, Boolean(msg.payload?.online))
 					}
-					if (msg?.type === 'friend_updated' && msg?.payload?.reason === 'account_deleted') {
-						const removedUserId = String(msg?.payload?.userId || '')
-						if (removedUserId) {
-							removeUserFromSocialLists(removedUserId)
-						}
-						return
-					}
-					if (msg?.type === 'friend_updated' || msg?.type === 'friend_request_received') {
-						await Promise.all([loadFriends(user.username), loadFriendRequests()])
-					}
-				} catch (error) {
-					console.warn('[Profile] Friends WebSocket message error', error)
+					return
 				}
-			}
 
-			socket.onerror = (error) => {
-				console.error('[Profile] Friends WebSocket error', error)
-			}
+				if (msg.type === 'friend_updated' && msg.payload?.reason === 'account_deleted') {
+					const removedUserId = String(msg.payload?.userId || '')
+					if (removedUserId) {
+						removeUserFromSocialLists(removedUserId)
+					}
+					return
+				}
 
-			socket.onclose = () => {
-				if (isDisposed) return
-				reconnectTimer = window.setTimeout(() => {
-					connect()
-				}, 1500)
+				if (msg.type === 'friend_updated' || msg.type === 'friend_request_received') {
+					await Promise.all([loadFriends(user.username), loadFriendRequests()])
+				}
+			} catch (error) {
+				console.warn('[Profile] Friends WebSocket message error', error)
 			}
 		}
 
-		connect()
+		window.addEventListener('friends-ws-message', onFriendsWsMessage as EventListener)
 
 		return () => {
-			isDisposed = true
-			if (reconnectTimer) window.clearTimeout(reconnectTimer)
-			if (currentSocket) {
-				currentSocket.close()
-			}
-			if (friendWsRef.current === currentSocket) {
-				friendWsRef.current = null
-			}
+			window.removeEventListener('friends-ws-message', onFriendsWsMessage as EventListener)
 		}
-	}, [user, canEdit])
+	}, [user, canEdit, isAuthReady, isAuthenticated])
 
 	useEffect(() => {
 		if (profileNotFound) {
@@ -836,7 +815,7 @@ function ProfilUser() {
 			setSelectedAvatarFileName('')
 			return
 		}
-		if (!['image/png', 'image/jpeg'].includes(file.type)) {
+		if (!['image/png', 'image/jpeg', 'image/gif'].includes(file.type)) {
 			setAvatarError(t('profile_avatar_error_type'))
 			e.target.value = ''
 			setSelectedAvatarFileName('')
@@ -1197,7 +1176,7 @@ function ProfilUser() {
 											onClick={() => changeLanguage(lng.code)}
 											className={`chip ${active ? 'chip-active' : ''}`}
 										>
-											{lng.lang}
+												{lng.lang}
 										</button>
 									)
 								})}
@@ -1336,7 +1315,7 @@ function ProfilUser() {
 										ref={avatarInputRef}
 										id="avatar-upload"
 										type="file"
-										accept="image/png,image/jpeg"
+										accept="image/png,image/jpeg,image/gif"
 										onChange={handleAvatarChange}
 										disabled={avatarUploading}
 										style={{ display: 'none' }}

@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const THEMES = [
-  'default',
-  'cinéma',
-  'echec',
-  'histoire',
-  'informatique',
-  'jeuxvidéo',
-  'musiques',
-  'sports',
+  { id: 'default', labelKey: 'theme_default' },
+  { id: 'cinéma', labelKey: 'cinema' },
+  { id: 'echec', labelKey: 'chess' },
+  { id: 'histoire', labelKey: 'histoire' },
+  { id: 'informatique', labelKey: 'computer_science' },
+  { id: 'jeuxvidéo', labelKey: 'video_games' },
+  { id: 'musiques', labelKey: 'music' },
+  { id: 'sports', labelKey: 'sports' },
 ] as const
 
 async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = false) {
@@ -41,6 +42,7 @@ async function applyTheme(themeName: string, signal?: AbortSignal, isRetry = fal
 }
 
 const ThemeSelector = () => {
+  const { t } = useTranslation()
   const [theme, setTheme] = useState<string>('default')
 
 useEffect(() => {
@@ -84,11 +86,11 @@ useEffect(() => {
       className="theme-combobox"
       value={theme}
       onChange={handleThemeChange}
-      aria-label="theme"
+      aria-label={t('theme_selector_label')}
     >
-      {THEMES.map((themeName) => (
-        <option key={themeName} value={themeName}>
-          {themeName}
+      {THEMES.map((themeOption) => (
+        <option key={themeOption.id} value={themeOption.id}>
+          {t(themeOption.labelKey)}
         </option>
       ))}
     </select>

@@ -225,8 +225,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 				sendActivity(true)
 			}
 
-			socket.onclose = () => {
+			socket.onmessage = (event) => {
+				try {
+					const message = JSON.parse(event.data)
+					window.dispatchEvent(new CustomEvent('friends-ws-message', { detail: message }))
+					if (message?.type === 'error' && String(message?.payload || '').toLowerCase().includes('unauthorized')) {
+						socket.close(1008, 'Unauthorized')
+					}
+				} catch {
+					return
+				}
+			}
+
+			socket.onclose = (event) => {
 				if (isDisposed) return
+				if (event.code === 1000 || event.code === 1001 || event.code === 1008 || event.code === 1002) return
 				reconnectTimer = window.setTimeout(() => {
 					connect()
 				}, 1500)

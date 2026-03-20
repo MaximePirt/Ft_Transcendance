@@ -254,7 +254,7 @@ if (loading) {
 	return (
 		<main className="page">
 		<div className="shell">
-			<p className="eyebrow">Quiz Sprint</p>
+			<p className="eyebrow">{t('app_name')}</p>
 			<div className="hero">
 			<div className="copy">
 				<h1>{t('loading')}</h1>
@@ -270,7 +270,7 @@ if (error) {
 	return (
 		<main className="page">
 		<div className="shell">
-			<p className="eyebrow">Quiz Sprint</p>
+			<p className="eyebrow">{t('app_name')}</p>
 			<div className="hero">
 			<div className="copy">
 				<h1>{t('error_title')}</h1>
@@ -304,7 +304,7 @@ if (error) {
 return (
 	<main className="page" dir={i18n.dir()}>
 		<div className="shell">
-			<p className="eyebrow">Quiz Sprint - {t("create_room")}</p>
+			<p className="eyebrow">{t('app_name')} - {t("create_room")}</p>
 			<div className="hero">
 				<div className="copy">
 					<h1>{isHost ? t("room_title_host") : t("room_title_guest")}</h1>
