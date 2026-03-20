@@ -760,7 +760,7 @@ function ProfilUser() {
 		setUsernameSuccess('')
 		try {
 			const nextUsername = usernameInput.trim()
-			const usernameRegex = /^[a-zA-Z0-9_]{3,16}$/
+			const usernameRegex = /^[\p{Script=Arabic}a-zA-Z0-9_]{3,16}$/u
 			if (!usernameRegex.test(nextUsername)) {
 				setUsernameError(t('signup_error_username_format'))
 				return

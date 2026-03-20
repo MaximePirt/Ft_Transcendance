@@ -77,14 +77,14 @@ async function userRoutes(fastify, options) {
 		const user_id = await userController.getUserByUsername(username);
 		const online = await userController.updateUser(user_id.id, { onlineStatus: 1 });
 		if (!online) {
-			return reply.status(401).send({ message: "could not update online status" });
+			return reply.status(500).send({ message: "could not update online status" });
 		}
 		console.log("User signed in successfully");
 		return reply.status(200).send({ message: "ok" });
 	})
 
 
-	fastify.get("/me_id", { onRequest: [fastify.authenticate] }, async (request, reply) => {
+	fastify.get("/me_id", {onRequest: [fastify.authenticate]}, async (request, reply) => {
 		const userId = request.user.id;
 		console.log("Authenticated user ID:", userId);
 		if (!userId) {
@@ -113,7 +113,7 @@ async function userRoutes(fastify, options) {
 				return reply.code(200).send({ id: null });
 			}
 			request.log.error(error);
-			return reply.code(401).send({ error: "Internal Server Error" });
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
@@ -133,7 +133,7 @@ async function userRoutes(fastify, options) {
 				return reply.code(404).send({ error: "User not found" });
 			}
 			request.log.error(error);
-			return reply.code(401).send({ error: "Internal Server Error" });
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
@@ -148,7 +148,7 @@ async function userRoutes(fastify, options) {
 			return reply.code(200).send({ result: matches });
 		} catch (error) {
 			request.log.error(error);
-			return reply.code(401).send({ error: "Internal Server Error" });
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
@@ -159,7 +159,7 @@ async function userRoutes(fastify, options) {
 			return reply.code(200).send({ result: leaderboard });
 		} catch (error) {
 			request.log.error(error);
-			return reply.code(401).send({ error: 'Internal Server Error' });
+			return reply.code(500).send({ error: 'Internal Server Error' });
 		}
 	});
 
@@ -189,7 +189,7 @@ async function userRoutes(fastify, options) {
 		}
 		catch (err) {
 			request.log.error(err);
-			return reply.code(401).send({ error: "Internal Server Error" });
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
@@ -207,7 +207,7 @@ async function userRoutes(fastify, options) {
 			if (String(err?.message).includes('User not found')) {
 				return reply.code(404).send({ error: 'User not found' });
 			}
-			return reply.code(401).send({ error: "Internal Server Error" });
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
@@ -222,7 +222,7 @@ async function userRoutes(fastify, options) {
 				return reply.code(404).send({ error: 'User not found' });
 			}
 			request.log.error(error);
-			return reply.code(401).send({ error: 'Internal Server Error' });
+			return reply.code(500).send({ error: 'Internal Server Error' });
 		}
 	});
 
@@ -239,7 +239,7 @@ async function userRoutes(fastify, options) {
 				return reply.code(200).send({ user: null });
 			}
 			request.log.error(error);
-			return reply.code(401).send({ error: 'Internal Server Error' });
+			return reply.code(500).send({ error: 'Internal Server Error' });
 		}
 	});
 
@@ -256,7 +256,7 @@ async function userRoutes(fastify, options) {
 				return reply.code(404).send({ error: 'User not found' });
 			}
 			request.log.error(error);
-			return reply.code(401).send({ error: 'Internal Server Error' });
+			return reply.code(500).send({ error: 'Internal Server Error' });
 		}
 	});
 
@@ -297,7 +297,7 @@ async function userRoutes(fastify, options) {
 			if (String(error?.message).includes('Email already taken')) {
 				return reply.code(409).send({ error: 'Email already taken by another account' });
 			}
-			return reply.code(401).send({ error: "Internal Server Error" });
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
@@ -324,9 +324,9 @@ async function userRoutes(fastify, options) {
 		} catch (error) {
 			request.log.error(error);
 			if (String(error?.message).includes("Invalid file type")) {
-				return reply.code(400).send({ error: "Invalid file type, only PNG, JPEG and GIF are allowed" });
+				return reply.code(400).send({ error: "Invalid file type, only PNG and JPEG are allowed" });
 			}
-			return reply.code(401).send({ error: "Internal Server Error" });
+			return reply.code(500).send({ error: "Internal Server Error" });
 		}
 	});
 
@@ -407,7 +407,7 @@ async function userRoutes(fastify, options) {
 			return reply.send({ success: true });
 		} catch (err) {
 			console.error(err);
-			return reply.code(401).send({ error: "MAIL_FAILED" });
+			return reply.code(500).send({ error: "MAIL_FAILED" });
 		}
 	});
 
@@ -415,13 +415,13 @@ async function userRoutes(fastify, options) {
 		try {
 			const { userId } = request.body;
 			if (!userId) {
-				return reply.code(400).send({ error: "BAD_REQUEST" });
+  				return reply.code(400).send({ error: "BAD_REQUEST" });
 			}
 
 			const user = await userController.getUserById(userId);
-			if (!user) {
-				return reply.code(404).send({ error: "USER_NOT_FOUND" });
-			}
+		    if (!user) {
+      			return reply.code(404).send({ error: "USER_NOT_FOUND" });
+    		}
 
 			const lang = user.lang;
 			const html = await render(React.createElement(AccountDeletionEmail, { username: user.username, lang: lang }));
@@ -437,11 +437,11 @@ async function userRoutes(fastify, options) {
 			return reply.send({ success: true });
 		} catch (err) {
 			console.error(err);
-			return reply.code(401).send({ error: "MAIL_FAILED" });
+			return reply.code(500).send({ error: "MAIL_FAILED" });
 		}
 	});
 
-
+	
 
 	fastify.delete("/delete-user", async (request, reply) => {
 		try {
@@ -474,7 +474,7 @@ async function userRoutes(fastify, options) {
 		}
 		catch (err) {
 			console.error(err);
-			return reply.code(401).send({ error: "USER_DELETE_FAILED" });
+			return reply.code(500).send({ error: "USER_DELETE_FAILED" });
 		}
 	});
 
@@ -489,7 +489,7 @@ async function userRoutes(fastify, options) {
 		}
 		catch (err) {
 			console.error(err);
-			return reply.code(401).send({ error: "AN_UNEXPECTED_ERROR_HAS_OCCURED" });
+			return reply.code(500).send({ error: "AN_UNEXPECTED_ERROR_HAS_OCCURED" });
 		}
 	});
 }

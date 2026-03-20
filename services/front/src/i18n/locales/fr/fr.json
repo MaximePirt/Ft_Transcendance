@@ -44,10 +44,8 @@
   "font_selector_label": "Police",
   "theme_default": "Thème par défaut",
   "theme_selector_label": "Thème",
-
   "cinema_series": "Cinema / Series",
   "cinema_series_desc": "Personnages emblématiques, citations, bandes originales et anecdotes.",
-
   "musique_series": "Musiques",
   "musique_series_desc": "Groupes, artistes, albums marquants et culture musicale.",
   "music": "Musique",
@@ -70,8 +68,6 @@
   "computer_science_desc": "Programmation, algorithmes, réseaux, sécurité et systèmes.",
   "Informatique": "Informatique",
   "Informatique_desc": "Programmation, algorithmes, réseaux, sécurité et systèmes.",
-  
-  
   "error_occurred": "Une erreur est survenue",
   "login_title": "Connexion",
   "login_subtitle": "Reviens buzzer",
