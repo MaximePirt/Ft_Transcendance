@@ -20,7 +20,11 @@
 					"question": "Qui a découvert l'Amérique ?",
 					"type": "texte",
 					"réponse": "Christophe Colomb",
-					"options": [],
+					"options": [
+						"Christophe Colomb",
+						"Vladimir Putin",
+						"Thierry Henry"
+					],
 					"difficulté": "easy"
 				},
 				{
@@ -162,7 +166,8 @@
 						"Louis XVI",
 						"Napoléon Bonaparte",
 						"Charlemagne",
-						"Louis XIV"
+						"Louis XIV",
+						"tata"
 					],
 					"difficulté": "hard"
 				},
@@ -184,6 +189,12 @@
 					"question": "L'assassinat de qui à Sarajevo en 1914 a déclenché le début de la Première Guerre mondiale ?",
 					"type": "qcm",
 					"réponse": "Archiduc François-Ferdinand",
+					"options": [
+						"Brigitte Macron",
+						"Kim Jon Hun",
+						"Archiduc François-Ferdinand",
+						"toto"
+					],
 					"difficulté": "easy"
 				}
 			],

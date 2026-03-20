@@ -184,6 +184,11 @@
 					"question": "Whose assassination in Sarajevo in 1914 sparked the beginning of World War I?",
 					"type": "qcm",
 					"réponse": "Archduke Franz Ferdinand",
+					"options": [
+						"Archduke Franz Ferdinand",
+						"toto",
+						"tutu"
+					],
 					"difficulté": "easy"
 				}
 			],
