@@ -60,6 +60,7 @@ The website will be available at https://localhost
 - [better-sqlite3](https://github.com/WiseLibs/better-sqlite3) — SQLite database driver
 - [JWT (jsonwebtoken)](https://github.com/auth0/node-jsonwebtoken) — Authentication token management
 - [HashiCorp Vault](https://github.com/hashicorp/vault-guides/tree/master) - Vault github guide
+- [i18n](https://react.i18next.com/) - i18n documentation
 
 
 ###### Articles & Tutorials
@@ -353,6 +354,20 @@ The site therefore uses the same color palette and typography throughout. These 
 tdausque: used to implement a full authentication module to able a client to connect to the quizz website, fetching his email, username and the password when signup. For a persistent security it's important to hash the password and put it in the database. Implementing a complet 2fa security part, sending to the client email adress using the smtp protocol a 6 digits code when signup and signin. The JWT (Json Web Token) was also an important part of the job, in fact, this tool can give a state to the front server, keeping it with specific data the user had to interact with. Because we can't stop to think with security it's important we have to put this token in a specific and protected space of the browser called the cookies. The cookies work like a localStorage with a security asset. We can't compile js script inside, so we avoid xss attack. We can't stock the token inside the database, the back server auth microservice is returning the JWT using a specific algorithm when the user is authenticate. The challenge was technical, with deep web concept like 2fa, jwt, password hash algorithm and read the documentation was a big part of the job.
 
 #### Pipi Tristan
+I started the project on the front side of it with vgodart. I immediately focused on the translation on the website since a quiz has a lot of text, it seemed really logical.
+Since we knew we were gonna use React, I leaned towards i18n React. It was very easy to use, and so that's how I could add the RTL management so easily.
+
+After that, I went to the design part of the website and did the design system. It was a bit hard at first because I had to consider that it's only a minor module, but at the same time a very complex and complete
+one. With the help of the styles sheet that my teammate prepared, I could easily modify and work around the permanently changing styles.
+While I was doing it, I was also working on the game customization by doing themes that could be used in game to amplify the gameplay experience.
+
+Then I switched and went to do the backend, starting with the SMTP, to implement the GDPR compliance features. I knew it was useful for the 2FA so I did it first while doing the data export and data deletion.
+But a problem I had was that I started using local storage but if the same account was connected multiple times, it would cause a lot of issues.
+So I learned how to use Web Sockets so one call could work for multiple browers.
+
+Speaking of Web Sockets, I did the powerups for the game as it requires backend and frontend exchanges.
+Those worked both for the solo and multi part of the game. The main problem while doing this was associate the front with the back, both fetch and web sockets messages.
+
 
 #### Godart Victor
 Project Manager
