@@ -7,7 +7,6 @@
   text-orientation: mixed;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   background-color: #050915;
   color: #e7edf7;
 }

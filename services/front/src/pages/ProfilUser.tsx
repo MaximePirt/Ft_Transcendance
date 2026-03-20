@@ -960,7 +960,7 @@ function ProfilUser() {
 			const raw = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain')
 			if (raw) payload = JSON.parse(raw)
 		} catch (err) {
-			console.warn('[ProfileCard] drop parse failed', err)
+			// console.warn('[ProfileCard] drop parse failed', err)
 		}
 		if (!payload || !payload.symbol || !dropZoneRef.current) return
 		const rect = dropZoneRef.current.getBoundingClientRect()
